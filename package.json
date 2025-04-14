@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^6.0.2",
     "sass-embedded": "^1.86.3",
-    "vite": "^6.2.0"
+    "typescript": "^5.8.3",
+    "vite": "^6.2.2"
   }
 }

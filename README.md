@@ -1,1 +1,1 @@
-# Per Diem Meals & Incidentals Calculator
+# Per Diem Calculator
