@@ -1,3 +1,6 @@
+export const LOCATION_HEADER = 'Date and Location';
+export const LOCATION_TEXT = '';
+
 export type LocationFromList = {
   name: string;
   abbreviation: string;
@@ -5,8 +8,20 @@ export type LocationFromList = {
   category: string;
 };
 
+export type LocationFromFetch = {
+  City: string;
+  State: string;
+};
+
+export interface handlerResult {
+  category: 'domestic' | 'intl';
+  state: string;
+  city: string;
+  row: HTMLElement;
+}
+
 // Array of US States excluding OCON locations like Alaska, territories, etc.
-export const ListStates: LocationFromList[] = [
+export const LIST_STATES_CONUS: LocationFromList[] = [
   {
     name: 'Alabama',
     abbreviation: 'AL',
@@ -304,7 +319,7 @@ export const ListStates: LocationFromList[] = [
 ];
 
 // Array of unique countries from OCONUSrates
-export const ListCountries: LocationFromList[] = [
+export const LIST_STATES_OCONUS: LocationFromList[] = [
   {
     label: 'ARUBA (ABW)',
     category: 'countries',
