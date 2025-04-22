@@ -1,1763 +1,2008 @@
+// Text
 export const LOCATION_HEADER = 'Date and Location';
 export const LOCATION_TEXT = '';
+
+// Utilities
+
+export const inPrimitiveType = <T>(values: readonly T[], x: any): x is T => {
+  return values.includes(x);
+};
+
+// Dates
+
+export enum LongMonths {
+  Jan = 'January',
+  Feb = 'February',
+  Mar = 'March',
+  Apr = 'April',
+  May = 'May',
+  Jun = 'June',
+  Jul = 'July',
+  Aug = 'August',
+  Sep = 'September',
+  Oct = 'October',
+  Nov = 'November',
+  Dec = 'December',
+}
+const shortMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+type ShortMonth =
+  | 'Jan'
+  | 'Feb'
+  | 'Mar'
+  | 'Apr'
+  | 'May'
+  | 'Jun'
+  | 'Jul'
+  | 'Aug'
+  | 'Sep'
+  | 'Oct'
+  | 'Nov'
+  | 'Dec';
+export const isShortMonth = (s: string): s is ShortMonth => {
+  return inPrimitiveType(shortMonths, s);
+};
+
+export const years = [
+  '2020',
+  '2021',
+  '2022',
+  '2023',
+  '2024',
+  '2025',
+  '2026',
+  '2027',
+  '2028',
+  '2029',
+  '2030',
+  '2031',
+  '2032',
+  '2033',
+  '2034',
+  '2035',
+  '2036',
+  '2037',
+  '2038',
+  '2039',
+  '2040',
+] as const;
+type YYYY =
+  | '2020'
+  | '2021'
+  | '2022'
+  | '2023'
+  | '2024'
+  | '2025'
+  | '2026'
+  | '2027'
+  | '2028'
+  | '2029'
+  | '2030'
+  | '2031'
+  | '2032'
+  | '2033'
+  | '2034'
+  | '2035'
+  | '2036'
+  | '2037'
+  | '2038'
+  | '2039'
+  | '2040';
+
+export const months: string[] = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+] as const;
+type MM =
+  | '01'
+  | '02'
+  | '03'
+  | '04'
+  | '05'
+  | '06'
+  | '07'
+  | '08'
+  | '09'
+  | '10'
+  | '11'
+  | '12';
+export const days: string[] = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+  '13',
+  '14',
+  '15',
+  '16',
+  '17',
+  '18',
+  '19',
+  '20',
+  '21',
+  '22',
+  '23',
+  '24',
+  '25',
+  '26',
+  '27',
+  '28',
+  '29',
+  '30',
+  '31',
+] as const;
+type DD =
+  | '01'
+  | '02'
+  | '03'
+  | '04'
+  | '05'
+  | '06'
+  | '07'
+  | '08'
+  | '09'
+  | '10'
+  | '11'
+  | '12'
+  | '13'
+  | '14'
+  | '15'
+  | '16'
+  | '17'
+  | '18'
+  | '19'
+  | '20'
+  | '21'
+  | '22'
+  | '23'
+  | '24'
+  | '25'
+  | '26'
+  | '27'
+  | '28'
+  | '29'
+  | '30'
+  | '31';
+
+export type DateRaw = `${YYYY}-${MM}-${DD}`;
+export const isDateRawType = (s: string): s is DateRaw => {
+  if (!s) return false;
+  const splitDate = s.split('-'); // split 2024-02-01
+  if (splitDate.length !== 3) return false; // expected result [0]2024 [1]02 [02]01
+  const year = splitDate[0];
+  const month = splitDate[1];
+  const day = splitDate[2];
+  return (
+    inPrimitiveType(years, year) &&
+    inPrimitiveType(months, month) &&
+    inPrimitiveType(days, day)
+  );
+};
+
+// Locations
+
+export interface LocationCities {
+  City?: string;
+  State?: string;
+  Country?: string;
+  Location?: string;
+}
+
+export interface ForeignPerDiem {
+  Country: string;
+  'Effective Date': string;
+  'Footnote Reference': string | number | null;
+  Location: string;
+  'Location Code': number;
+  Lodging: number;
+  'Meals & Incidentals': number;
+  'Per Diem': number;
+  'Season Code': string;
+  'Season End Date': string;
+  'Season Start Date': string;
+  __rowNum__: number;
+}
+
+const locationCategories = ['domestic', 'intl'];
+export type LocationCategory = 'domestic' | 'intl';
+export const isLocationCategory = (s: string): s is LocationCategory => {
+  return inPrimitiveType(locationCategories, s);
+};
+
+export interface LocationForAPI {
+  category: LocationCategory;
+  state: string;
+  city: string;
+  date: DateRaw;
+}
+
+export interface LocationRow extends LocationForAPI {
+  row: HTMLElement;
+}
+
+export interface RateAPIRequest {
+  expensesCategory: 'lodging' | 'meals' | 'both';
+  expenseDatesLocations: LocationForAPI[];
+}
+
+export interface LodgingRow {
+  location: string;
+  maxRate: number;
+  date: DateRaw;
+}
 
 export type LocationFromList = {
   name: string;
   abbreviation: string;
   label: string;
-  category: string;
+  category: LocationCategory;
 };
-
-export type LocationFromFetch = {
-  City: string;
-  State: string;
-};
-
-export interface handlerResult {
-  category: 'domestic' | 'intl';
-  state: string;
-  city: string;
-  row: HTMLElement;
-}
 
 // Array of US States excluding OCON locations like Alaska, territories, etc.
-export const LIST_STATES_CONUS: LocationFromList[] = [
+export const LIST_STATES: LocationFromList[] = [
   {
     name: 'Alabama',
     abbreviation: 'AL',
     label: 'Alabama (AL)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Arizona',
     abbreviation: 'AZ',
     label: 'Arizona (AZ)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Arkansas',
     abbreviation: 'AR',
     label: 'Arkansas (AR)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'California',
     abbreviation: 'CA',
     label: 'California (CA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Colorado',
     abbreviation: 'CO',
     label: 'Colorado (CO)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Connecticut',
     abbreviation: 'CT',
     label: 'Connecticut (CT)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Delaware',
     abbreviation: 'DE',
     label: 'Delaware (DE)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'District Of Columbia',
     abbreviation: 'DC',
     label: 'District Of Columbia (DC)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Florida',
     abbreviation: 'FL',
     label: 'Florida (FL)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Georgia',
     abbreviation: 'GA',
     label: 'Georgia (GA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Idaho',
     abbreviation: 'ID',
     label: 'Idaho (ID)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Illinois',
     abbreviation: 'IL',
     label: 'Illinois (IL)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Indiana',
     abbreviation: 'IN',
     label: 'Indiana (IN)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Iowa',
     abbreviation: 'IA',
     label: 'Iowa (IA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Kansas',
     abbreviation: 'KS',
     label: 'Kansas (KS)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Kentucky',
     abbreviation: 'KY',
     label: 'Kentucky (KY)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Louisiana',
     abbreviation: 'LA',
     label: 'Louisiana (LA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Maine',
     abbreviation: 'ME',
     label: 'Maine (ME)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Maryland',
     abbreviation: 'MD',
     label: 'Maryland (MD)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Massachusetts',
     abbreviation: 'MA',
     label: 'Massachusetts (MA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Michigan',
     abbreviation: 'MI',
     label: 'Michigan (MI)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Minnesota',
     abbreviation: 'MN',
     label: 'Minnesota (MN)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Mississippi',
     abbreviation: 'MS',
     label: 'Mississippi (MS)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Missouri',
     abbreviation: 'MO',
     label: 'Missouri (MO)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Montana',
     abbreviation: 'MT',
     label: 'Montana (MT)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Nebraska',
     abbreviation: 'NE',
     label: 'Nebraska (NE)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Nevada',
     abbreviation: 'NV',
     label: 'Nevada (NV)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'New Hampshire',
     abbreviation: 'NH',
     label: 'New Hampshire (NH)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'New Jersey',
     abbreviation: 'NJ',
     label: 'New Jersey (NJ)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'New Mexico',
     abbreviation: 'NM',
     label: 'New Mexico (NM)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'New York',
     abbreviation: 'NY',
     label: 'New York (NY)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'North Carolina',
     abbreviation: 'NC',
     label: 'North Carolina (NC)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'North Dakota',
     abbreviation: 'ND',
     label: 'North Dakota (ND)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Ohio',
     abbreviation: 'OH',
     label: 'Ohio (OH)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Oklahoma',
     abbreviation: 'OK',
     label: 'Oklahoma (OK)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Oregon',
     abbreviation: 'OR',
     label: 'Oregon (OR)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Pennsylvania',
     abbreviation: 'PA',
     label: 'Pennsylvania (PA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Rhode Island',
     abbreviation: 'RI',
     label: 'Rhode Island (RI)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'South Carolina',
     abbreviation: 'SC',
     label: 'South Carolina (SC)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'South Dakota',
     abbreviation: 'SD',
     label: 'South Dakota (SD)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Tennessee',
     abbreviation: 'TN',
     label: 'Tennessee (TN)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Texas',
     abbreviation: 'TX',
     label: 'Texas (TX)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Utah',
     abbreviation: 'UT',
     label: 'Utah (UT)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Vermont',
     abbreviation: 'VT',
     label: 'Vermont (VT)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Virginia',
     abbreviation: 'VA',
     label: 'Virginia (VA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Washington',
     abbreviation: 'WA',
     label: 'Washington (WA)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'West Virginia',
     abbreviation: 'WV',
     label: 'West Virginia (WV)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Wisconsin',
     abbreviation: 'WI',
     label: 'Wisconsin (WI)',
-    category: 'states',
+    category: 'domestic',
   },
   {
     name: 'Wyoming',
     abbreviation: 'WY',
     label: 'Wyoming (WY)',
-    category: 'states',
+    category: 'domestic',
   },
-];
 
-// Array of unique countries from OCONUSrates
-export const LIST_STATES_OCONUS: LocationFromList[] = [
   {
     label: 'ARUBA (ABW)',
-    category: 'countries',
+    category: 'intl',
     name: 'ARUBA',
     abbreviation: 'ABW',
   },
   {
     label: 'AFGHANISTAN (AFG)',
-    category: 'countries',
+    category: 'intl',
     name: 'AFGHANISTAN',
     abbreviation: 'AFG',
   },
   {
     label: 'ANGOLA (AGO)',
-    category: 'countries',
+    category: 'intl',
     name: 'ANGOLA',
     abbreviation: 'AGO',
   },
   {
     label: 'ANGUILLA (AIA)',
-    category: 'countries',
+    category: 'intl',
     name: 'ANGUILLA',
     abbreviation: 'AIA',
   },
   {
     label: 'ALASKA (AK)',
-    category: 'countries',
+    category: 'intl',
     name: 'ALASKA',
     abbreviation: 'AK',
   },
   {
     label: 'ALBANIA (ALB)',
-    category: 'countries',
+    category: 'intl',
     name: 'ALBANIA',
     abbreviation: 'ALB',
   },
   {
     label: 'ALL PLACES NOT LISTED (ALL)',
-    category: 'countries',
+    category: 'intl',
     name: 'ALL PLACES NOT LISTED',
     abbreviation: 'ALL',
   },
   {
     label: 'ANDORRA (AND)',
-    category: 'countries',
+    category: 'intl',
     name: 'ANDORRA',
     abbreviation: 'AND',
   },
   {
     label: 'UNITED ARAB EMIRATES (ARE)',
-    category: 'countries',
+    category: 'intl',
     name: 'UNITED ARAB EMIRATES',
     abbreviation: 'ARE',
   },
   {
     label: 'ARGENTINA (ARG)',
-    category: 'countries',
+    category: 'intl',
     name: 'ARGENTINA',
     abbreviation: 'ARG',
   },
   {
     label: 'ARMENIA (ARM)',
-    category: 'countries',
+    category: 'intl',
     name: 'ARMENIA',
     abbreviation: 'ARM',
   },
   {
     label: 'AMERICAN SAMOA (AS)',
-    category: 'countries',
+    category: 'intl',
     name: 'AMERICAN SAMOA',
     abbreviation: 'AS',
   },
   {
     label: 'ASCENSION ISLAND (ASC)',
-    category: 'countries',
+    category: 'intl',
     name: 'ASCENSION ISLAND',
     abbreviation: 'ASC',
   },
   {
     label: 'ANTARCTICA (ATA)',
-    category: 'countries',
+    category: 'intl',
     name: 'ANTARCTICA',
     abbreviation: 'ATA',
   },
   {
     label: 'ANTIGUA AND BARBUDA (ATG)',
-    category: 'countries',
+    category: 'intl',
     name: 'ANTIGUA AND BARBUDA',
     abbreviation: 'ATG',
   },
   {
     label: 'AUSTRALIA (AUS)',
-    category: 'countries',
+    category: 'intl',
     name: 'AUSTRALIA',
     abbreviation: 'AUS',
   },
   {
     label: 'AUSTRIA (AUT)',
-    category: 'countries',
+    category: 'intl',
     name: 'AUSTRIA',
     abbreviation: 'AUT',
   },
   {
     label: 'AZERBAIJAN (AZE)',
-    category: 'countries',
+    category: 'intl',
     name: 'AZERBAIJAN',
     abbreviation: 'AZE',
   },
   {
     label: 'BURUNDI (BDI)',
-    category: 'countries',
+    category: 'intl',
     name: 'BURUNDI',
     abbreviation: 'BDI',
   },
   {
     label: 'BELGIUM (BEL)',
-    category: 'countries',
+    category: 'intl',
     name: 'BELGIUM',
     abbreviation: 'BEL',
   },
   {
     label: 'BENIN (BEN)',
-    category: 'countries',
+    category: 'intl',
     name: 'BENIN',
     abbreviation: 'BEN',
   },
   {
     label: 'BONAIRE, SINT EUSTATIUS, AND SABA (BES)',
-    category: 'countries',
+    category: 'intl',
     name: 'BONAIRE, SINT EUSTATIUS, AND SABA',
     abbreviation: 'BES',
   },
   {
     label: 'BURKINA FASO (BFA)',
-    category: 'countries',
+    category: 'intl',
     name: 'BURKINA FASO',
     abbreviation: 'BFA',
   },
   {
     label: 'BANGLADESH (BGD)',
-    category: 'countries',
+    category: 'intl',
     name: 'BANGLADESH',
     abbreviation: 'BGD',
   },
   {
     label: 'BULGARIA (BGR)',
-    category: 'countries',
+    category: 'intl',
     name: 'BULGARIA',
     abbreviation: 'BGR',
   },
   {
     label: 'BAHRAIN (BHR)',
-    category: 'countries',
+    category: 'intl',
     name: 'BAHRAIN',
     abbreviation: 'BHR',
   },
   {
     label: 'BAHAMAS, THE (BHS)',
-    category: 'countries',
+    category: 'intl',
     name: 'BAHAMAS, THE',
     abbreviation: 'BHS',
   },
   {
     label: 'BOSNIA AND HERZEGOVINA (BIH)',
-    category: 'countries',
+    category: 'intl',
     name: 'BOSNIA AND HERZEGOVINA',
     abbreviation: 'BIH',
   },
   {
     label: 'BELARUS (BLR)',
-    category: 'countries',
+    category: 'intl',
     name: 'BELARUS',
     abbreviation: 'BLR',
   },
   {
     label: 'BELIZE (BLZ)',
-    category: 'countries',
+    category: 'intl',
     name: 'BELIZE',
     abbreviation: 'BLZ',
   },
   {
     label: 'BERMUDA (BMU)',
-    category: 'countries',
+    category: 'intl',
     name: 'BERMUDA',
     abbreviation: 'BMU',
   },
   {
     label: 'BOLIVIA (BOL)',
-    category: 'countries',
+    category: 'intl',
     name: 'BOLIVIA',
     abbreviation: 'BOL',
   },
   {
     label: 'BRAZIL (BRA)',
-    category: 'countries',
+    category: 'intl',
     name: 'BRAZIL',
     abbreviation: 'BRA',
   },
   {
     label: 'BARBADOS (BRB)',
-    category: 'countries',
+    category: 'intl',
     name: 'BARBADOS',
     abbreviation: 'BRB',
   },
   {
     label: 'BRUNEI (BRN)',
-    category: 'countries',
+    category: 'intl',
     name: 'BRUNEI',
     abbreviation: 'BRN',
   },
   {
     label: 'BHUTAN (BTN)',
-    category: 'countries',
+    category: 'intl',
     name: 'BHUTAN',
     abbreviation: 'BTN',
   },
   {
     label: 'BOTSWANA (BWA)',
-    category: 'countries',
+    category: 'intl',
     name: 'BOTSWANA',
     abbreviation: 'BWA',
   },
   {
     label: 'CENTRAL AFRICAN REPUBLIC (CAF)',
-    category: 'countries',
+    category: 'intl',
     name: 'CENTRAL AFRICAN REPUBLIC',
     abbreviation: 'CAF',
   },
   {
     label: 'CANADA (CAN)',
-    category: 'countries',
+    category: 'intl',
     name: 'CANADA',
     abbreviation: 'CAN',
   },
   {
     label: 'COCOS (KEELING) ISLANDS (CCK)',
-    category: 'countries',
+    category: 'intl',
     name: 'COCOS (KEELING) ISLANDS',
     abbreviation: 'CCK',
   },
   {
     label: 'SWITZERLAND (CHE)',
-    category: 'countries',
+    category: 'intl',
     name: 'SWITZERLAND',
     abbreviation: 'CHE',
   },
   {
     label: 'CHILE (CHL)',
-    category: 'countries',
+    category: 'intl',
     name: 'CHILE',
     abbreviation: 'CHL',
   },
   {
     label: 'CHINA (CHN)',
-    category: 'countries',
+    category: 'intl',
     name: 'CHINA',
     abbreviation: 'CHN',
   },
   {
     label: "COTE D'IVOIRE (CIV)",
-    category: 'countries',
+    category: 'intl',
     name: "COTE D'IVOIRE",
     abbreviation: 'CIV',
   },
   {
     label: 'CAMEROON (CMR)',
-    category: 'countries',
+    category: 'intl',
     name: 'CAMEROON',
     abbreviation: 'CMR',
   },
   {
     label: 'DEMOCRATIC REPUBLIC OF THE CONGO (COD)',
-    category: 'countries',
+    category: 'intl',
     name: 'DEMOCRATIC REPUBLIC OF THE CONGO',
     abbreviation: 'COD',
   },
   {
     label: 'REPUBLIC OF THE CONGO (COG)',
-    category: 'countries',
+    category: 'intl',
     name: 'REPUBLIC OF THE CONGO',
     abbreviation: 'COG',
   },
   {
     label: 'COOK ISLANDS (COK)',
-    category: 'countries',
+    category: 'intl',
     name: 'COOK ISLANDS',
     abbreviation: 'COK',
   },
   {
     label: 'COLOMBIA (COL)',
-    category: 'countries',
+    category: 'intl',
     name: 'COLOMBIA',
     abbreviation: 'COL',
   },
   {
     label: 'COMOROS (COM)',
-    category: 'countries',
+    category: 'intl',
     name: 'COMOROS',
     abbreviation: 'COM',
   },
   {
     label: 'CABO VERDE (CPV)',
-    category: 'countries',
+    category: 'intl',
     name: 'CABO VERDE',
     abbreviation: 'CPV',
   },
   {
     label: 'COSTA RICA (CRI)',
-    category: 'countries',
+    category: 'intl',
     name: 'COSTA RICA',
     abbreviation: 'CRI',
   },
   {
     label: 'CUBA (CUB)',
-    category: 'countries',
+    category: 'intl',
     name: 'CUBA',
     abbreviation: 'CUB',
   },
   {
     label: 'CURACAO (CUW)',
-    category: 'countries',
+    category: 'intl',
     name: 'CURACAO',
     abbreviation: 'CUW',
   },
   {
     label: 'CAYMAN ISLANDS (CYM)',
-    category: 'countries',
+    category: 'intl',
     name: 'CAYMAN ISLANDS',
     abbreviation: 'CYM',
   },
   {
     label: 'CYPRUS (CYP)',
-    category: 'countries',
+    category: 'intl',
     name: 'CYPRUS',
     abbreviation: 'CYP',
   },
   {
     label: 'CZECH REPUBLIC (CZE)',
-    category: 'countries',
+    category: 'intl',
     name: 'CZECH REPUBLIC',
     abbreviation: 'CZE',
   },
   {
     label: 'DUTCH CARIBBEAN (DCR)',
-    category: 'countries',
+    category: 'intl',
     name: 'DUTCH CARIBBEAN',
     abbreviation: 'DCR',
   },
   {
     label: 'GERMANY (DEU)',
-    category: 'countries',
+    category: 'intl',
     name: 'GERMANY',
     abbreviation: 'DEU',
   },
   {
     label: 'DJIBOUTI (DJI)',
-    category: 'countries',
+    category: 'intl',
     name: 'DJIBOUTI',
     abbreviation: 'DJI',
   },
   {
     label: 'DOMINICA (DMA)',
-    category: 'countries',
+    category: 'intl',
     name: 'DOMINICA',
     abbreviation: 'DMA',
   },
   {
     label: 'DENMARK (DNK)',
-    category: 'countries',
+    category: 'intl',
     name: 'DENMARK',
     abbreviation: 'DNK',
   },
   {
     label: 'DOMINICAN REPUBLIC (DOM)',
-    category: 'countries',
+    category: 'intl',
     name: 'DOMINICAN REPUBLIC',
     abbreviation: 'DOM',
   },
   {
     label: 'ALGERIA (DZA)',
-    category: 'countries',
+    category: 'intl',
     name: 'ALGERIA',
     abbreviation: 'DZA',
   },
   {
     label: 'ECUADOR (ECU)',
-    category: 'countries',
+    category: 'intl',
     name: 'ECUADOR',
     abbreviation: 'ECU',
   },
   {
     label: 'EGYPT (EGY)',
-    category: 'countries',
+    category: 'intl',
     name: 'EGYPT',
     abbreviation: 'EGY',
   },
   {
     label: 'ERITREA (ERI)',
-    category: 'countries',
+    category: 'intl',
     name: 'ERITREA',
     abbreviation: 'ERI',
   },
   {
     label: 'SPAIN (ESP)',
-    category: 'countries',
+    category: 'intl',
     name: 'SPAIN',
     abbreviation: 'ESP',
   },
   {
     label: 'ESTONIA (EST)',
-    category: 'countries',
+    category: 'intl',
     name: 'ESTONIA',
     abbreviation: 'EST',
   },
   {
     label: 'ETHIOPIA (ETH)',
-    category: 'countries',
+    category: 'intl',
     name: 'ETHIOPIA',
     abbreviation: 'ETH',
   },
   {
     label: 'FINLAND (FIN)',
-    category: 'countries',
+    category: 'intl',
     name: 'FINLAND',
     abbreviation: 'FIN',
   },
   {
     label: 'FIJI (FJI)',
-    category: 'countries',
+    category: 'intl',
     name: 'FIJI',
     abbreviation: 'FJI',
   },
   {
     label: 'FALKLAND ISLANDS (ISLAS MALVINAS) (FLK)',
-    category: 'countries',
+    category: 'intl',
     name: 'FALKLAND ISLANDS (ISLAS MALVINAS)',
     abbreviation: 'FLK',
   },
   {
     label: 'FRANCE (FRA)',
-    category: 'countries',
+    category: 'intl',
     name: 'FRANCE',
     abbreviation: 'FRA',
   },
   {
     label: 'FAROE ISLANDS (FRO)',
-    category: 'countries',
+    category: 'intl',
     name: 'FAROE ISLANDS',
     abbreviation: 'FRO',
   },
   {
     label: 'MICRONESIA, FEDERATED STATES OF (FSM)',
-    category: 'countries',
+    category: 'intl',
     name: 'MICRONESIA, FEDERATED STATES OF',
     abbreviation: 'FSM',
   },
   {
     label: 'GABON (GAB)',
-    category: 'countries',
+    category: 'intl',
     name: 'GABON',
     abbreviation: 'GAB',
   },
   {
     label: 'UNITED KINGDOM (GBR)',
-    category: 'countries',
+    category: 'intl',
     name: 'UNITED KINGDOM',
     abbreviation: 'GBR',
   },
   {
     label: 'GEORGIA (GEO)',
-    category: 'countries',
+    category: 'intl',
     name: 'GEORGIA',
     abbreviation: 'GEO',
   },
   {
     label: 'GHANA (GHA)',
-    category: 'countries',
+    category: 'intl',
     name: 'GHANA',
     abbreviation: 'GHA',
   },
   {
     label: 'GIBRALTAR (GIB)',
-    category: 'countries',
+    category: 'intl',
     name: 'GIBRALTAR',
     abbreviation: 'GIB',
   },
   {
     label: 'GUINEA (GIN)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUINEA',
     abbreviation: 'GIN',
   },
   {
     label: 'GUADELOUPE (GLP)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUADELOUPE',
     abbreviation: 'GLP',
   },
   {
     label: 'GAMBIA, THE (GMB)',
-    category: 'countries',
+    category: 'intl',
     name: 'GAMBIA, THE',
     abbreviation: 'GMB',
   },
   {
     label: 'GUINEA-BISSAU (GNB)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUINEA-BISSAU',
     abbreviation: 'GNB',
   },
   {
     label: 'EQUATORIAL GUINEA (GNQ)',
-    category: 'countries',
+    category: 'intl',
     name: 'EQUATORIAL GUINEA',
     abbreviation: 'GNQ',
   },
   {
     label: 'GREECE (GRC)',
-    category: 'countries',
+    category: 'intl',
     name: 'GREECE',
     abbreviation: 'GRC',
   },
   {
     label: 'GRENADA (GRD)',
-    category: 'countries',
+    category: 'intl',
     name: 'GRENADA',
     abbreviation: 'GRD',
   },
   {
     label: 'GREENLAND (GRL)',
-    category: 'countries',
+    category: 'intl',
     name: 'GREENLAND',
     abbreviation: 'GRL',
   },
   {
     label: 'GUATEMALA (GTM)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUATEMALA',
     abbreviation: 'GTM',
   },
   {
     label: 'GUAM (GU)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUAM',
     abbreviation: 'GU',
   },
   {
     label: 'FRENCH GUIANA (GUF)',
-    category: 'countries',
+    category: 'intl',
     name: 'FRENCH GUIANA',
     abbreviation: 'GUF',
   },
   {
     label: 'GUYANA (GUY)',
-    category: 'countries',
+    category: 'intl',
     name: 'GUYANA',
     abbreviation: 'GUY',
   },
   {
     label: 'HAWAII (HI)',
-    category: 'countries',
+    category: 'intl',
     name: 'HAWAII',
     abbreviation: 'HI',
   },
   {
     label: 'HONG KONG (HKG)',
-    category: 'countries',
+    category: 'intl',
     name: 'HONG KONG',
     abbreviation: 'HKG',
   },
   {
     label: 'HONDURAS (HND)',
-    category: 'countries',
+    category: 'intl',
     name: 'HONDURAS',
     abbreviation: 'HND',
   },
   {
     label: 'CROATIA (HRV)',
-    category: 'countries',
+    category: 'intl',
     name: 'CROATIA',
     abbreviation: 'HRV',
   },
   {
     label: 'HAITI (HTI)',
-    category: 'countries',
+    category: 'intl',
     name: 'HAITI',
     abbreviation: 'HTI',
   },
   {
     label: 'HUNGARY (HUN)',
-    category: 'countries',
+    category: 'intl',
     name: 'HUNGARY',
     abbreviation: 'HUN',
   },
   {
     label: 'INDONESIA (IDN)',
-    category: 'countries',
+    category: 'intl',
     name: 'INDONESIA',
     abbreviation: 'IDN',
   },
   {
     label: 'INDIA (IND)',
-    category: 'countries',
+    category: 'intl',
     name: 'INDIA',
     abbreviation: 'IND',
   },
   {
     label: 'CHAGOS ARCHIPELAGO (IOT)',
-    category: 'countries',
+    category: 'intl',
     name: 'CHAGOS ARCHIPELAGO',
     abbreviation: 'IOT',
   },
   {
     label: 'IRELAND (IRL)',
-    category: 'countries',
+    category: 'intl',
     name: 'IRELAND',
     abbreviation: 'IRL',
   },
   {
     label: 'IRAN (IRN)',
-    category: 'countries',
+    category: 'intl',
     name: 'IRAN',
     abbreviation: 'IRN',
   },
   {
     label: 'IRAQ (IRQ)',
-    category: 'countries',
+    category: 'intl',
     name: 'IRAQ',
     abbreviation: 'IRQ',
   },
   {
     label: 'ICELAND (ISL)',
-    category: 'countries',
+    category: 'intl',
     name: 'ICELAND',
     abbreviation: 'ISL',
   },
   {
     label: 'ISRAEL (ISR)',
-    category: 'countries',
+    category: 'intl',
     name: 'ISRAEL',
     abbreviation: 'ISR',
   },
   {
     label: 'ITALY (ITA)',
-    category: 'countries',
+    category: 'intl',
     name: 'ITALY',
     abbreviation: 'ITA',
   },
   {
     label: 'JAMAICA (JAM)',
-    category: 'countries',
+    category: 'intl',
     name: 'JAMAICA',
     abbreviation: 'JAM',
   },
   {
     label: 'JORDAN (JOR)',
-    category: 'countries',
+    category: 'intl',
     name: 'JORDAN',
     abbreviation: 'JOR',
   },
   {
     label: 'JAPAN (JPN)',
-    category: 'countries',
+    category: 'intl',
     name: 'JAPAN',
     abbreviation: 'JPN',
   },
   {
     label: 'KAZAKHSTAN (KAZ)',
-    category: 'countries',
+    category: 'intl',
     name: 'KAZAKHSTAN',
     abbreviation: 'KAZ',
   },
   {
     label: 'KENYA (KEN)',
-    category: 'countries',
+    category: 'intl',
     name: 'KENYA',
     abbreviation: 'KEN',
   },
   {
     label: 'KYRGYZSTAN (KGZ)',
-    category: 'countries',
+    category: 'intl',
     name: 'KYRGYZSTAN',
     abbreviation: 'KGZ',
   },
   {
     label: 'CAMBODIA (KHM)',
-    category: 'countries',
+    category: 'intl',
     name: 'CAMBODIA',
     abbreviation: 'KHM',
   },
   {
     label: 'KIRIBATI (KIR)',
-    category: 'countries',
+    category: 'intl',
     name: 'KIRIBATI',
     abbreviation: 'KIR',
   },
   {
     label: 'SAINT KITTS AND NEVIS (KNA)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAINT KITTS AND NEVIS',
     abbreviation: 'KNA',
   },
   {
     label: 'KOREA, SOUTH (KOR)',
-    category: 'countries',
+    category: 'intl',
     name: 'KOREA, SOUTH',
     abbreviation: 'KOR',
   },
   {
     label: 'KUWAIT (KWT)',
-    category: 'countries',
+    category: 'intl',
     name: 'KUWAIT',
     abbreviation: 'KWT',
   },
   {
     label: 'LAOS (LAO)',
-    category: 'countries',
+    category: 'intl',
     name: 'LAOS',
     abbreviation: 'LAO',
   },
   {
     label: 'LEBANON (LBN)',
-    category: 'countries',
+    category: 'intl',
     name: 'LEBANON',
     abbreviation: 'LBN',
   },
   {
     label: 'LIBERIA (LBR)',
-    category: 'countries',
+    category: 'intl',
     name: 'LIBERIA',
     abbreviation: 'LBR',
   },
   {
     label: 'LIBYA (LBY)',
-    category: 'countries',
+    category: 'intl',
     name: 'LIBYA',
     abbreviation: 'LBY',
   },
   {
     label: 'ST LUCIA (LCA)',
-    category: 'countries',
+    category: 'intl',
     name: 'ST LUCIA',
     abbreviation: 'LCA',
   },
   {
     label: 'LIECHTENSTEIN (LIE)',
-    category: 'countries',
+    category: 'intl',
     name: 'LIECHTENSTEIN',
     abbreviation: 'LIE',
   },
   {
     label: 'SRI LANKA (LKA)',
-    category: 'countries',
+    category: 'intl',
     name: 'SRI LANKA',
     abbreviation: 'LKA',
   },
   {
     label: 'LESOTHO (LSO)',
-    category: 'countries',
+    category: 'intl',
     name: 'LESOTHO',
     abbreviation: 'LSO',
   },
   {
     label: 'LITHUANIA (LTU)',
-    category: 'countries',
+    category: 'intl',
     name: 'LITHUANIA',
     abbreviation: 'LTU',
   },
   {
     label: 'LUXEMBOURG (LUX)',
-    category: 'countries',
+    category: 'intl',
     name: 'LUXEMBOURG',
     abbreviation: 'LUX',
   },
   {
     label: 'LATVIA (LVA)',
-    category: 'countries',
+    category: 'intl',
     name: 'LATVIA',
     abbreviation: 'LVA',
   },
   {
     label: 'MACAU (MAC)',
-    category: 'countries',
+    category: 'intl',
     name: 'MACAU',
     abbreviation: 'MAC',
   },
   {
     label: 'MOROCCO (MAR)',
-    category: 'countries',
+    category: 'intl',
     name: 'MOROCCO',
     abbreviation: 'MAR',
   },
   {
     label: 'MONACO (MCO)',
-    category: 'countries',
+    category: 'intl',
     name: 'MONACO',
     abbreviation: 'MCO',
   },
   {
     label: 'MOLDOVA (MDA)',
-    category: 'countries',
+    category: 'intl',
     name: 'MOLDOVA',
     abbreviation: 'MDA',
   },
   {
     label: 'MADAGASCAR (MDG)',
-    category: 'countries',
+    category: 'intl',
     name: 'MADAGASCAR',
     abbreviation: 'MDG',
   },
   {
     label: 'MALDIVES (MDV)',
-    category: 'countries',
+    category: 'intl',
     name: 'MALDIVES',
     abbreviation: 'MDV',
   },
   {
     label: 'MEXICO (MEX)',
-    category: 'countries',
+    category: 'intl',
     name: 'MEXICO',
     abbreviation: 'MEX',
   },
   {
     label: 'MARSHALL ISLANDS (MHL)',
-    category: 'countries',
+    category: 'intl',
     name: 'MARSHALL ISLANDS',
     abbreviation: 'MHL',
   },
   {
     label: 'NORTH MACEDONIA (MKD)',
-    category: 'countries',
+    category: 'intl',
     name: 'NORTH MACEDONIA',
     abbreviation: 'MKD',
   },
   {
     label: 'MALI (MLI)',
-    category: 'countries',
+    category: 'intl',
     name: 'MALI',
     abbreviation: 'MLI',
   },
   {
     label: 'MALTA (MLT)',
-    category: 'countries',
+    category: 'intl',
     name: 'MALTA',
     abbreviation: 'MLT',
   },
   {
     label: 'BURMA (MMR)',
-    category: 'countries',
+    category: 'intl',
     name: 'BURMA',
     abbreviation: 'MMR',
   },
   {
     label: 'MONTENEGRO (MNE)',
-    category: 'countries',
+    category: 'intl',
     name: 'MONTENEGRO',
     abbreviation: 'MNE',
   },
   {
     label: 'MONGOLIA (MNG)',
-    category: 'countries',
+    category: 'intl',
     name: 'MONGOLIA',
     abbreviation: 'MNG',
   },
   {
     label: 'MOZAMBIQUE (MOZ)',
-    category: 'countries',
+    category: 'intl',
     name: 'MOZAMBIQUE',
     abbreviation: 'MOZ',
   },
   {
     label: 'NORTHERN MARIANA ISLANDS (MP)',
-    category: 'countries',
+    category: 'intl',
     name: 'NORTHERN MARIANA ISLANDS',
     abbreviation: 'MP',
   },
   {
     label: 'MAURITANIA (MRT)',
-    category: 'countries',
+    category: 'intl',
     name: 'MAURITANIA',
     abbreviation: 'MRT',
   },
   {
     label: 'MONTSERRAT (MSR)',
-    category: 'countries',
+    category: 'intl',
     name: 'MONTSERRAT',
     abbreviation: 'MSR',
   },
   {
     label: 'MARTINIQUE (MTQ)',
-    category: 'countries',
+    category: 'intl',
     name: 'MARTINIQUE',
     abbreviation: 'MTQ',
   },
   {
     label: 'MAURITIUS (MUS)',
-    category: 'countries',
+    category: 'intl',
     name: 'MAURITIUS',
     abbreviation: 'MUS',
   },
   {
     label: 'MALAWI (MWI)',
-    category: 'countries',
+    category: 'intl',
     name: 'MALAWI',
     abbreviation: 'MWI',
   },
   {
     label: 'MALAYSIA (MYS)',
-    category: 'countries',
+    category: 'intl',
     name: 'MALAYSIA',
     abbreviation: 'MYS',
   },
   {
     label: 'MAYOTTE (MYT)',
-    category: 'countries',
+    category: 'intl',
     name: 'MAYOTTE',
     abbreviation: 'MYT',
   },
   {
     label: 'NAMIBIA (NAM)',
-    category: 'countries',
+    category: 'intl',
     name: 'NAMIBIA',
     abbreviation: 'NAM',
   },
   {
     label: 'NEW CALEDONIA (NCL)',
-    category: 'countries',
+    category: 'intl',
     name: 'NEW CALEDONIA',
     abbreviation: 'NCL',
   },
   {
     label: 'NIGER (NER)',
-    category: 'countries',
+    category: 'intl',
     name: 'NIGER',
     abbreviation: 'NER',
   },
   {
     label: 'NIGERIA (NGA)',
-    category: 'countries',
+    category: 'intl',
     name: 'NIGERIA',
     abbreviation: 'NGA',
   },
   {
     label: 'NICARAGUA (NIC)',
-    category: 'countries',
+    category: 'intl',
     name: 'NICARAGUA',
     abbreviation: 'NIC',
   },
   {
     label: 'NIUE (NIU)',
-    category: 'countries',
+    category: 'intl',
     name: 'NIUE',
     abbreviation: 'NIU',
   },
   {
     label: 'NETHERLANDS (NLD)',
-    category: 'countries',
+    category: 'intl',
     name: 'NETHERLANDS',
     abbreviation: 'NLD',
   },
   {
     label: 'NORWAY (NOR)',
-    category: 'countries',
+    category: 'intl',
     name: 'NORWAY',
     abbreviation: 'NOR',
   },
   {
     label: 'NEPAL (NPL)',
-    category: 'countries',
+    category: 'intl',
     name: 'NEPAL',
     abbreviation: 'NPL',
   },
   {
     label: 'NAURU (NRU)',
-    category: 'countries',
+    category: 'intl',
     name: 'NAURU',
     abbreviation: 'NRU',
   },
   {
     label: 'NEW ZEALAND (NZL)',
-    category: 'countries',
+    category: 'intl',
     name: 'NEW ZEALAND',
     abbreviation: 'NZL',
   },
   {
     label: 'OMAN (OMN)',
-    category: 'countries',
+    category: 'intl',
     name: 'OMAN',
     abbreviation: 'OMN',
   },
   {
     label: 'OTHER FOREIGN LOCALITIES (OTH)',
-    category: 'countries',
+    category: 'intl',
     name: 'OTHER FOREIGN LOCALITIES',
     abbreviation: 'OTH',
   },
   {
     label: 'PAKISTAN (PAK)',
-    category: 'countries',
+    category: 'intl',
     name: 'PAKISTAN',
     abbreviation: 'PAK',
   },
   {
     label: 'PANAMA (PAN)',
-    category: 'countries',
+    category: 'intl',
     name: 'PANAMA',
     abbreviation: 'PAN',
   },
   {
     label: 'PERU (PER)',
-    category: 'countries',
+    category: 'intl',
     name: 'PERU',
     abbreviation: 'PER',
   },
   {
     label: 'PHILIPPINES (PHL)',
-    category: 'countries',
+    category: 'intl',
     name: 'PHILIPPINES',
     abbreviation: 'PHL',
   },
   {
     label: 'PALAU (PLW)',
-    category: 'countries',
+    category: 'intl',
     name: 'PALAU',
     abbreviation: 'PLW',
   },
   {
     label: 'PAPUA NEW GUINEA (PNG)',
-    category: 'countries',
+    category: 'intl',
     name: 'PAPUA NEW GUINEA',
     abbreviation: 'PNG',
   },
   {
     label: 'POLAND (POL)',
-    category: 'countries',
+    category: 'intl',
     name: 'POLAND',
     abbreviation: 'POL',
   },
   {
     label: 'PUERTO RICO (PR)',
-    category: 'countries',
+    category: 'intl',
     name: 'PUERTO RICO',
     abbreviation: 'PR',
   },
   {
     label: "DEM. PEOPLE'S REPUBLIC OF KOREA (PRK)",
-    category: 'countries',
+    category: 'intl',
     name: "DEM. PEOPLE'S REPUBLIC OF KOREA",
     abbreviation: 'PRK',
   },
   {
     label: 'PORTUGAL (PRT)',
-    category: 'countries',
+    category: 'intl',
     name: 'PORTUGAL',
     abbreviation: 'PRT',
   },
   {
     label: 'PARAGUAY (PRY)',
-    category: 'countries',
+    category: 'intl',
     name: 'PARAGUAY',
     abbreviation: 'PRY',
   },
   {
     label: 'FRENCH POLYNESIA (PYF)',
-    category: 'countries',
+    category: 'intl',
     name: 'FRENCH POLYNESIA',
     abbreviation: 'PYF',
   },
   {
     label: 'QATAR (QAT)',
-    category: 'countries',
+    category: 'intl',
     name: 'QATAR',
     abbreviation: 'QAT',
   },
   {
     label: 'MIDWAY ISLANDS (QM)',
-    category: 'countries',
+    category: 'intl',
     name: 'MIDWAY ISLANDS',
     abbreviation: 'QM',
   },
   {
     label: 'WAKE ISLAND (QW)',
-    category: 'countries',
+    category: 'intl',
     name: 'WAKE ISLAND',
     abbreviation: 'QW',
   },
   {
     label: 'RESERVE COMPONENT (RES)',
-    category: 'countries',
+    category: 'intl',
     name: 'RESERVE COMPONENT',
     abbreviation: 'RES',
   },
   {
     label: 'REUNION (REU)',
-    category: 'countries',
+    category: 'intl',
     name: 'REUNION',
     abbreviation: 'REU',
   },
   {
     label: 'ROMANIA (ROU)',
-    category: 'countries',
+    category: 'intl',
     name: 'ROMANIA',
     abbreviation: 'ROU',
   },
   {
     label: 'RUSSIA (RUS)',
-    category: 'countries',
+    category: 'intl',
     name: 'RUSSIA',
     abbreviation: 'RUS',
   },
   {
     label: 'RWANDA (RWA)',
-    category: 'countries',
+    category: 'intl',
     name: 'RWANDA',
     abbreviation: 'RWA',
   },
   {
     label: 'SAUDI ARABIA (SAU)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAUDI ARABIA',
     abbreviation: 'SAU',
   },
   {
     label: 'SUDAN (SDN)',
-    category: 'countries',
+    category: 'intl',
     name: 'SUDAN',
     abbreviation: 'SDN',
   },
   {
     label: 'SENEGAL (SEN)',
-    category: 'countries',
+    category: 'intl',
     name: 'SENEGAL',
     abbreviation: 'SEN',
   },
   {
     label: 'SINGAPORE (SGP)',
-    category: 'countries',
+    category: 'intl',
     name: 'SINGAPORE',
     abbreviation: 'SGP',
   },
   {
     label: 'SAINT HELENA (SHN)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAINT HELENA',
     abbreviation: 'SHN',
   },
   {
     label: 'SOLOMON ISLANDS (SLB)',
-    category: 'countries',
+    category: 'intl',
     name: 'SOLOMON ISLANDS',
     abbreviation: 'SLB',
   },
   {
     label: 'SIERRA LEONE (SLE)',
-    category: 'countries',
+    category: 'intl',
     name: 'SIERRA LEONE',
     abbreviation: 'SLE',
   },
   {
     label: 'EL SALVADOR (SLV)',
-    category: 'countries',
+    category: 'intl',
     name: 'EL SALVADOR',
     abbreviation: 'SLV',
   },
   {
     label: 'SAN MARINO (SMR)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAN MARINO',
     abbreviation: 'SMR',
   },
   {
     label: 'SOMALIA (SOM)',
-    category: 'countries',
+    category: 'intl',
     name: 'SOMALIA',
     abbreviation: 'SOM',
   },
   {
     label: 'SERBIA (SRB)',
-    category: 'countries',
+    category: 'intl',
     name: 'SERBIA',
     abbreviation: 'SRB',
   },
   {
     label: 'SOUTH SUDAN (SSD)',
-    category: 'countries',
+    category: 'intl',
     name: 'SOUTH SUDAN',
     abbreviation: 'SSD',
   },
   {
     label: 'SAO TOME AND PRINCIPE (STP)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAO TOME AND PRINCIPE',
     abbreviation: 'STP',
   },
   {
     label: 'SURINAME (SUR)',
-    category: 'countries',
+    category: 'intl',
     name: 'SURINAME',
     abbreviation: 'SUR',
   },
   {
     label: 'SLOVAKIA (SVK)',
-    category: 'countries',
+    category: 'intl',
     name: 'SLOVAKIA',
     abbreviation: 'SVK',
   },
   {
     label: 'SLOVENIA (SVN)',
-    category: 'countries',
+    category: 'intl',
     name: 'SLOVENIA',
     abbreviation: 'SVN',
   },
   {
     label: 'SWEDEN (SWE)',
-    category: 'countries',
+    category: 'intl',
     name: 'SWEDEN',
     abbreviation: 'SWE',
   },
   {
     label: 'ESWATINI (SWZ)',
-    category: 'countries',
+    category: 'intl',
     name: 'ESWATINI',
     abbreviation: 'SWZ',
   },
   {
     label: 'SINT MAARTEN (SXM)',
-    category: 'countries',
+    category: 'intl',
     name: 'SINT MAARTEN',
     abbreviation: 'SXM',
   },
   {
     label: 'SEYCHELLES (SYC)',
-    category: 'countries',
+    category: 'intl',
     name: 'SEYCHELLES',
     abbreviation: 'SYC',
   },
   {
     label: 'SYRIA (SYR)',
-    category: 'countries',
+    category: 'intl',
     name: 'SYRIA',
     abbreviation: 'SYR',
   },
   {
     label: 'TURKS AND CAICOS ISLANDS (TCA)',
-    category: 'countries',
+    category: 'intl',
     name: 'TURKS AND CAICOS ISLANDS',
     abbreviation: 'TCA',
   },
   {
     label: 'CHAD (TCD)',
-    category: 'countries',
+    category: 'intl',
     name: 'CHAD',
     abbreviation: 'TCD',
   },
   {
     label: 'TOGO (TGO)',
-    category: 'countries',
+    category: 'intl',
     name: 'TOGO',
     abbreviation: 'TGO',
   },
   {
     label: 'THAILAND (THA)',
-    category: 'countries',
+    category: 'intl',
     name: 'THAILAND',
     abbreviation: 'THA',
   },
   {
     label: 'TAJIKISTAN (TJK)',
-    category: 'countries',
+    category: 'intl',
     name: 'TAJIKISTAN',
     abbreviation: 'TJK',
   },
   {
     label: 'TOKELAU (TKL)',
-    category: 'countries',
+    category: 'intl',
     name: 'TOKELAU',
     abbreviation: 'TKL',
   },
   {
     label: 'TURKMENISTAN (TKM)',
-    category: 'countries',
+    category: 'intl',
     name: 'TURKMENISTAN',
     abbreviation: 'TKM',
   },
   {
     label: 'TIMOR-LESTE (TLS)',
-    category: 'countries',
+    category: 'intl',
     name: 'TIMOR-LESTE',
     abbreviation: 'TLS',
   },
   {
     label: 'TONGA (TON)',
-    category: 'countries',
+    category: 'intl',
     name: 'TONGA',
     abbreviation: 'TON',
   },
   {
     label: 'TRINIDAD AND TOBAGO (TTO)',
-    category: 'countries',
+    category: 'intl',
     name: 'TRINIDAD AND TOBAGO',
     abbreviation: 'TTO',
   },
   {
     label: 'TUNISIA (TUN)',
-    category: 'countries',
+    category: 'intl',
     name: 'TUNISIA',
     abbreviation: 'TUN',
   },
   {
     label: 'TURKEY (TUR)',
-    category: 'countries',
+    category: 'intl',
     name: 'TURKEY',
     abbreviation: 'TUR',
   },
   {
     label: 'TUVALU (TUV)',
-    category: 'countries',
+    category: 'intl',
     name: 'TUVALU',
     abbreviation: 'TUV',
   },
   {
     label: 'TAIWAN (TWN)',
-    category: 'countries',
+    category: 'intl',
     name: 'TAIWAN',
     abbreviation: 'TWN',
   },
   {
     label: 'TANZANIA (TZA)',
-    category: 'countries',
+    category: 'intl',
     name: 'TANZANIA',
     abbreviation: 'TZA',
   },
   {
     label: 'UGANDA (UGA)',
-    category: 'countries',
+    category: 'intl',
     name: 'UGANDA',
     abbreviation: 'UGA',
   },
   {
     label: 'UKRAINE (UKR)',
-    category: 'countries',
+    category: 'intl',
     name: 'UKRAINE',
     abbreviation: 'UKR',
   },
   {
     label: 'URUGUAY (URY)',
-    category: 'countries',
+    category: 'intl',
     name: 'URUGUAY',
     abbreviation: 'URY',
   },
   {
     label: 'UZBEKISTAN (UZB)',
-    category: 'countries',
+    category: 'intl',
     name: 'UZBEKISTAN',
     abbreviation: 'UZB',
   },
   {
     label: 'HOLY SEE (VAT)',
-    category: 'countries',
+    category: 'intl',
     name: 'HOLY SEE',
     abbreviation: 'VAT',
   },
   {
     label: 'SAINT VINCENT AND THE GRENADINES (VCT)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAINT VINCENT AND THE GRENADINES',
     abbreviation: 'VCT',
   },
   {
     label: 'VENEZUELA (VEN)',
-    category: 'countries',
+    category: 'intl',
     name: 'VENEZUELA',
     abbreviation: 'VEN',
   },
   {
     label: 'VIRGIN ISLANDS, BRITISH (VGB)',
-    category: 'countries',
+    category: 'intl',
     name: 'VIRGIN ISLANDS, BRITISH',
     abbreviation: 'VGB',
   },
   {
     label: 'VIRGIN ISLANDS (U.S.) (VI)',
-    category: 'countries',
+    category: 'intl',
     name: 'VIRGIN ISLANDS (U.S.)',
     abbreviation: 'VI',
   },
   {
     label: 'VIETNAM (VNM)',
-    category: 'countries',
+    category: 'intl',
     name: 'VIETNAM',
     abbreviation: 'VNM',
   },
   {
     label: 'VANUATU (VUT)',
-    category: 'countries',
+    category: 'intl',
     name: 'VANUATU',
     abbreviation: 'VUT',
   },
   {
     label: 'WALLIS AND FUTUNA (WLF)',
-    category: 'countries',
+    category: 'intl',
     name: 'WALLIS AND FUTUNA',
     abbreviation: 'WLF',
   },
   {
     label: 'SAMOA (WSM)',
-    category: 'countries',
+    category: 'intl',
     name: 'SAMOA',
     abbreviation: 'WSM',
   },
   {
     label: 'KOSOVO (XKS)',
-    category: 'countries',
+    category: 'intl',
     name: 'KOSOVO',
     abbreviation: 'XKS',
   },
   {
     label: 'YEMEN (YEM)',
-    category: 'countries',
+    category: 'intl',
     name: 'YEMEN',
     abbreviation: 'YEM',
   },
   {
     label: 'SOUTH AFRICA (ZAF)',
-    category: 'countries',
+    category: 'intl',
     name: 'SOUTH AFRICA',
     abbreviation: 'ZAF',
   },
   {
     label: 'ZAMBIA (ZMB)',
-    category: 'countries',
+    category: 'intl',
     name: 'ZAMBIA',
     abbreviation: 'ZMB',
   },
   {
     label: 'ZIMBABWE (ZWE)',
-    category: 'countries',
+    category: 'intl',
     name: 'ZIMBABWE',
     abbreviation: 'ZWE',
   },
-];
+] as const;
