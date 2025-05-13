@@ -54,7 +54,7 @@ export class Pdc {
         changedAttr: LocationKeys,
         newValue: string | null,
     ) => {
-        const { index, start, end, category, country } = row;
+        const { index, start, end, category, country, city } = row;
         this.#viewExpense.renderEmtpy();
         model.updateStateLocation(row);
 
@@ -72,6 +72,20 @@ export class Pdc {
                 return;
             case !newValue:
                 this.#viewLocation.transitionRow(index, 'start');
+                return;
+            case (changedAttr === 'start' || changedAttr === 'end') && // To account for when rows are deleted and the only updates are to the start/end dates of prev/next rows
+                !!start &&
+                !!end &&
+                !!category &&
+                !!country &&
+                !!city:
+                const startDate = new Date(start);
+                const endDate = new Date(end);
+                if (startDate <= endDate) {
+                    return;
+                } else {
+                    this.#viewLocation.transitionRow(index, changedAttr);
+                }
                 return;
             default:
                 this.#viewLocation.transitionRow(index, changedAttr);

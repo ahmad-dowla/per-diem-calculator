@@ -39,6 +39,7 @@ customElements.define('pdc-location-select', PdcLocationSelect);
 
 // Template for this Custom Element
 const template = document.createElement('template');
+const templateRow = document.createElement('template');
 
 // Custom Element
 export class PdcLocationView extends HTMLElement {
@@ -86,7 +87,7 @@ export class PdcLocationView extends HTMLElement {
             body.insertAdjacentHTML('beforeend', config.body);
         } else body.remove();
 
-        this.#addRow();
+        this.#addRow('initial');
 
         // Event listeners for the delete location, add location, and generate expenses buttons
         let pointerStartX = 0;
@@ -154,7 +155,7 @@ export class PdcLocationView extends HTMLElement {
         }
     }
 
-    #addRow() {
+    #addRow(initial: 'initial' | null = null) {
         const totalRowCount = this.#rowsContainer?.childElementCount;
         const newRowCount = totalRowCount ? totalRowCount + 1 : 1;
         const rowId = Date.now();
@@ -163,13 +164,14 @@ export class PdcLocationView extends HTMLElement {
             this.#styled ? templateRowHTML : removeStyles(templateRowHTML);
         newRowMarkup = newRowMarkup
             .replace('PDC_ROW_COUNT', newRowCount.toString().padStart(2, '0'))
-            .replaceAll('ROW_ID', rowId.toString());
-
-        this.#rowsContainer?.insertAdjacentHTML('beforeend', newRowMarkup);
+            .replaceAll('ROW_ID', rowId.toString())
+            .replaceAll('PDC_HEIGHT', initial ? '' : 'h-0');
+        templateRow.innerHTML = newRowMarkup;
+        this.#rowsContainer?.appendChild(templateRow.content.cloneNode(true));
         const newRow = this.#rowsContainer?.lastElementChild;
-        if (!newRow) throw new Error(`Failed to render new row.`);
-
-        this.#toggleRow(newRow, 'new', newRowCount === 1 ? 'first' : null);
+        if (!(newRow instanceof HTMLElement))
+            throw new Error(`Failed to render new row.`);
+        this.#toggleRow(newRow, 'new');
     }
 
     #deleteRow(row: HTMLElement) {
@@ -195,9 +197,8 @@ export class PdcLocationView extends HTMLElement {
             // Update attribute to trigger listener that updates state
             this.#rowsContainer?.setAttribute('update-state', `true`);
             // Deleted row was only row -> add a blank template row
-
             this.#rowsContainer?.childElementCount === 0 && this.#addRow();
-        }, 700);
+        }, 750);
         return;
     }
 
@@ -211,7 +212,7 @@ export class PdcLocationView extends HTMLElement {
 
     #getRowFromIndex(rowIndex: number) {
         const row = this.#rowsContainer?.children[rowIndex];
-        if (!row)
+        if (!(row instanceof HTMLElement))
             throw new Error(
                 `Failed to get row using row index of ${rowIndex} in Location view.`,
             );
@@ -276,50 +277,77 @@ export class PdcLocationView extends HTMLElement {
     // }
 
     #toggleRow(
-        row: Element,
-        direction: 'open' | 'closed' | 'new' | 'delete' | null = null,
-        newType: 'first' | null = null,
+        row: HTMLElement,
+        toggle: 'open' | 'closed' | 'new' | 'delete' | null = null,
+        first: boolean | null = null,
     ): void {
         if (!this.#styled) return;
-        const rowDetails = row.querySelector('#row-details-content');
-        const rowSummary = row.querySelector(
+        const rowDetails = row.querySelector<HTMLElement>(
+            '[data-pdc="location-row-details"]',
+        );
+        const rowSummary = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-summary"]',
         );
-        switch (direction) {
-            case 'open':
-                row.classList.add('pdc-row-open');
-                rowDetails?.classList.add('active');
-                return;
-            case 'closed':
-                row.classList.remove('pdc-row-open');
-                rowDetails?.classList.remove('active');
-                return;
-            case 'new':
-                row.classList.add('pdc-row-open');
-                row.classList.add('active');
-
-                if (newType === 'first') {
-                    rowDetails?.classList.add('active');
-                    rowSummary?.classList.add('active');
-                    row.removeAttribute('inert');
-                } else {
+        const rowSpacer = row.querySelector<HTMLElement>(
+            '[data-pdc="location-row-spacer"]',
+        );
+        if (!(rowDetails && rowSummary && rowSpacer))
+            throw new Error(`Failed to render row elements in Location view.`);
+        setTimeout(() => {
+            const targetHeightSummary =
+                rowSummary.clientHeight === 56 ? 80 : 56;
+            const targetHeightDetails =
+                !rowDetails.clientHeight ? rowDetails.scrollHeight : 0;
+            const targetHeightSpacer = !rowSpacer.clientHeight ? 32 : 0;
+            switch (toggle) {
+                case 'open':
+                    row.classList.add('pdc-row-open');
+                    rowSummary.style.height = rowSummary.scrollHeight + 'px';
+                    rowDetails.style.height = rowDetails.scrollHeight + 'px';
+                    row.style.height =
+                        rowSummary.scrollHeight +
+                        rowDetails.scrollHeight +
+                        rowSpacer.scrollHeight +
+                        2 +
+                        'px';
+                    return;
+                case 'closed':
+                    row.classList.remove('pdc-row-open');
+                    rowSummary.style.height = 56 + 'px';
+                    rowDetails.style.height = 0 + 'px';
+                    row.style.height = rowSummary.scrollHeight + 2 + 'px';
+                    return;
+                case 'new':
+                    rowSummary.style.height = rowSummary.scrollHeight + 'px';
+                    rowDetails.style.height = rowDetails.scrollHeight + 'px';
+                    row.style.height =
+                        rowSummary.scrollHeight +
+                        rowDetails.scrollHeight +
+                        rowSpacer.scrollHeight +
+                        2 +
+                        'px';
                     setTimeout(() => {
-                        rowDetails?.classList.add('active');
-                        rowSummary?.classList.add('active');
                         row.removeAttribute('inert');
                     }, 500);
-                }
-                return;
-            case 'delete':
-                row.setAttribute('inert', '');
-                row.classList.remove('active');
-                rowDetails?.classList.remove('active');
-                return;
-            default:
-                row.classList.toggle('pdc-row-open');
-                rowDetails?.classList.toggle('active');
-                return;
-        }
+                    return;
+                case 'delete':
+                    row.setAttribute('inert', '');
+                    row.classList.remove('active');
+                    row.style.height = 0 + 'px';
+                    return;
+                default:
+                    row.classList.toggle('pdc-row-open');
+                    rowSummary.style.height = targetHeightSummary + 'px';
+                    rowDetails.style.height = targetHeightDetails + 'px';
+                    row.style.height =
+                        targetHeightSummary +
+                        targetHeightDetails +
+                        targetHeightSpacer +
+                        2 +
+                        'px';
+                    return;
+            }
+        }, 0);
     }
 
     transitionRow(index: number, updatedAttr: LocationKeys): void {
@@ -479,7 +507,7 @@ export class PdcLocationView extends HTMLElement {
     ): boolean {
         const valid = el.validate();
         if (!valid) {
-            const row = el.closest('[data-pdc="location-row"]');
+            const row = el.closest<HTMLElement>('[data-pdc="location-row"]');
             if (!row) throw new Error('Failed to get row during validation.');
             const {
                 switchToDatesBtn,

@@ -2,14 +2,13 @@
 <li
     inert
     data-pdc="location-row"
-    class="group/row relative max-h-0 overflow-hidden transition-[max-height]
-        duration-700 ease-in-out [.active]:max-h-[550px]"
+    class="group/row PDC_HEIGHT pdc-row-open active relative overflow-hidden
+        opacity-0 transition-[height_opacity] duration-700
+        [.active]:opacity-100"
 >
     <div
-        class="overflow-hidden rounded-lg border border-transparent
-            bg-transparent opacity-0
-            transition-[background-color_border-color_opacity] duration-1200
-            group-[.active]/row:bg-white group-[.active]/row:opacity-100
+        class="overflow-hidden rounded-lg border border-transparent bg-white
+            transition-[background-color_border-color_opacity] duration-500
             group-[.active]/row:group-hover/row:border-neutral-300
             group-[.pdc-row-open.active]/row:border-neutral-300"
     >
@@ -35,14 +34,12 @@
         <!-- Summary -->
         <div
             data-pdc="location-row-summary"
-            class="relative z-20 flex h-20 max-h-20 items-center justify-between
-                gap-1.5 px-4 text-neutral-800 opacity-0
-                transition-[max-height_background-color_opacity] duration-700
-                group-[.pdc-row-open]/row:max-h-14
-                group-[.pdc-row-open.active]/row:bg-neutral-50
+            class="relative z-20 flex h-20 items-center justify-between gap-1.5
+                px-4 text-neutral-800 transition-[height_background-color]
+                duration-700 group-[.pdc-row-open]/row:bg-neutral-50
                 hover:cursor-pointer
-                hover:group-[.pdc-row-open.active]/row:bg-neutral-100
-                [.active]:opacity-100 hover:*:[svg:first-of-type]:rotate-0"
+                hover:group-[.pdc-row-open]/row:bg-neutral-100
+                hover:*:[svg:first-of-type]:rotate-0"
         >
             <svg
                 class="mr-2 size-5 shrink-0 fill-none stroke-current
@@ -99,219 +96,217 @@
             </button>
         </div>
         <!-- Details w/ Input Fields -->
+
         <div
-            class="grid [grid-template-rows:0fr]
-                [transition:grid-template-rows_0.7s_ease-in-out]
-                group-[.pdc-row-open]/row:[grid-template-rows:1fr]"
+            data-pdc="location-row-details"
+            class="PDC_HEIGHT mx-4 overflow-hidden opacity-0
+                transition-[height_opacity] duration-700
+                group-[.pdc-row-open]/row:opacity-100"
         >
+            <!-- Hidden navigation radio buttons that help move between each page of inputs -->
+            <input
+                type="radio"
+                name="pdc-row-ROW_ID"
+                id="pdc-el-date-ROW_ID"
+                class="peer/pdc-el-dates hidden"
+                checked
+                hidden
+            />
+            <input
+                type="radio"
+                name="pdc-row-ROW_ID"
+                id="pdc-el-category-ROW_ID"
+                class="peer/pdc-el-category hidden"
+                hidden
+            />
+            <input
+                type="radio"
+                name="pdc-row-ROW_ID"
+                id="pdc-el-countrycity-ROW_ID"
+                class="peer/pdc-el-countrycity hidden"
+                hidden
+            />
+
+            <!-- Container with pages of inputs for dates/category/countrycity -->
             <div
-                id="row-details-content"
-                class="mx-4 overflow-hidden opacity-0 transition-opacity
-                    duration-700 [.active]:opacity-100"
+                class="relative z-50 flex w-full transition-[translate]
+                    duration-300 ease-in
+                    peer-checked/pdc-el-category:-translate-x-full
+                    peer-checked/pdc-el-countrycity:-translate-x-[200%]
+                    peer-checked/pdc-el-dates:-translate-x-0"
             >
-                <!-- Hidden navigation radio buttons that help move between each page of inputs -->
-                <input
-                    type="radio"
-                    name="pdc-row-ROW_ID"
-                    id="pdc-el-date-ROW_ID"
-                    class="peer/pdc-el-dates hidden"
-                    checked
-                    hidden
-                />
-                <input
-                    type="radio"
-                    name="pdc-row-ROW_ID"
-                    id="pdc-el-category-ROW_ID"
-                    class="peer/pdc-el-category hidden"
-                    hidden
-                />
-                <input
-                    type="radio"
-                    name="pdc-row-ROW_ID"
-                    id="pdc-el-countrycity-ROW_ID"
-                    class="peer/pdc-el-countrycity hidden"
-                    hidden
-                />
-
-                <!-- Container with pages of inputs for dates/category/countrycity -->
-                <div
-                    class="relative z-50 flex w-full transition-[translate]
-                        duration-300 ease-in
-                        peer-checked/pdc-el-category:-translate-x-full
-                        peer-checked/pdc-el-countrycity:-translate-x-[200%]
-                        peer-checked/pdc-el-dates:-translate-x-0"
-                >
-                    <div class="grid min-w-full grid-cols-1 gap-2 p-6">
-                        <pdc-location-date
-                            pdc="start"
-                            styled="true"
-                        ></pdc-location-date>
-                        <pdc-location-date
-                            pdc="end"
-                            styled="true"
-                        ></pdc-location-date>
-                    </div>
-                    <pdc-location-category
-                        pdc="category"
+                <div class="grid min-w-full grid-cols-1 gap-2 p-6">
+                    <pdc-location-date
+                        pdc="start"
                         styled="true"
-                        class="min-w-full"
-                    ></pdc-location-category>
-                    <div class="relative grid min-w-full grid-cols-1 gap-6 p-6">
-                        <!-- Indicator that results are still loading -->
+                    ></pdc-location-date>
+                    <pdc-location-date
+                        pdc="end"
+                        styled="true"
+                    ></pdc-location-date>
+                </div>
+                <pdc-location-category
+                    pdc="category"
+                    styled="true"
+                    class="min-w-full"
+                ></pdc-location-category>
+                <div class="relative grid min-w-full grid-cols-1 gap-6 p-6">
+                    <!-- Indicator that results are still loading -->
+                    <div
+                        data-pdc="loading-spinner"
+                        class="absolute z-50 hidden h-[90%] w-full items-center
+                            justify-center bg-white opacity-0 transition-opacity
+                            duration-500 ease-in [.active]:flex
+                            [.active]:opacity-100"
+                    >
                         <div
-                            data-pdc="loading-spinner"
-                            class="absolute z-50 hidden h-[90%] w-full
-                                items-center justify-center bg-white opacity-0
-                                transition-opacity duration-500 ease-in
-                                [&.active]:flex [&.active]:opacity-100"
-                        >
-                            <div
-                                class="border-t-primary-600 border-primary-50
-                                    h-10 w-10 animate-spin rounded-full border-4
-                                    border-t-4"
-                            ></div>
-                        </div>
-                        <pdc-location-select
-                            pdc="country"
-                            styled="true"
-                        ></pdc-location-select>
-                        <pdc-location-select
-                            pdc="city"
-                            styled="true"
-                        ></pdc-location-select>
+                            class="border-t-primary-600 border-primary-50 h-10
+                                w-10 animate-spin rounded-full border-4
+                                border-t-4"
+                        ></div>
                     </div>
+                    <pdc-location-select
+                        pdc="country"
+                        styled="true"
+                    ></pdc-location-select>
+                    <pdc-location-select
+                        pdc="city"
+                        styled="true"
+                    ></pdc-location-select>
                 </div>
+            </div>
 
-                <!-- Labels that control the hidden radio navigation buttons, and provide a visual indicator of inputs being completed -->
-                <div
-                    class="relative mb-8 grid grid-cols-3 justify-between
-                        justify-items-center pt-4 text-lg font-semibold
-                        **:transition-colors **:duration-300 [&_label]:z-10"
+            <!-- Labels that control the hidden radio navigation buttons, and provide a visual indicator of inputs being completed -->
+            <div
+                class="relative mb-8 grid grid-cols-3 justify-between
+                    justify-items-center pt-4 text-lg font-semibold
+                    **:transition-colors **:duration-300 [&_label]:z-10"
+            >
+                <label
+                    class="group/label grid justify-items-center px-5
+                        hover:cursor-pointer"
+                    for="pdc-el-date-ROW_ID"
                 >
-                    <label
-                        class="group/label grid justify-items-center px-5
-                            hover:cursor-pointer"
-                        for="pdc-el-date-ROW_ID"
+                    <!-- Calendar icon -->
+                    <svg
+                        class="group-hover/label:!text-primary-600
+                            group-has-[[end]]/row:text-secondary-400 group/label
+                            group-has-[&_input[id*=pdc-el-date]:checked]/row:text-primary-200
+                            size-6 fill-white text-neutral-300"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
                     >
-                        <!-- Calendar icon -->
-                        <svg
-                            class="group-hover/label:!text-primary-600
-                                group-has-[[end]]/row:text-secondary-400
-                                group/label
-                                group-has-[&_input[id*=pdc-el-date]:checked]/row:text-primary-200
-                                size-6 fill-white text-neutral-300"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke="currentColor"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"
-                            />
-                        </svg>
-                        <!-- Circled check icon -->
-                        <svg
-                            class="group-has-[[end]]/row:text-secondary-400
-                                group/label mt-2 size-5 rounded-[50%] bg-current
-                                fill-white text-neutral-300"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    </label>
-                    <label
-                        class="group/label grid justify-items-center px-5
-                            hover:cursor-pointer"
-                        for="pdc-el-category-ROW_ID"
+                        <path
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"
+                        />
+                    </svg>
+                    <!-- Circled check icon -->
+                    <svg
+                        class="group-has-[[end]]/row:text-secondary-400
+                            group/label mt-2 size-5 rounded-[50%] bg-current
+                            fill-white text-neutral-300"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
                     >
-                        <!-- Category icon -->
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="group-has-[&_input[id*=pdc-el-category]:checked]/row:fill-primary-200
-                                group-has-[[end]]/row:group-has-[[category]]/row:fill-secondary-400
-                                group-hover/label:!fill-primary-600 size-6
-                                scale-85 fill-neutral-300"
-                            aria-hidden="true"
-                            viewBox="0 0 16 16"
-                        >
-                            <path
-                                d="M2 10h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1m9-9h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1m0 9a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1zm0-10a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM2 9a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2zm7 2a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2zM0 2a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.354.854a.5.5 0 1 0-.708-.708L3 3.793l-.646-.647a.5.5 0 1 0-.708.708l1 1a.5.5 0 0 0 .708 0z"
-                            />
-                        </svg>
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </label>
+                <label
+                    class="group/label grid justify-items-center px-5
+                        hover:cursor-pointer"
+                    for="pdc-el-category-ROW_ID"
+                >
+                    <!-- Category icon -->
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="group-has-[&_input[id*=pdc-el-category]:checked]/row:fill-primary-200
+                            group-has-[[end]]/row:group-has-[[category]]/row:fill-secondary-400
+                            group-hover/label:!fill-primary-600 size-6 scale-85
+                            fill-neutral-300"
+                        aria-hidden="true"
+                        viewBox="0 0 16 16"
+                    >
+                        <path
+                            d="M2 10h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1m9-9h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1m0 9a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1zm0-10a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM2 9a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2zm7 2a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2zM0 2a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.354.854a.5.5 0 1 0-.708-.708L3 3.793l-.646-.647a.5.5 0 1 0-.708.708l1 1a.5.5 0 0 0 .708 0z"
+                        />
+                    </svg>
 
-                        <!-- Circled check icon -->
-                        <svg
-                            class="group-has-[[end]]/row:group-has-[[category]]/row:text-secondary-400
-                                mt-2 size-5 rounded-[50%] bg-current fill-white
-                                text-neutral-300"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    </label>
-                    <label
-                        for="pdc-el-countrycity-ROW_ID"
-                        class="group/label grid justify-items-center px-5
-                            hover:cursor-pointer"
+                    <!-- Circled check icon -->
+                    <svg
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:text-secondary-400
+                            mt-2 size-5 rounded-[50%] bg-current fill-white
+                            text-neutral-300"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
                     >
-                        <!-- Location icon -->
-                        <svg
-                            class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:stroke-secondary-400
-                                group-hover/label:!stroke-primary-600
-                                group-has-[&_input[id*=pdc-el-countrycity]:checked]/row:stroke-primary-200
-                                size-6 fill-white stroke-neutral-300 stroke-2"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
-                        <!-- Circled check icon -->
-                        <svg
-                            class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:text-secondary-400
-                                mt-2 size-5 rounded-[50%] bg-current fill-white
-                                text-neutral-300"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    </label>
-                    <hr
-                        class="group-has-[[city]]/row:border-secondary-600
-                            col-span-3 -mt-2.5 w-[66%] border border-neutral-300
-                            opacity-50"
-                    />
-                </div>
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </label>
+                <label
+                    for="pdc-el-countrycity-ROW_ID"
+                    class="group/label grid justify-items-center px-5
+                        hover:cursor-pointer"
+                >
+                    <!-- Location icon -->
+                    <svg
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:stroke-secondary-400
+                            group-hover/label:!stroke-primary-600
+                            group-has-[&_input[id*=pdc-el-countrycity]:checked]/row:stroke-primary-200
+                            size-6 fill-white stroke-neutral-300 stroke-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                    </svg>
+                    <!-- Circled check icon -->
+                    <svg
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:text-secondary-400
+                            mt-2 size-5 rounded-[50%] bg-current fill-white
+                            text-neutral-300"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </label>
+                <hr
+                    class="group-has-[[city]]/row:border-secondary-600
+                        col-span-3 -mt-2.5 w-[66%] border border-neutral-300
+                        opacity-50"
+                />
             </div>
         </div>
     </div>
 
-    <!-- Empty div to avoid using padding on the primary element, which can lead to jumpy transitions when adding/deleting rows-->
-    <div class="min-h-8"></div>
+    <div
+        data-pdc="location-row-spacer"
+        class="PDC_HEIGHT transition-[height]"
+    ></div>
+    <!-- Empty div to avoid height transition jumps caused by having margin/padding on the parent element -->
 </li>
