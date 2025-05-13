@@ -8,10 +8,10 @@ import { isDateRawType } from '../dates';
 export const createExpenseObjs = (
     location: StateLocationItemValid,
 ): StateExpenseItem[] => {
-    const { startDate, endDate, country, city } = location;
+    const { start, end, country, city } = location;
     const expenses: StateExpenseItem[] = [];
-    const currentDate = new Date(startDate);
-    const lastDate = new Date(endDate);
+    const currentDate = new Date(start);
+    const lastDate = new Date(end);
     while (currentDate <= lastDate) {
         const currentDateRaw = currentDate.toISOString().slice(0, 10);
         if (!isDateRawType(currentDateRaw))

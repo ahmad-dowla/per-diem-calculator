@@ -289,6 +289,7 @@ export class PdcLocationDate extends HTMLElement {
     ) {
         if (enable) {
             highlightError(this.#input);
+            this.focusInput();
             this.#errorMsgEl.textContent = msg;
             this.#errorContainer.classList.add('active');
             return;

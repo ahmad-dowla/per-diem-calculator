@@ -92,7 +92,7 @@
 .ts-wrapper.single .ts-control,
 .plugin-dropdown_input.focus.dropdown-active .ts-control,
 .ts-wrapper.single.input-active .ts-control {
-    @apply [.success]:ring-secondary-400 mt-2 min-h-[46px] rounded-lg border-none bg-neutral-50 bg-none !px-5 !py-2.5 text-base shadow-sm ring ring-neutral-200 transition ease-in-out after:top-4 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] [.success]:ring-3;
+    @apply [.error]:ring-error-400 [.success]:ring-secondary-400 mt-2 min-h-[46px] rounded-lg border-none bg-neutral-50 bg-none !px-5 !py-2.5 text-base shadow-sm ring ring-neutral-200 transition ease-in-out after:top-4 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] [.error]:ring-3 [.success]:ring-3;
 }
 
 .ts-control .item {

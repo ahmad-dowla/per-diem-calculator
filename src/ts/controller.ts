@@ -37,8 +37,11 @@ export class Pdc {
         const { styled, location: config } = this.#config;
 
         this.#viewLocation.render(styled, { ...config });
-        this.#viewLocation.handlerUpdate(this.#locationUpdated);
-        // this.#viewLocation.handlerValidate(this.#locationsValidate);
+        this.#viewLocation.controllerHandler(
+            this.#locationUpdated,
+            this.#locationDeleted,
+            this.#locationsValidate,
+        );
 
         this.#container.insertAdjacentElement('afterbegin', this.#viewLocation);
         this.#container.insertAdjacentElement('beforeend', this.#viewExpense);
@@ -108,8 +111,10 @@ export class Pdc {
     #locationsValidate = async (viewValidator: AllViewLocationsValid) => {
         try {
             this.#viewExpense.renderEmtpy();
-            if (!viewValidator.valid) return;
+            const { valid, expensesCategory } = viewValidator;
+            if (!valid || !expensesCategory) return;
             const modelValidate = model.validateStateLocations();
+            console.log(modelValidate);
             if (!modelValidate) return;
 
             const { styled, expense: config } = this.#config;
@@ -118,7 +123,7 @@ export class Pdc {
             this.#viewExpense.handlerRowUpdate(this.#expenseUpdate);
 
             const expenses = await model.generateExpenses(viewValidator);
-            this.#viewExpense.addRows(expenses, viewValidator.expensesCategory);
+            this.#viewExpense.addRows(expenses, expensesCategory);
             this.#viewExpense.renderLoadingSpinner(false);
             this.#dispatchEvent();
         } catch (error) {

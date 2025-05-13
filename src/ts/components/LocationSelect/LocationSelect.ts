@@ -134,6 +134,7 @@ export class PdcLocationSelect extends HTMLElement {
 
     _renderError(enable: boolean) {
         if (enable) {
+            highlightError(this._tomSelect.control);
             const msg =
                 this._attrName === 'country' ?
                     `Select a state.`

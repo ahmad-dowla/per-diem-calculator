@@ -6,7 +6,7 @@ import type {
 export const returnValidStateLocation = (
     location: StateLocationItem,
 ): StateLocationItemValid | null => {
-    const { startDate, endDate, country, city } = location;
-    if (!(startDate && endDate && country && city)) return null;
-    return { startDate, endDate, country, city };
+    const { start, end, country, city } = location;
+    if (!(start && end && country && city)) return null;
+    return { start, end, country, city };
 };

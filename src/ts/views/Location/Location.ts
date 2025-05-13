@@ -1,17 +1,11 @@
-// TODO Add row
-// TODO delete row
-// TODO dates updatnig with add/delete
-// TODO error message when click add/generate
-// TODO validation
-
 // Types
 import type {
+    AllViewLocationsValid,
     Location,
     LocationKeys,
     StateLocationItem,
 } from '../../types/locations';
 import type { ConfigSectionText } from '../../types/config';
-import { DateRaw } from '../../types/dates';
 
 // Utils
 import { isDateRawType, getShortDate } from '../../utils/dates';
@@ -46,7 +40,6 @@ export class PdcLocationView extends HTMLElement {
     #rowsContainer: HTMLElement | null;
     #styled: boolean;
     #valid = false;
-    #expensesCategory: string = '';
 
     constructor() {
         super();
@@ -145,7 +138,7 @@ export class PdcLocationView extends HTMLElement {
                 return;
             case btn?.getAttribute('id') === 'generate-expenses':
                 this.#validateRows() &&
-                    this.#rowsContainer?.setAttribute('validate', '');
+                    this.#rowsContainer?.setAttribute('validate', 'true');
                 return;
             case !!row && !!target.closest('[data-pdc="location-row-summary"]'):
                 this.#toggleRow(row);
@@ -171,35 +164,38 @@ export class PdcLocationView extends HTMLElement {
         const newRow = this.#rowsContainer?.lastElementChild;
         if (!(newRow instanceof HTMLElement))
             throw new Error(`Failed to render new row.`);
-        const newRowObject = this.#returnRowObject(newRow);
-        this.#updateRowSummary(newRowObject);
+        this.#returnRowObject(newRow); // Calling this will update row summary
         this.#toggleRow(newRow, 'new');
     }
 
     #deleteRow(row: HTMLElement) {
         this.#toggleRow(row, 'delete');
-
         const prevRow = row.previousElementSibling;
         const nextRow = row.nextElementSibling;
+
         setTimeout(() => {
+            // Slight delay to allow for element's transitions
             row.remove();
 
             // Update restrictions on date inputs for both previously last row and new row
-            const restrictDateInputs = (row: Element): void => {
-                const start =
-                    row.querySelector<PdcLocationDate>('[pdc="start"]');
-                const end = row.querySelector<PdcLocationDate>('[pdc="end"]');
-                start?.restrictStartInput();
-                end?.restrictEndInput();
-            };
-            prevRow && restrictDateInputs(prevRow);
-            nextRow && restrictDateInputs(nextRow);
+            prevRow
+                ?.querySelector<PdcLocationDate>('[pdc="start"]')
+                ?.restrictStartInput();
+            prevRow
+                ?.querySelector<PdcLocationDate>('[pdc="end"]')
+                ?.restrictEndInput();
+            nextRow
+                ?.querySelector<PdcLocationDate>('[pdc="start"]')
+                ?.restrictStartInput();
+            nextRow?.querySelector<PdcLocationDate>('[pdc="end"]')
+                ?.restrictEndInput;
 
             // Update attribute to trigger listener that updates state
             this.#rowsContainer?.setAttribute('update-state', `true`);
             // Deleted row was only row -> add a blank template row
             this.#rowsContainer?.childElementCount === 0 && this.#addRow();
 
+            // For any next rows, update summary number
             if (nextRow) {
                 const index = this.#getRowIndex(nextRow);
                 const rows = this.#rowsContainer?.querySelectorAll(
@@ -212,8 +208,7 @@ export class PdcLocationView extends HTMLElement {
                 [...rows]
                     .filter((_, i) => i >= index)
                     .map(remainingRow => {
-                        const rowObj = this.#returnRowObject(remainingRow);
-                        this.#updateRowSummary(rowObj);
+                        this.#returnRowObject(remainingRow);
                     });
             }
         }, 750);
@@ -221,7 +216,6 @@ export class PdcLocationView extends HTMLElement {
     }
 
     #getRowIndex(row: Element) {
-        console.log(row, row.parentNode);
         if (!row || !row.parentNode)
             throw new Error(`Failed to get row index in Location View.`);
         return Array.from(
@@ -286,25 +280,9 @@ export class PdcLocationView extends HTMLElement {
         rowSelect?.setOptions(arr);
     }
 
-    // handlerDeleteRow(controllerHandler: Function) {
-    //     this.#observer(
-    //         'update-state',
-    //         controllerHandler,
-    //         this.#locationRowDeleteResult.bind(this),
-    //     );
-    // }
-    // handlerValidate(controllerHandler: Function) {
-    //     this.#observer(
-    //         'validate',
-    //         controllerHandler,
-    //         this.#validRowsResult.bind(this),
-    //     );
-    // }
-
     #toggleRow(
         row: HTMLElement,
         toggle: 'open' | 'closed' | 'new' | 'delete' | null = null,
-        first: boolean | null = null,
     ): void {
         if (!this.#styled) return;
         const rowDetails = row.querySelector<HTMLElement>(
@@ -329,10 +307,11 @@ export class PdcLocationView extends HTMLElement {
                     row.classList.add('pdc-row-open');
                     rowSummary.style.height = rowSummary.scrollHeight + 'px';
                     rowDetails.style.height = rowDetails.scrollHeight + 'px';
+                    rowSpacer.style.height = 32 + 'px';
                     row.style.height =
                         rowSummary.scrollHeight +
                         rowDetails.scrollHeight +
-                        rowSpacer.scrollHeight +
+                        32 +
                         2 +
                         'px';
                     return;
@@ -340,15 +319,17 @@ export class PdcLocationView extends HTMLElement {
                     row.classList.remove('pdc-row-open');
                     rowSummary.style.height = 56 + 'px';
                     rowDetails.style.height = 0 + 'px';
+                    rowSpacer.style.height = 0 + 'px';
                     row.style.height = rowSummary.scrollHeight + 2 + 'px';
                     return;
                 case 'new':
                     rowSummary.style.height = rowSummary.scrollHeight + 'px';
                     rowDetails.style.height = rowDetails.scrollHeight + 'px';
+                    rowSpacer.style.height = 32 + 'px';
                     row.style.height =
                         rowSummary.scrollHeight +
                         rowDetails.scrollHeight +
-                        rowSpacer.scrollHeight +
+                        32 +
                         2 +
                         'px';
                     setTimeout(() => {
@@ -364,6 +345,7 @@ export class PdcLocationView extends HTMLElement {
                     row.classList.toggle('pdc-row-open');
                     rowSummary.style.height = targetHeightSummary + 'px';
                     rowDetails.style.height = targetHeightDetails + 'px';
+                    rowSpacer.style.height = targetHeightSpacer + 'px';
                     row.style.height =
                         targetHeightSummary +
                         targetHeightDetails +
@@ -439,7 +421,12 @@ export class PdcLocationView extends HTMLElement {
         }, 300);
     }
 
-    #returnRowObject = (row: Element): StateLocationItem => {
+    #returnRowObject = (
+        target: Element,
+        updateSummary: boolean = true,
+    ): StateLocationItem => {
+        const row = target.closest('[data-pdc="location-row"]');
+        if (!row) throw new Error('Failed to get row.');
         const getPdcValue = <
             T extends PdcLocationDate | PdcLocationCategory | PdcLocationSelect,
         >(
@@ -454,7 +441,7 @@ export class PdcLocationView extends HTMLElement {
         const country = getPdcValue<PdcLocationSelect>('country');
         const city = getPdcValue<PdcLocationSelect>('city');
 
-        return {
+        const result: StateLocationItem = {
             index,
             ...(start && isDateRawType(start) && { start }),
             ...(end && isDateRawType(end) && { end }),
@@ -464,24 +451,21 @@ export class PdcLocationView extends HTMLElement {
             ...(country && { country }),
             ...(city && { city }),
         };
+        if (updateSummary) this.#updateRowSummary(result);
+        return result;
     };
 
-    // #locationRowDeleteResult(target: Element, _: string) {
-    //     const updatedRows: StateLocationItem[] = [];
-    //     [...target.children].forEach(row => {
-    //         const result = this.#locationRowUpdateResult(row);
-    //         result && updatedRows.push(result);
-    //     });
-    //     return updatedRows;
-    // }
-
-    // #validRowsResult(_: Element, __: string) {
-    //     this.#rowsContainer?.removeAttribute('validate');
-    //     return {
-    //         valid: this.#valid,
-    //         expensesCategory: this.#expensesCategory,
-    //     };
-    // }
+    #returnAllRowsOjbect = (): StateLocationItem[] => {
+        const rows = this.#rowsContainer?.querySelectorAll(
+            '[data-pdc="location-row"]',
+        );
+        if (!rows) throw new Error('Failed to get all rows.');
+        const result = [...rows].map(row => {
+            return this.#returnRowObject(row, false);
+        });
+        this.removeAttribute('update-state');
+        return result;
+    };
 
     #updateRowSummary(location: StateLocationItem): void {
         const { index, start, end, country, city } = location;
@@ -507,28 +491,30 @@ export class PdcLocationView extends HTMLElement {
         rowSummaryLocationEl.textContent = countryCity;
     }
 
-    #getValidators() {
+    #getValidators = (): (
+        | PdcLocationDate
+        | PdcLocationCategory
+        | PdcLocationSelect
+    )[] => {
         if (!this.shadowRoot)
             throw new Error('Failed to render ShadowRoot for location View.');
-
         const dates =
             this.shadowRoot.querySelectorAll<PdcLocationDate>(
                 'pdc-location-date',
             );
-        const selects = this.shadowRoot.querySelectorAll<PdcLocationSelect>(
-            'pdc-location-select',
-        );
         const categories =
             this.shadowRoot.querySelectorAll<PdcLocationCategory>(
                 'pdc-location-category',
             );
+        const selects = this.shadowRoot.querySelectorAll<PdcLocationSelect>(
+            'pdc-location-select',
+        );
+        return [...dates, ...categories, ...selects];
+    };
 
-        return [...dates, ...selects, ...categories];
-    }
-
-    #validateEl(
+    #validateEl = (
         el: PdcLocationDate | PdcLocationCategory | PdcLocationSelect,
-    ): boolean {
+    ): boolean => {
         const valid = el.validate();
         if (!valid) {
             const row = el.closest<HTMLElement>('[data-pdc="location-row"]');
@@ -547,40 +533,45 @@ export class PdcLocationView extends HTMLElement {
             this.#toggleRow(row, 'open');
         }
         return valid;
-    }
+    };
 
-    #validateRows() {
-        this.#valid = false;
+    #validateRows = (): boolean => {
         const validators = this.#getValidators();
         this.#valid = validators.every(el => this.#validateEl(el));
-
-        const expensesCategoryInput =
-            this.shadowRoot?.querySelector<HTMLInputElement>(
-                'input[name="expenses-category"]:checked',
-            );
-        if (!expensesCategoryInput)
-            throw new Error(
-                'Failed to get expense category type from location View.',
-            );
-        this.#expensesCategory = expensesCategoryInput.value;
         return this.#valid;
-    }
+    };
 
-    #observer(controllerFunction: Function, viewFunction: Function) {
+    #observer(
+        controlUpdateFunction: Function,
+        controlDeleteFunction: Function,
+        controlValidateFunction: Function,
+        viewUpdateFunction: Function,
+        viewDeleteFunction: Function,
+        viewValidateFunction: Function,
+    ) {
         const callback = (mutations: MutationRecord[]) => {
             mutations.forEach(mutation => {
                 const changedAttr = mutation.attributeName;
-                if (!inPrimitiveType<LocationKeys>(locationKeys, changedAttr))
+                if (!(changedAttr && mutation.target instanceof Element))
                     return;
                 const target = mutation.target;
-                if (!(target instanceof Element)) return;
                 const newValue = target.getAttribute(changedAttr);
-                const row = target.closest<Element>(
-                    '[data-pdc="location-row"]',
-                );
-                const result = viewFunction(row);
-                this.#updateRowSummary(result);
-                controllerFunction(result, changedAttr, newValue);
+                if (changedAttr === 'validate' && !!newValue) {
+                    const result = viewValidateFunction();
+                    controlValidateFunction(result);
+                    return;
+                }
+                if (changedAttr === 'update-state' && !!newValue) {
+                    const result = viewDeleteFunction();
+                    controlDeleteFunction(result);
+                    return;
+                }
+                if (inPrimitiveType<LocationKeys>(locationKeys, changedAttr)) {
+                    const result = viewUpdateFunction(target);
+                    controlUpdateFunction(result, changedAttr, newValue);
+                    return;
+                }
+                return;
             });
         };
         const debouncedCallback = debounce(callback, 300);
@@ -588,13 +579,39 @@ export class PdcLocationView extends HTMLElement {
         if (this.shadowRoot)
             observer.observe(this.shadowRoot, {
                 subtree: true,
-                attributeFilter: [...locationKeys],
+                attributeFilter: ['update-state', 'validate', ...locationKeys],
             });
     }
 
-    handlerUpdate(controllerFunction: Function) {
-        this.#observer(controllerFunction, this.#returnRowObject);
+    controllerHandler(
+        controlUpdateFunction: Function,
+        controlDeleteFunction: Function,
+        controlValidateFunction: Function,
+    ) {
+        this.#observer(
+            controlUpdateFunction,
+            controlDeleteFunction,
+            controlValidateFunction,
+            this.#returnRowObject,
+            this.#returnAllRowsOjbect,
+            this.#returnValidation,
+        );
     }
+
+    #returnValidation = (): AllViewLocationsValid => {
+        this.removeAttribute('validate');
+        const inputValue = this.shadowRoot?.querySelector<HTMLInputElement>(
+            'input[name="expenses-category"]:checked',
+        )?.value;
+        const expensesCategory =
+            inputValue === 'mie' || inputValue === 'lodging' ?
+                inputValue
+            :   'both';
+        return {
+            valid: this.#valid,
+            expensesCategory,
+        };
+    };
 }
 
 customElements.define('pdc-location-view', PdcLocationView);
