@@ -8,3 +8,4 @@ export {
     YEAR_MAX_REGEX,
     YEAR_INCOMPLETE_REGEX,
 } from './YEAR_REGEX';
+export { getShortDate } from './getShortDate';

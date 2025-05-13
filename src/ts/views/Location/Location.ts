@@ -14,7 +14,7 @@ import type { ConfigSectionText } from '../../types/config';
 import { DateRaw } from '../../types/dates';
 
 // Utils
-import { isDateRawType } from '../../utils/dates';
+import { isDateRawType, getShortDate } from '../../utils/dates';
 import { locationKeys } from '../../utils/locations';
 import {
     inPrimitiveType,
@@ -171,6 +171,8 @@ export class PdcLocationView extends HTMLElement {
         const newRow = this.#rowsContainer?.lastElementChild;
         if (!(newRow instanceof HTMLElement))
             throw new Error(`Failed to render new row.`);
+        const newRowObject = this.#returnRowObject(newRow);
+        this.#updateRowSummary(newRowObject);
         this.#toggleRow(newRow, 'new');
     }
 
@@ -179,7 +181,6 @@ export class PdcLocationView extends HTMLElement {
 
         const prevRow = row.previousElementSibling;
         const nextRow = row.nextElementSibling;
-
         setTimeout(() => {
             row.remove();
 
@@ -198,11 +199,29 @@ export class PdcLocationView extends HTMLElement {
             this.#rowsContainer?.setAttribute('update-state', `true`);
             // Deleted row was only row -> add a blank template row
             this.#rowsContainer?.childElementCount === 0 && this.#addRow();
+
+            if (nextRow) {
+                const index = this.#getRowIndex(nextRow);
+                const rows = this.#rowsContainer?.querySelectorAll(
+                    '[data-pdc="location-row"]',
+                );
+                if (!rows)
+                    throw new Error(
+                        'Failed to get row parent container when deleting row.',
+                    );
+                [...rows]
+                    .filter((_, i) => i >= index)
+                    .map(remainingRow => {
+                        const rowObj = this.#returnRowObject(remainingRow);
+                        this.#updateRowSummary(rowObj);
+                    });
+            }
         }, 750);
         return;
     }
 
     #getRowIndex(row: Element) {
+        console.log(row, row.parentNode);
         if (!row || !row.parentNode)
             throw new Error(`Failed to get row index in Location View.`);
         return Array.from(
@@ -228,7 +247,7 @@ export class PdcLocationView extends HTMLElement {
         const countryEl =
             row.querySelector<PdcLocationSelect>('[pdc="country"]');
         const cityEl = row.querySelector<PdcLocationSelect>('[pdc="city"]');
-        const switchToDatesBtn = row?.querySelector<HTMLInputElement>(
+        const switchToDatesBtn = row.querySelector<HTMLInputElement>(
             'input[id^="pdc-el-date"]',
         );
         const switchToCategoryBtn = row.querySelector<HTMLInputElement>(
@@ -237,6 +256,9 @@ export class PdcLocationView extends HTMLElement {
         const switchToCountryCityBtn = row.querySelector<HTMLInputElement>(
             'input[id^="pdc-el-countrycity"]',
         );
+        const rowSummaryNumberEl = row.querySelector('h3');
+        const rowSummaryDatesEl = row.querySelector('h4');
+        const rowSummaryLocationEl = row.querySelector('h5');
         return {
             startEl,
             endEl,
@@ -246,6 +268,9 @@ export class PdcLocationView extends HTMLElement {
             switchToDatesBtn,
             switchToCategoryBtn,
             switchToCountryCityBtn,
+            rowSummaryNumberEl,
+            rowSummaryDatesEl,
+            rowSummaryLocationEl,
         };
     }
 
@@ -401,7 +426,7 @@ export class PdcLocationView extends HTMLElement {
         categoryEl?.enableCategory(true);
         countryEl?.enable(false);
         cityEl?.enable(false);
-        setTimeout(() => switchToCategoryBtn?.click(), 500);
+        setTimeout(() => switchToCategoryBtn?.click(), 300);
     }
 
     #transitionCategory(row: Element) {
@@ -411,7 +436,7 @@ export class PdcLocationView extends HTMLElement {
         cityEl?.enable(false);
         setTimeout(() => {
             switchToCountryCityBtn?.click();
-        }, 500);
+        }, 300);
     }
 
     #returnRowObject = (row: Element): StateLocationItem => {
@@ -458,29 +483,28 @@ export class PdcLocationView extends HTMLElement {
     //     };
     // }
 
-    #updateRowSummary(location: StateLocationItem) {
-        if (!('index' in location)) return;
+    #updateRowSummary(location: StateLocationItem): void {
         const { index, start, end, country, city } = location;
         const row = this.#getRowFromIndex(index);
 
         // Get elements
-        const rowSummaryNumberEl = row.querySelector('h3');
-        const rowSummaryDatesEl = row.querySelector('h4');
-        const rowSummaryLocationEl = row.querySelector('h5');
-
-        // Verify elements exist
+        const { rowSummaryNumberEl, rowSummaryDatesEl, rowSummaryLocationEl } =
+            this.#getRowEls(row);
         if (!(rowSummaryNumberEl && rowSummaryDatesEl && rowSummaryLocationEl))
             throw new Error(
-                `Failed to render row summary elements for row ${location.index} in Location view`,
+                `Failed to render summary elements in location row ${index + 1}.`,
             );
 
-        // Update summary values
-        const shortDate = (date: DateRaw): string => {
-            return `${date.slice(5).replaceAll('-', '/')}/${date.slice(2, 4)}`;
-        };
-        rowSummaryNumberEl.textContent = `${(index + 1).toString().padStart(2, '0')}`;
-        rowSummaryDatesEl.textContent = `${start ? shortDate(start) : '\u00A0'}${end ? ` to ${shortDate(end)}` : '\u00A0'}`;
-        rowSummaryLocationEl.textContent = `${city && country ? `${city} (${country})` : '\u00A0'}`;
+        // Get values
+        const rowCount = (index + 1).toString().padStart(2, '0');
+        const startDate = start ? getShortDate(start) : '\u00A0';
+        const endDate = end ? ` to ${getShortDate(end)}` : '\u00A0';
+        const countryCity = city && country ? `${city} (${country})` : '\u00A0';
+
+        // Update els with values
+        rowSummaryNumberEl.textContent = rowCount;
+        rowSummaryDatesEl.textContent = startDate + endDate;
+        rowSummaryLocationEl.textContent = countryCity;
     }
 
     #getValidators() {
