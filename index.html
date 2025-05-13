@@ -1,14 +1,43 @@
+<!-- TODO Clicks not always registering on toggle expand -->
+<!-- TODO3 Update main landing page with text (e.g. title Per Diem Calc) -->
+<!-- TODO3 Update main landing page with Google Adwords -->
+<!-- TODO3 Update main landing page with metadata -->
+<!-- TODO3 REPLACE SVG ICON -->
+<!-- TEST Do fonts work when npm installed -->
+<!-- TEST Browerstack -->
+<!-- TEST by adding file to NNSC landing page -->
+<!-- LAST README -->
+<!-- LAST Publish to npm -->
+<!-- LAST Publish to cdn? -->
+<!-- LAST Demo pages showing options -->
+<!-- LAST Publish to app stores -->
+
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <!-- TODO Replace icon -->
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Per Diem Calculator</title>
-  </head>
-  <body>
-    <form id="perDiemCalc"></form>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <link rel="preconnect" href="https://fonts.bunny.net" />
+        <link
+            href="https://fonts.bunny.net/css?family=ibm-plex-mono:400,500,600"
+            rel="stylesheet"
+        />
+        <!-- <link rel="stylesheet" href="/src/css/styles.css" /> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Per Diem Calculator</title>
+        <style type="text/css" media="print">
+            @media print {
+                body {
+                    background-color: #fff !important;
+                }
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+        </style>
+    </head>
+    <body style="background-color: hsl(210, 25%, 98%)" ;>
+        <div id="perDiemCalc"></div>
+        <script type="module" src="/src/index.ts"></script>
+    </body>
 </html>
