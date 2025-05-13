@@ -202,6 +202,11 @@ export class PdcLocationDate extends HTMLElement {
             return;
         }
 
+        // If no previous row, input should be enabled
+        if (!prevRow) {
+            this.enable(true);
+        }
+
         // If valid current row end date, set input max to current row end date
         if (endDate && isDateRawType(endDate)) {
             this.#setMax(endDate);
