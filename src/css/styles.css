@@ -28,16 +28,16 @@
     --color-primary-100: hsl(238, 100%, 88%);
     --color-primary-50: hsl(240, 100%, 95%);
 
-    --color-secondary-900: hsl(170, 97%, 15%);
-    --color-secondary-800: hsl(168, 80%, 23%);
-    --color-secondary-700: hsl(166, 72%, 28%);
-    --color-secondary-600: hsl(164, 71%, 34%);
-    --color-secondary-500: hsl(162, 63%, 41%);
-    --color-secondary-400: hsl(160, 51%, 49%);
-    --color-secondary-300: hsl(158, 58%, 62%);
-    --color-secondary-200: hsl(156, 73%, 74%);
-    --color-secondary-100: hsl(154, 75%, 87%);
-    --color-secondary-50: hsl(152, 68%, 96%);
+    --color-success-900: hsl(170, 97%, 15%);
+    --color-success-800: hsl(168, 80%, 23%);
+    --color-success-700: hsl(166, 72%, 28%);
+    --color-success-600: hsl(164, 71%, 34%);
+    --color-success-500: hsl(162, 63%, 41%);
+    --color-success-400: hsl(160, 51%, 49%);
+    --color-success-300: hsl(158, 58%, 62%);
+    --color-success-200: hsl(156, 73%, 74%);
+    --color-success-100: hsl(154, 75%, 87%);
+    --color-success-50: hsl(152, 68%, 96%);
 
     --color-neutral-900: hsl(209, 61%, 16%);
     --color-neutral-800: hsl(211, 39%, 23%);
@@ -60,39 +60,17 @@
     --color-error-200: hsl(360, 100%, 80%);
     --color-error-100: hsl(360, 100%, 87%);
     --color-error-50: hsl(360, 100%, 95%);
-
-    --color-active-900: hsl(204, 96%, 27%);
-    --color-active-800: hsl(203, 87%, 34%);
-    --color-active-700: hsl(202, 83%, 41%);
-    --color-active-600: hsl(201, 79%, 46%);
-    --color-active-500: hsl(199, 84%, 55%);
-    --color-active-400: hsl(197, 92%, 61%);
-    --color-active-300: hsl(196, 94%, 67%);
-    --color-active-200: hsl(195, 97%, 75%);
-    --color-active-100: hsl(195, 100%, 85%);
-    --color-active-50: hsl(195, 100%, 95%);
-
-    --color-warning-900: hsl(15, 86%, 30%);
-    --color-warning-800: hsl(22, 82%, 39%);
-    --color-warning-700: hsl(29, 80%, 44%);
-    --color-warning-600: hsl(36, 77%, 49%);
-    --color-warning-500: hsl(42, 87%, 55%);
-    --color-warning-400: hsl(44, 92%, 63%);
-    --color-warning-300: hsl(48, 94%, 68%);
-    --color-warning-200: hsl(48, 95%, 76%);
-    --color-warning-100: hsl(48, 100%, 88%);
-    --color-warning-50: hsl(49, 100%, 96%);
 }
 
 .ts-wrapper {
-    @apply !static !ml-0 w-full;
+    @apply !static !ml-0 w-full focus-visible:!outline-1;
 }
 
 .ts-control,
 .ts-wrapper.single .ts-control,
 .plugin-dropdown_input.focus.dropdown-active .ts-control,
 .ts-wrapper.single.input-active .ts-control {
-    @apply [.error]:ring-error-400 [.success]:ring-secondary-400 mt-2 min-h-[46px] rounded-lg border-none bg-neutral-50 bg-none !px-5 !py-2.5 text-base shadow-sm ring ring-neutral-200 transition ease-in-out after:top-4 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] [.error]:ring-3 [.success]:ring-3;
+    @apply [.error]:ring-error-400 [.success]:ring-success-400 mt-2 min-h-[46px] rounded-lg border-none bg-neutral-50 bg-none !px-5 !py-2.5 text-base shadow-sm ring ring-neutral-200 transition ease-in-out after:top-4 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] [.error]:ring-3 [.success]:ring-3;
 }
 
 .ts-control .item {

@@ -1,14 +1,21 @@
 <label for="date" class="block text-neutral-700"></label>
 <input
+    tabindex="0"
     disabled
     type="date"
     id="date"
     min="2021-01-01"
     max="2040-12-31"
-    class="focus:ring-primary-300 [.success]:ring-secondary-400
+    class="focus:ring-primary-300 [.success]:ring-success-400
         [.error]:ring-error-400 relative z-10 mt-2 block w-full rounded-lg px-5
         py-2.5 text-neutral-800 ring-1 ring-neutral-200 transition ease-in-out
         focus:ring-2 focus:outline-none enabled:bg-neutral-50
         disabled:cursor-not-allowed disabled:bg-neutral-200 [.error]:ring-3
         [.success]:ring-3"
 />
+<div
+    id="error"
+    class="[.active]:text-error-600 pt-3 text-transparent transition-colors"
+>
+    &nbsp;
+</div>

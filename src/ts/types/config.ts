@@ -3,6 +3,7 @@ import type { StateExpenseItem, StateExpenseItemValid } from './expenses';
 
 export type ConfigSectionText = {
     heading?: string;
+    headingPrint?: string;
     body?: string;
     bodyPrint?: string;
 };

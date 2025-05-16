@@ -14,34 +14,38 @@ import { StateExpenseItemUpdate } from './types/expenses';
 import type { Config, State } from './types/config';
 
 // Utils
-import * as model from './model';
 import { sanitizeConfig } from './utils/misc';
+
+// Model
+import * as model from './model';
 
 // Views
 import { PdcLocationView } from './views';
 import { PdcExpenseView } from './views';
+customElements.define('pdc-expense-view', PdcExpenseView);
+customElements.define('pdc-location-view', PdcLocationView);
 
 export class Pdc {
-    #eventTarget;
     #container: Element;
     #config: Config;
-    #viewLocation = new PdcLocationView();
-    #viewExpense = new PdcExpenseView();
+    #viewLocation;
+    #viewExpense;
+    #eventTarget;
 
     constructor(container: Element, configUser: Partial<Config> | null = null) {
-        this.#eventTarget = new EventTarget();
-
         this.#container = container;
         this.#config = sanitizeConfig(configUser);
+        const { styled } = this.#config;
 
-        const { styled, location: config } = this.#config;
+        this.#viewLocation = new PdcLocationView(styled);
+        this.#viewExpense = new PdcExpenseView();
 
-        this.#viewLocation.render(styled, { ...config });
         this.#viewLocation.controllerHandler(
             this.#locationUpdated,
             this.#locationDeleted,
             this.#locationsValidate,
         );
+        this.#eventTarget = new EventTarget();
 
         this.#container.insertAdjacentElement('afterbegin', this.#viewLocation);
         this.#container.insertAdjacentElement('beforeend', this.#viewExpense);
@@ -101,11 +105,11 @@ export class Pdc {
 
     #createSelectOptions = async (row: StateLocationItem) => {
         const { index } = row;
-        this.#viewLocation.renderLoadingSpinner(index, true);
+        this.#viewLocation.rowLoadingSpinner(index, true);
         const list = await model.returnOptions(row);
         const locationCategory = !!row.country ? 'city' : 'country';
         this.#viewLocation.setOptions(index, list, locationCategory);
-        this.#viewLocation.renderLoadingSpinner(index, false);
+        this.#viewLocation.rowLoadingSpinner(index, false);
     };
 
     #locationsValidate = async (viewValidator: AllViewLocationsValid) => {
@@ -114,24 +118,27 @@ export class Pdc {
             const { valid, expensesCategory } = viewValidator;
             if (!valid || !expensesCategory) return;
             const modelValidate = model.validateStateLocations();
-            console.log(modelValidate);
             if (!modelValidate) return;
 
             const { styled, expense: config } = this.#config;
             this.#viewExpense.render(styled, { ...config });
             this.#viewExpense.renderLoadingSpinner(true);
-            this.#viewExpense.handlerRowUpdate(this.#expenseUpdate);
-
+            this.#viewExpense.controllerHandler(
+                this.#expenseUpdated,
+                this.#expenseTable,
+            );
             const expenses = await model.generateExpenses(viewValidator);
             this.#viewExpense.addRows(expenses, expensesCategory);
-            this.#viewExpense.renderLoadingSpinner(false);
+            setTimeout(() => {
+                this.#viewExpense.renderLoadingSpinner(false);
+            }, 1000);
             this.#dispatchEvent();
         } catch (error) {
             console.error(error);
         }
     };
 
-    #expenseUpdate = (row: StateExpenseItemUpdate) => {
+    #expenseUpdated = (row: StateExpenseItemUpdate) => {
         const { date, newRowMieTotal, totalMie, totalLodging } =
             model.updateStateExpenseItem(row);
         this.#viewExpense.updateRowMie(
@@ -140,7 +147,12 @@ export class Pdc {
             totalMie,
             totalLodging,
         );
+        this.#viewExpense.emptyExpenseTable();
         this.#dispatchEvent();
+    };
+
+    #expenseTable = () => {
+        this.#viewExpense.createExpenseTable(model.returnExpenses());
     };
 
     #dispatchEvent() {

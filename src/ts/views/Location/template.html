@@ -1,109 +1,99 @@
 <!-- TODO2 dark mode -->
 
-<!-- Main container heading from config, body from config, rows, and button to add row -->
-<div
-    class="mx-auto grid max-w-4xl grid-cols-1 rounded-md bg-neutral-100 p-6
-        shadow-md print:hidden"
->
-    <h3 id="heading" class="my-2.5 text-xl font-semibold text-neutral-900"></h3>
-    <p id="body" class="mb-8"></p>
-    <ul id="rows"></ul>
-
-    <button
-        class="group relative mt-8 -mb-14 hover:cursor-pointer
-            focus:outline-hidden"
-        type="button"
-        id="add-row"
-    >
-        <span
-            aria-hidden="true"
-            class="absolute inset-0 z-0 mx-auto w-9/12 border border-neutral-300
-                bg-neutral-50 py-3.5"
-        ></span>
-        <span
-            class="relative z-10 mx-auto block w-9/12 border border-neutral-300
-                bg-neutral-50 py-4 font-medium text-neutral-600
-                transition-transform group-hover:-translate-x-1
-                group-hover:-translate-y-1"
-            >+ Add Location</span
-        >
-    </button>
-</div>
-
-<!-- Input for type of per diem (mie vs lodging vs both)-->
-<fieldset
-    id="expense-category"
-    class="mx-auto mt-20 w-9/12 space-y-6 print:hidden"
->
+<div id="location-container">
+    <!-- Main container heading from config, body from config, rows, and button to add row -->
     <div
-        class="bg-primary-50 text-primary-800 border-primary-900
-            *:border-primary-900 grid grid-cols-3 divide-x overflow-hidden
-            rounded-lg border text-center text-sm font-medium *:p-2.5"
+        class="mx-auto max-w-4xl rounded-md bg-neutral-100 p-6 pt-5 shadow-md
+            transition-[height] duration-700 print:hidden"
     >
-        <label
-            class="hover:bg-primary-900 hover:text-primary-50
-                has-checked:bg-primary-900 has-checked:text-primary-50
-                cursor-pointer transition-colors ease-in-out select-none"
-            for="mie"
-        >
-            <input
-                type="radio"
-                name="expenses-category"
-                value="mie"
-                id="mie"
-                class="hidden"
-            />
-            M&IE
-        </label>
-        <label
-            class="hover:bg-primary-900 hover:text-primary-50
-                has-checked:bg-primary-900 has-checked:text-primary-50
-                cursor-pointer transition-colors ease-in-out select-none"
-            for="lodging"
-        >
-            <input
-                type="radio"
-                name="expenses-category"
-                value="lodging"
-                id="lodging"
-                class="hidden"
-            />
-            Lodging
-        </label>
-        <label
-            class="hover:bg-primary-900 hover:text-primary-50
-                has-checked:bg-primary-900 has-checked:text-primary-50
-                cursor-pointer transition-colors ease-in-out select-none"
-            for="both"
-        >
-            <input
-                type="radio"
-                name="expenses-category"
-                value="both"
-                id="both"
-                class="hidden"
-                checked="true"
-            />
-            Both
-        </label>
-    </div>
-</fieldset>
+        <h3
+            id="heading"
+            class="my-2.5 text-xl font-semibold text-neutral-900"
+        ></h3>
+        <p id="body" class="peer mb-8"></p>
+        <ul id="rows" class="not-peer-[*]:mt-8"></ul>
 
-<!-- Button to generate Expense view -->
-<button
-    class="group relative mt-6 mb-12 w-full hover:cursor-pointer
-        focus:outline-hidden print:hidden"
-    type="button"
-    id="generate-expenses"
->
-    <span
-        aria-hidden="true"
-        class="border-primary-900 absolute inset-0 mx-auto w-9/12 border"
-    ></span>
-    <span
-        class="border-primary-900 bg-primary-900 mx-auto block w-9/12 border
-            py-3.5 font-medium text-neutral-50 shadow-xl transition-transform
-            group-hover:-translate-x-1 group-hover:-translate-y-1"
-        >Generate Expenses</span
+        <div class="-mb-14 w-full text-center">
+            <pdc-button-text
+                id="add-row"
+                styled="true"
+                bg-color="neutral-50"
+                border-color="neutral-300"
+                text="+ Add Location"
+                text-color="neutral-600"
+            ></pdc-button-text>
+        </div>
+    </div>
+
+    <!-- Input for type of per diem (mie vs lodging vs both)-->
+    <fieldset
+        id="expense-category"
+        class="mt-20 space-y-6 text-center print:hidden"
     >
-</button>
+        <div
+            class="bg-primary-50 text-primary-800 border-primary-900
+                *:border-primary-900 mx-auto grid max-w-3xs grid-cols-3 divide-x
+                overflow-hidden rounded-lg border text-center text-sm
+                font-medium *:p-2.5 sm:max-w-2xs md:max-w-xs"
+        >
+            <label
+                class="hover:bg-primary-900 hover:text-primary-50
+                    has-checked:bg-primary-900 has-checked:text-primary-50
+                    cursor-pointer transition-colors ease-in-out select-none"
+                for="mie"
+            >
+                <input
+                    type="radio"
+                    name="expenses-category"
+                    value="mie"
+                    id="mie"
+                    class="hidden"
+                />
+                M&IE
+            </label>
+            <label
+                class="hover:bg-primary-900 hover:text-primary-50
+                    has-checked:bg-primary-900 has-checked:text-primary-50
+                    cursor-pointer transition-colors ease-in-out select-none"
+                for="lodging"
+            >
+                <input
+                    type="radio"
+                    name="expenses-category"
+                    value="lodging"
+                    id="lodging"
+                    class="hidden"
+                />
+                Lodging
+            </label>
+            <label
+                class="hover:bg-primary-900 hover:text-primary-50
+                    has-checked:bg-primary-900 has-checked:text-primary-50
+                    cursor-pointer transition-colors ease-in-out select-none"
+                for="both"
+            >
+                <input
+                    type="radio"
+                    name="expenses-category"
+                    value="both"
+                    id="both"
+                    class="hidden"
+                    checked="true"
+                />
+                Both
+            </label>
+        </div>
+    </fieldset>
+
+    <!-- Button to generate Expense view -->
+    <div class="mt-6 mb-8 w-full text-center print:hidden">
+        <pdc-button-text
+            id="generate-expenses"
+            styled="true"
+            bg-color="primary-900"
+            border-color="primary-900"
+            text="Generate Expenses"
+            text-color="neutral-50"
+        ></pdc-button-text>
+    </div>
+</div>

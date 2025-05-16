@@ -1,233 +1,239 @@
 <div
-    data-pdc="expense-row"
-    class="group my-4 overflow-hidden rounded-lg border border-transparent
-        bg-white transition-[border_border-color] ease-in-out
-        hover:border-neutral-300 print:m-0 print:flex print:break-inside-avoid
-        print:rounded-none print:border-0 print:bg-white print:py-2.5
-        **:print:self-start **:print:bg-white **:print:text-sm
-        **:print:leading-normal **:print:text-black
-        [&_summary::-webkit-details-marker]:hidden
-        [.pdc-row-open]:border-neutral-300"
+    id="expense-row"
+    class="group pdc-row-open h-0 overflow-hidden transition-[height]
+        duration-700 print:m-0 print:flex print:!h-auto print:break-inside-avoid
+        print:rounded-none print:border-0 print:py-2.5 **:print:self-start
+        **:print:!border-none **:print:!bg-white **:print:text-sm
+        **:print:leading-normal **:print:!text-black **:print:!ring-0"
 >
-    <!-- Summary -->
     <div
-        data-pdc="expense-row-summary"
-        class="flex h-20 max-h-20 items-center justify-between gap-1.5 px-4
-            text-neutral-800 transition-[max-height_background-color]
-            duration-300 group-[.pdc-row-open]:max-h-14
-            group-[.pdc-row-open]:bg-neutral-50 hover:cursor-pointer
-            hover:group-[.pdc-row-open]:bg-neutral-100 print:!h-auto
-            print:!max-h-lvh print:items-start print:overflow-visible
-            print:!py-0 print:group-[.pdc-row-open]:border-b-transparent
-            hover:*:[svg:first-of-type]:rotate-0"
+        class="overflow-hidden rounded-lg border border-transparent bg-white
+            transition-[border-color_opacity] duration-500
+            group-hover:border-neutral-300
+            group-[.pdc-row-open]:border-neutral-300 print:flex"
     >
-        <svg
-            class="mr-2 size-5 shrink-0 fill-none stroke-current
-                transition-transform duration-500
-                group-[.pdc-row-open]:-rotate-180 print:hidden"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-            />
-        </svg>
-        <h3
-            id="date"
-            class="mr-3 text-lg leading-6 font-semibold md:leading-5 lg:mr-6
-                lg:leading-4"
-        ></h3>
-
-        <h4
-            data-pdc="expense-total"
-            class="grow truncate text-sm transition-opacity duration-300
-                ease-out group-[.pdc-row-open]:opacity-0 print:hidden"
-        ></h4>
-    </div>
-
-    <!-- Details w/ Input Fields -->
-    <div
-        class="mx-4 grid max-h-0 grid-cols-1 gap-8 overflow-hidden px-6
-            opacity-0 transition-[max-height_opacity] duration-1000
-            group-[.pdc-row-open]:max-h-lvh group-[.pdc-row-open]:p-6
-            group-[.pdc-row-open]:opacity-100 print:!mr-0 print:!max-h-lvh
-            print:grid-cols-6 print:gap-1 print:!p-0 print:!pl-5
-            print:!opacity-100"
-    >
+        <!-- Summary -->
         <div
-            class="grid grid-cols-1 gap-6 print:col-span-4 print:auto-rows-fr
-                print:gap-0"
+            id="expense-row-summary"
+            class="flex h-14 items-center justify-between gap-1.5 px-4
+                text-neutral-800
+                [transition:height_0.7s_ease,background-color_1.4s_ease]
+                group-[.pdc-row-open]:bg-neutral-50 hover:cursor-pointer
+                hover:group-[.pdc-row-open]:bg-neutral-100 print:!h-auto
+                print:items-start print:overflow-visible print:!py-0
+                hover:*:[svg:first-of-type]:rotate-0"
         >
-            <div>
-                <p
-                    id="location"
-                    class="truncate text-neutral-800 print:pr-6
-                        print:font-semibold"
-                ></p>
-            </div>
-            <fieldset
-                id="deductions"
-                class="space-y-3 print:col-span-3 print:row-span-2 print:hidden
-                    print:space-y-0 print:has-checked:grid"
+            <svg
+                class="mr-2 size-5 shrink-0 fill-none stroke-current
+                    transition-transform duration-500
+                    group-[.pdc-row-open]:-rotate-180 print:hidden"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
             >
-                <p
-                    class="hidden pr-2 text-neutral-700 print:block
-                        print:italic"
-                >
-                    Deductions
-                </p>
-                <p class="pr-2 font-semibold text-neutral-700 print:hidden">
-                    I was provided:
-                </p>
-                <div
-                    class="*:has-checked:bg-primary-50 *:hover:bg-primary-50
-                        *:has-checked:text-primary-800 *:hover:text-primary-800
-                        grid grid-cols-3 divide-x overflow-hidden rounded-lg
-                        border bg-neutral-50 text-center text-neutral-700 *:px-4
-                        *:py-2 *:text-sm *:font-medium *:hover:cursor-pointer
-                        *:sm:px-6 *:sm:text-base print:flex print:border-none
-                        print:bg-transparent print:text-left *:print:hidden
-                        *:print:p-0 *:print:font-normal **:print:self-start
-                        **:print:!text-black
-                        *:print:peer-has-checked:before:text-xs
-                        *:print:peer-has-checked:before:text-neutral-600
-                        *:print:peer-has-checked:before:content-[',_']
-                        *:print:has-checked:block
-                        *:print:has-checked:bg-transparent"
-                >
-                    <label for="firstDay" class="peer hidden"
-                        >First Day<input
-                            type="checkbox"
-                            name="firstDay"
-                            id="firstDay"
-                            class="hidden"
-                            disabled
-                    /></label>
-                    <label for="lastDay" class="peer hidden"
-                        >Last Day<input
-                            type="checkbox"
-                            name="lastDay"
-                            id="lastDay"
-                            class="hidden"
-                            disabled
-                    /></label>
-                    <label for="breakfast" class="peer"
-                        >Break<span
-                            class="sm:hidden print:hidden"
-                            aria-hidden="true"
-                            >.</span
-                        ><span class="hidden sm:inline-block print:inline-block"
-                            >fast</span
-                        ><input
-                            type="checkbox"
-                            name="breakfast"
-                            id="breakfast"
-                            class="hidden"
-                    /></label>
-                    <label for="lunch" class="peer"
-                        >Lunch<input
-                            type="checkbox"
-                            name="lunch"
-                            id="lunch"
-                            class="hidden"
-                    /></label>
-                    <label for="dinner" class="peer"
-                        >Dinner<input
-                            type="checkbox"
-                            name="dinner"
-                            id="dinner"
-                            class="hidden"
-                    /></label>
-                </div>
-            </fieldset>
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                />
+            </svg>
+            <h3
+                id="date"
+                class="mr-3 text-lg leading-6 font-semibold md:leading-5 lg:mr-6
+                    lg:leading-4"
+            ></h3>
+
+            <h4
+                data-pdc="expense-total"
+                class="grow truncate text-sm transition-opacity duration-300
+                    ease-out group-[.pdc-row-open]:opacity-0 print:hidden"
+            ></h4>
         </div>
+
+        <!-- Details w/ Input Fields -->
         <div
-            class="grid grid-cols-1 gap-8 pb-4 print:col-span-2
-                print:auto-rows-fr print:gap-0 print:p-0 [&_input]:text-right"
+            id="expense-row-details"
+            class="mx-4 grid h-0 grid-cols-1 gap-8 overflow-hidden px-6
+                opacity-0 transition-[height_opacity] duration-700
+                group-[.pdc-row-open]:opacity-100 print:!mx-0 print:!mr-0
+                print:!h-auto print:grid-cols-6 print:gap-1 print:!p-0
+                print:!opacity-100"
         >
-            <div id="mie" class="grid grid-cols-2 gap-4">
+            <!-- Location and deductions -->
+            <div
+                class="grid grid-cols-1 gap-6 pt-6 print:col-span-4
+                    print:auto-rows-fr print:gap-0 print:!p-0"
+            >
                 <div>
-                    <label
-                        class="block text-base text-neutral-700
-                            print:font-normal"
-                        >M&IE</label
-                    >
-                    <label
-                        id="mie-rate"
-                        class="block text-sm text-neutral-600 print:hidden"
-                    ></label>
+                    <p
+                        id="location"
+                        class="truncate text-neutral-800 print:pr-6
+                            print:font-semibold"
+                    ></p>
                 </div>
-                <input
-                    id="mie-total-amount"
-                    type="number"
-                    inputmode="decimal"
-                    step="0.01"
-                    min="0"
-                    disabled
-                    class="[.success]:ring-secondary-400 block w-full
-                        [appearance:textfield] rounded-lg bg-neutral-100 px-5
-                        py-2.5 text-neutral-800 ring-1 ring-neutral-200
-                        transition ease-in-out print:bg-transparent print:p-0
-                        print:text-right print:ring-transparent
-                        [&::-webkit-inner-spin-button]:appearance-none
-                        [&::-webkit-outer-spin-button]:appearance-none
-                        [.success]:ring-3"
-                />
-            </div>
-            <div id="lodging" class="grid grid-cols-2 gap-4">
-                <div>
-                    <label
-                        class="block text-base text-neutral-700
-                            print:font-normal"
-                        >Lodging</label
-                    >
-                    <label
-                        id="lodging-rate"
-                        class="block text-sm text-neutral-600 print:hidden"
-                    ></label>
-                </div>
-                <input
-                    id="lodging-amount"
-                    type="number"
-                    inputmode="decimal"
-                    step="0.01"
-                    min="0"
-                    class="[.success]:ring-secondary-400 focus:ring-primary-300
-                        block w-full [appearance:textfield] rounded-lg
-                        bg-neutral-50 px-5 py-2.5 text-neutral-800 ring-1
-                        ring-neutral-200 transition ease-in-out focus:ring-2
-                        print:bg-transparent print:p-0 print:text-right
-                        print:ring-transparent
-                        [&::-webkit-inner-spin-button]:appearance-none
-                        [&::-webkit-outer-spin-button]:appearance-none
-                        [.success]:border-green-500 [.success]:ring-3"
-                />
-            </div>
-            <div id="total" class="grid grid-cols-2 gap-4">
-                <label
-                    class="block text-base font-semibold text-neutral-700
-                        print:font-normal"
-                    >Total</label
+                <fieldset
+                    id="deductions"
+                    class="space-y-3 print:col-span-3 print:row-span-2
+                        print:hidden print:space-y-0 print:has-checked:grid"
                 >
-                <input
-                    data-pdc="expense-total"
-                    type="number"
-                    inputmode="decimal"
-                    step="0.01"
-                    min="0"
-                    disabled
-                    class="[.success]:ring-secondary-400 block w-full
-                        [appearance:textfield] rounded-lg bg-neutral-100 px-5
-                        py-2.5 text-neutral-800 ring-1 ring-neutral-200
-                        transition ease-in-out print:p-0 print:text-right
-                        print:ring-transparent
-                        [&::-webkit-inner-spin-button]:appearance-none
-                        [&::-webkit-outer-spin-button]:appearance-none
-                        [.success]:ring-3"
-                />
+                    <p
+                        class="hidden pr-2 text-neutral-700 print:block
+                            print:italic"
+                    >
+                        Deductions
+                    </p>
+                    <p class="pr-2 font-semibold text-neutral-700 print:hidden">
+                        I was provided:
+                    </p>
+                    <div
+                        class="*:has-checked:bg-primary-50 *:hover:bg-primary-50
+                            *:has-checked:text-primary-800
+                            *:hover:text-primary-800 grid grid-cols-3 divide-x
+                            overflow-hidden rounded-lg border bg-neutral-50
+                            text-center text-neutral-700 *:px-4 *:py-2 *:text-sm
+                            *:font-medium *:hover:cursor-pointer *:sm:px-6
+                            *:sm:text-base print:flex print:text-left
+                            *:print:hidden *:print:p-0 *:print:font-normal
+                            *:print:!text-black **:print:self-start
+                            *:print:peer-has-checked:before:text-xs
+                            *:print:peer-has-checked:before:text-neutral-600
+                            *:print:peer-has-checked:before:content-[',_']
+                            *:print:has-checked:block"
+                    >
+                        <label for="firstDay" class="peer hidden"
+                            >First Day<input
+                                type="checkbox"
+                                name="firstDay"
+                                id="firstDay"
+                                class="hidden"
+                                disabled
+                        /></label>
+                        <label for="lastDay" class="peer hidden"
+                            >Last Day<input
+                                type="checkbox"
+                                name="lastDay"
+                                id="lastDay"
+                                class="hidden"
+                                disabled
+                        /></label>
+                        <label for="breakfast" class="peer"
+                            >Break<span
+                                class="sm:hidden print:hidden"
+                                aria-hidden="true"
+                                >.</span
+                            ><span
+                                class="hidden sm:inline-block
+                                    print:inline-block"
+                                >fast</span
+                            ><input
+                                type="checkbox"
+                                name="breakfast"
+                                id="breakfast"
+                                class="hidden"
+                        /></label>
+                        <label for="lunch" class="peer"
+                            >Lunch<input
+                                type="checkbox"
+                                name="lunch"
+                                id="lunch"
+                                class="hidden"
+                        /></label>
+                        <label for="dinner" class="peer"
+                            >Dinner<input
+                                type="checkbox"
+                                name="dinner"
+                                id="dinner"
+                                class="hidden"
+                        /></label>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Amounts -->
+            <div
+                class="grid grid-cols-1 gap-8 pb-12 print:col-span-2
+                    print:auto-rows-fr print:gap-0 print:p-0
+                    [&_input]:text-right"
+            >
+                <div id="mie" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-base text-neutral-700
+                                print:font-normal"
+                            >M&IE</label
+                        >
+                        <label
+                            id="mie-rate"
+                            class="block text-sm text-neutral-600 print:hidden"
+                        ></label>
+                    </div>
+                    <input
+                        id="mie-total-amount"
+                        type="number"
+                        inputmode="decimal"
+                        step="0.01"
+                        min="0"
+                        disabled
+                        class="[.success]:ring-success-400 block w-full
+                            [appearance:textfield] rounded-lg bg-neutral-100
+                            px-5 py-2.5 text-neutral-800 ring-1 ring-neutral-200
+                            transition ease-in-out print:p-0 print:text-right
+                            [&::-webkit-inner-spin-button]:appearance-none
+                            [&::-webkit-outer-spin-button]:appearance-none
+                            [.success]:ring-3"
+                    />
+                </div>
+                <div id="lodging" class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-base text-neutral-700
+                                print:font-normal"
+                            >Lodging</label
+                        >
+                        <label
+                            id="lodging-rate"
+                            class="block text-sm text-neutral-600 print:hidden"
+                        ></label>
+                    </div>
+                    <input
+                        id="lodging-amount"
+                        type="number"
+                        inputmode="decimal"
+                        step="0.01"
+                        min="0"
+                        class="[.success]:ring-success-400
+                            focus:ring-primary-300 block w-full
+                            [appearance:textfield] rounded-lg bg-neutral-50 px-5
+                            py-2.5 text-neutral-800 ring-1 ring-neutral-200
+                            transition ease-in-out focus:ring-2 print:p-0
+                            print:text-right
+                            [&::-webkit-inner-spin-button]:appearance-none
+                            [&::-webkit-outer-spin-button]:appearance-none
+                            [.success]:border-green-500 [.success]:ring-3"
+                    />
+                </div>
+                <div id="total" class="grid grid-cols-2 gap-4">
+                    <label
+                        class="block text-base font-semibold text-neutral-700
+                            print:font-normal"
+                        >Total</label
+                    >
+                    <input
+                        data-pdc="expense-total"
+                        type="number"
+                        inputmode="decimal"
+                        step="0.01"
+                        min="0"
+                        disabled
+                        class="[.success]:ring-success-400 block w-full
+                            [appearance:textfield] rounded-lg bg-neutral-100
+                            px-5 py-2.5 text-neutral-800 ring-1 ring-neutral-200
+                            transition ease-in-out print:p-0 print:text-right
+                            [&::-webkit-inner-spin-button]:appearance-none
+                            [&::-webkit-outer-spin-button]:appearance-none
+                            [.success]:ring-3"
+                    />
+                </div>
             </div>
         </div>
     </div>

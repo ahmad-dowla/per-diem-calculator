@@ -29,11 +29,11 @@ export class PdcLocationDate extends HTMLElement {
     #attrName: 'start' | 'end';
     #valid = false;
     #input: HTMLInputElement;
-    #errorContainer: Element;
-    #errorMsgEl: Element;
+    #error: Element;
     #styled = false;
     #startEl: PdcLocationDate;
     #endEl: PdcLocationDate;
+    #enabled = false;
 
     constructor() {
         super();
@@ -53,38 +53,10 @@ export class PdcLocationDate extends HTMLElement {
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-        const row = this.closest<HTMLUListElement>('[data-pdc="location-row"]');
-        const input = this.shadowRoot.querySelector('input');
-        const label = this.shadowRoot.querySelector('label');
-        const errorContainer = this.closest(
-            '[data-pdc="location-row"]',
-        )?.querySelector('#error');
-        const errorMsgEl = errorContainer?.querySelector('#error-message');
-        const startEl = row?.querySelector<PdcLocationDate>(
-            'pdc-location-date[pdc="start"]',
-        );
-        const endEl = row?.querySelector<PdcLocationDate>(
-            'pdc-location-date[pdc="end"]',
-        );
-
-        if (
-            !(
-                row &&
-                input &&
-                label &&
-                errorContainer &&
-                errorMsgEl &&
-                startEl &&
-                endEl
-            )
-        )
-            throw new Error(
-                `Failed to render ${this.#attrName} date elements in Location view.`,
-            );
+        const { input, label, error, startEl, endEl } = this.#getEls();
 
         this.#input = input;
-        this.#errorContainer = errorContainer;
-        this.#errorMsgEl = errorMsgEl;
+        this.#error = error;
         this.#startEl = startEl;
         this.#endEl = endEl;
 
@@ -95,6 +67,8 @@ export class PdcLocationDate extends HTMLElement {
             this.restrictStartInput()
         :   this.restrictEndInput();
 
+        this.enableTabIndex(false);
+
         // Apply listeners for inputs only after initial restrictInput(), and potentially any changes to input/attr by it, are done
         this.#input.addEventListener('change', e => {
             const target = e.target;
@@ -104,15 +78,47 @@ export class PdcLocationDate extends HTMLElement {
         });
     }
 
+    enableTabIndex(enable: boolean) {
+        enable ?
+            this.#input.setAttribute('tabindex', '0')
+        :   this.#input.setAttribute('tabindex', '-1');
+    }
+
+    #getEls = () => {
+        const row = this.closest<HTMLUListElement>('[data-pdc="location-row"]');
+        const input = this.shadowRoot?.querySelector('input');
+        const label = this.shadowRoot?.querySelector('label');
+        const error = this.shadowRoot?.querySelector('#error');
+        const startEl = row?.querySelector<PdcLocationDate>(
+            'pdc-location-date[pdc="start"]',
+        );
+        const endEl = row?.querySelector<PdcLocationDate>(
+            'pdc-location-date[pdc="end"]',
+        );
+
+        if (!(row && input && label && error && startEl && endEl))
+            throw new Error(
+                `Failed to render ${this.#attrName} date elements in Location view.`,
+            );
+
+        return {
+            row,
+            input,
+            label,
+            error,
+            startEl,
+            endEl,
+        };
+    };
+
     #handleChange(target: HTMLInputElement) {
-        if (this.#styled) this.renderError(false);
         this.updateInput(target.value);
     }
 
     #reset() {
         this.setInputValue();
         this.setAttr();
-        this.focusInput();
+        this.focusEl();
     }
 
     #resetEnd() {
@@ -166,7 +172,7 @@ export class PdcLocationDate extends HTMLElement {
             await this.#startEl.restrictStartInput();
             this.#endEl.updateInput();
             this.#endEl.restrictEndInput();
-            this.#endEl.focusInput();
+            this.#endEl.focusEl();
             if (this.#styled)
                 this.#endEl.renderError(
                     true,
@@ -182,6 +188,7 @@ export class PdcLocationDate extends HTMLElement {
         await this.#startEl.restrictStartInput();
         this.#endEl.restrictEndInput();
         if (this.#styled) highlightSuccess(this.#input);
+        if (this.#styled) this.renderError(false);
     }
 
     async restrictStartInput() {
@@ -256,10 +263,12 @@ export class PdcLocationDate extends HTMLElement {
         }
     }
 
-    protected enable(value: boolean) {
-        value ?
+    enable(enable: boolean) {
+        enable ?
             this.#input.removeAttribute('disabled')
         :   this.#input.setAttribute('disabled', 'true');
+        this.enableTabIndex(enable);
+        this.#enabled = enable;
     }
     // setMin and setMax handled with restrictInput()
     #setMin(value: DateRaw | null = null) {
@@ -279,7 +288,7 @@ export class PdcLocationDate extends HTMLElement {
         :   this.removeAttribute(this.#attrName);
     }
 
-    focusInput() {
+    focusEl() {
         this.#input.focus();
     }
 
@@ -289,12 +298,15 @@ export class PdcLocationDate extends HTMLElement {
     ) {
         if (enable) {
             highlightError(this.#input);
-            this.focusInput();
-            this.#errorMsgEl.textContent = msg;
-            this.#errorContainer.classList.add('active');
+            this.focusEl();
+            this.#error.textContent = msg;
+            this.#error.classList.add('active');
             return;
         }
-        this.#errorContainer.classList.remove('active');
+        this.#error.classList.remove('active');
+        setTimeout(() => {
+            this.#error.innerHTML = '&nbsp;';
+        }, 300);
     }
 
     get inputValue() {
@@ -302,6 +314,10 @@ export class PdcLocationDate extends HTMLElement {
     }
     setInputValue(value: DateRaw | null = null) {
         value ? (this.#input.value = value) : (this.#input.value = '');
+    }
+
+    get isEnabled() {
+        return this.#enabled;
     }
 
     get pdcValue() {

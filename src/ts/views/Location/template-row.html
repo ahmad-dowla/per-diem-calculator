@@ -11,39 +11,22 @@
             group-[.active]/row:group-hover/row:border-neutral-300
             group-[.pdc-row-open.active]/row:border-neutral-300"
     >
-        <!-- Error container-->
-        <div
-            id="error"
-            class="bg-error-50 absolute top-0 left-[50%] z-10 my-3 flex w-[80%]
-                translate-x-[-50%] items-center rounded-md border
-                border-neutral-200 p-3 opacity-0 transition-opacity
-                [.active]:z-80 [.active]:opacity-100"
-        >
-            <svg viewBox="0 0 24 24" class="text-error-700 mr-3 h-5 w-5">
-                <path
-                    fill="currentColor"
-                    d="M11.983,0a12.206,12.206,0,0,0-8.51,3.653A11.8,11.8,0,0,0,0,12.207,11.779,11.779,0,0,0,11.8,24h.214A12.111,12.111,0,0,0,24,11.791h0A11.766,11.766,0,0,0,11.983,0ZM10.5,16.542a1.476,1.476,0,0,1,1.449-1.53h.027a1.527,1.527,0,0,1,1.523,1.47,1.475,1.475,0,0,1-1.449,1.53h-.027A1.529,1.529,0,0,1,10.5,16.542ZM11,12.5v-6a1,1,0,0,1,2,0v6a1,1,0,1,1-2,0Z"
-                ></path>
-            </svg>
-            <span id="error-message" class="text-error-900 text-sm"
-                >Please enter a valid date.</span
-            >
-        </div>
-
         <!-- Summary -->
         <div
             data-pdc="location-row-summary"
             class="relative z-20 flex h-14 items-center justify-between gap-1.5
-                px-4 text-neutral-800 transition-[height_background-color]
-                duration-700 group-[.pdc-row-open]/row:bg-neutral-50
-                hover:cursor-pointer
+                px-4 text-neutral-800
+                [transition:height_0.7s_ease,background-color_1.4s_ease]
+                group-[.pdc-row-open]/row:bg-neutral-50 hover:cursor-pointer
                 hover:group-[.pdc-row-open]/row:bg-neutral-100
                 hover:*:[svg:first-of-type]:rotate-0"
         >
             <svg
+                tabindex="0"
                 class="mr-2 size-5 shrink-0 fill-none stroke-current
                     transition-transform duration-500
-                    group-[.pdc-row-open]/row:-rotate-180"
+                    group-[.pdc-row-open]/row:-rotate-180
+                    focus-visible:rotate-0"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
             >
@@ -71,13 +54,13 @@
             <button
                 type="button"
                 data-pdc="location-delete"
-                class="hover:text-error-600 ml-3 text-neutral-200
-                    **:transition-colors **:duration-300 **:ease-out
-                    hover:cursor-pointer"
+                class="hover:text-error-600 focus-visible:text-error-600 py-3
+                    pl-3 text-neutral-200 **:transition-colors **:duration-300
+                    **:ease-out hover:cursor-pointer"
             >
                 <svg
                     inert
-                    class="size-5 fill-current"
+                    class="size-7 fill-current"
                     data-pdc="location-delete"
                     data-pdc-unstyled="Delete Location"
                     xmlns="http://www.w3.org/2000/svg"
@@ -94,94 +77,120 @@
                 </svg>
             </button>
         </div>
-        <!-- Details w/ Input Fields -->
 
+        <!-- Details w/ Input Fields -->
         <div
             data-pdc="location-row-details"
             class="PDC_HEIGHT mx-4 overflow-hidden opacity-0
                 transition-[height_opacity] duration-700
                 group-[.pdc-row-open]/row:opacity-100"
         >
-            <!-- Hidden navigation radio buttons that help move between each page of inputs -->
-            <input
-                type="radio"
-                name="pdc-row-ROW_ID"
-                id="pdc-el-date-ROW_ID"
-                class="peer/pdc-el-dates hidden"
-                checked
-                hidden
-            />
-            <input
-                type="radio"
-                name="pdc-row-ROW_ID"
-                id="pdc-el-category-ROW_ID"
-                class="peer/pdc-el-category hidden"
-                hidden
-            />
-            <input
-                type="radio"
-                name="pdc-row-ROW_ID"
-                id="pdc-el-countrycity-ROW_ID"
-                class="peer/pdc-el-countrycity hidden"
-                hidden
-            />
+            <div>
+                <!-- Hidden navigation radio buttons that help move between each page of inputs -->
+                <input
+                    type="radio"
+                    name="pdc-row-ROW_ID"
+                    id="pdc-el-date-ROW_ID"
+                    class="peer/pdc-el-dates hidden"
+                    checked
+                    hidden
+                />
+                <input
+                    type="radio"
+                    name="pdc-row-ROW_ID"
+                    id="pdc-el-category-ROW_ID"
+                    class="peer/pdc-el-category hidden"
+                    hidden
+                />
+                <input
+                    type="radio"
+                    name="pdc-row-ROW_ID"
+                    id="pdc-el-countrycity-ROW_ID"
+                    class="peer/pdc-el-countrycity hidden"
+                    hidden
+                />
 
-            <!-- Container with pages of inputs for dates/category/countrycity -->
-            <div
-                class="relative z-50 flex w-full transition-[translate]
-                    duration-300 ease-in
-                    peer-checked/pdc-el-category:-translate-x-full
-                    peer-checked/pdc-el-countrycity:-translate-x-[200%]
-                    peer-checked/pdc-el-dates:-translate-x-0"
-            >
-                <div class="grid min-w-full grid-cols-1 gap-2 p-6">
-                    <pdc-location-date
-                        pdc="start"
-                        styled="true"
-                    ></pdc-location-date>
-                    <pdc-location-date
-                        pdc="end"
-                        styled="true"
-                    ></pdc-location-date>
-                </div>
-                <pdc-location-category
-                    pdc="category"
-                    styled="true"
-                    class="min-w-full"
-                ></pdc-location-category>
-                <div class="relative grid min-w-full grid-cols-1 gap-6 p-6">
-                    <!-- Indicator that results are still loading -->
-                    <div
-                        data-pdc="loading-spinner"
-                        class="absolute z-50 hidden h-[90%] w-full items-center
-                            justify-center bg-white opacity-0 transition-opacity
-                            duration-500 ease-in [.active]:flex
-                            [.active]:opacity-100"
-                    >
+                <!-- Container with pages of inputs for dates/category/countrycity -->
+                <div
+                    class="relative z-50 flex w-full transition-[translate]
+                        duration-300 ease-in
+                        peer-checked/pdc-el-category:-translate-x-full
+                        peer-checked/pdc-el-countrycity:-translate-x-[200%]
+                        peer-checked/pdc-el-dates:-translate-x-0"
+                >
+                    <!-- Dates -->
+                    <div class="grid min-w-full grid-cols-1 gap-2 p-6">
+                        <pdc-location-date
+                            pdc="start"
+                            styled="true"
+                        ></pdc-location-date>
+                        <pdc-location-date
+                            pdc="end"
+                            styled="true"
+                        ></pdc-location-date>
                         <div
-                            class="border-t-primary-600 border-primary-50 h-10
-                                w-10 animate-spin rounded-full border-4
-                                border-t-4"
+                            class="h-0 min-w-full"
+                            data-pdc="switchToCategory0"
+                            tabindex="-1"
+                        ></div>
+                        <div
+                            class="h-0 min-w-full"
+                            data-pdc="switchToDates"
+                            tabindex="-1"
                         ></div>
                     </div>
-                    <pdc-location-select
-                        pdc="country"
-                        styled="true"
-                    ></pdc-location-select>
-                    <pdc-location-select
-                        pdc="city"
-                        styled="true"
-                    ></pdc-location-select>
+                    <!-- Category -->
+                    <div class="min-w-full">
+                        <pdc-location-category
+                            pdc="category"
+                            styled="true"
+                        ></pdc-location-category>
+                        <div
+                            class="grid-cols-0 h-0 min-w-full"
+                            data-pdc="switchToCountryCity"
+                            tabindex="-1"
+                        ></div>
+                    </div>
+                    <!-- CountryCity -->
+                    <div class="relative grid min-w-full grid-cols-1 gap-6 p-6">
+                        <div
+                            class="h-0 min-w-full"
+                            data-pdc="switchToCategory1"
+                            tabindex="-1"
+                        ></div>
+                        <!-- Indicator that results are still loading -->
+                        <div
+                            data-pdc="loading-spinner"
+                            class="absolute z-50 hidden h-[90%] w-full
+                                items-center justify-center bg-white opacity-0
+                                transition-opacity duration-500 ease-in
+                                [.active]:flex [.active]:opacity-100"
+                        >
+                            <div
+                                class="border-t-primary-600 border-primary-50
+                                    h-10 w-10 animate-spin rounded-full border-4
+                                    border-t-4"
+                            ></div>
+                        </div>
+                        <pdc-location-select
+                            pdc="country"
+                            styled="true"
+                        ></pdc-location-select>
+                        <pdc-location-select
+                            pdc="city"
+                            styled="true"
+                        ></pdc-location-select>
+                    </div>
                 </div>
             </div>
-
             <!-- Labels that control the hidden radio navigation buttons, and provide a visual indicator of inputs being completed -->
             <div
-                class="relative mb-8 grid grid-cols-3 justify-between
+                class="mb-8 grid grid-cols-3 justify-between
                     justify-items-center pt-4 text-lg font-semibold
                     **:transition-colors **:duration-300 [&_label]:z-10"
             >
                 <label
+                    tabindex="0"
                     class="group/label grid justify-items-center px-5
                         hover:cursor-pointer"
                     for="pdc-el-date-ROW_ID"
@@ -189,10 +198,10 @@
                     <!-- Calendar icon -->
                     <svg
                         class="group-hover/label:!text-primary-600
-                            group-has-[[end]]/row:text-secondary-400 group/label
+                            group-focus-visible/label:!text-primary-600
+                            group-has-[[end]]/row:text-success-400
                             group-has-[&_input[id*=pdc-el-date]:checked]/row:text-primary-200
                             size-6 fill-white text-neutral-300"
-                        aria-hidden="true"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                     >
@@ -206,9 +215,9 @@
                     </svg>
                     <!-- Circled check icon -->
                     <svg
-                        class="group-has-[[end]]/row:text-secondary-400
-                            group/label mt-2 size-5 rounded-[50%] bg-current
-                            fill-white text-neutral-300"
+                        class="group-has-[[end]]/row:text-success-400 mt-2
+                            size-5 rounded-[50%] bg-current fill-white
+                            text-neutral-300"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                     >
@@ -220,6 +229,7 @@
                     </svg>
                 </label>
                 <label
+                    tabindex="0"
                     class="group/label grid justify-items-center px-5
                         hover:cursor-pointer"
                     for="pdc-el-category-ROW_ID"
@@ -228,10 +238,10 @@
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="group-has-[&_input[id*=pdc-el-category]:checked]/row:fill-primary-200
-                            group-has-[[end]]/row:group-has-[[category]]/row:fill-secondary-400
+                            group-focus-visible/label:!fill-primary-600
+                            group-has-[[end]]/row:group-has-[[category]]/row:fill-success-400
                             group-hover/label:!fill-primary-600 size-6 scale-85
                             fill-neutral-300"
-                        aria-hidden="true"
                         viewBox="0 0 16 16"
                     >
                         <path
@@ -241,7 +251,7 @@
 
                     <!-- Circled check icon -->
                     <svg
-                        class="group-has-[[end]]/row:group-has-[[category]]/row:text-secondary-400
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:text-success-400
                             mt-2 size-5 rounded-[50%] bg-current fill-white
                             text-neutral-300"
                         xmlns="http://www.w3.org/2000/svg"
@@ -255,13 +265,15 @@
                     </svg>
                 </label>
                 <label
+                    tabindex="0"
                     for="pdc-el-countrycity-ROW_ID"
                     class="group/label grid justify-items-center px-5
                         hover:cursor-pointer"
                 >
                     <!-- Location icon -->
                     <svg
-                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:stroke-secondary-400
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:stroke-success-400
+                            group-focus-visible/label:!stroke-primary-600
                             group-hover/label:!stroke-primary-600
                             group-has-[&_input[id*=pdc-el-countrycity]:checked]/row:stroke-primary-200
                             size-6 fill-white stroke-neutral-300 stroke-2"
@@ -281,7 +293,7 @@
                     </svg>
                     <!-- Circled check icon -->
                     <svg
-                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:text-secondary-400
+                        class="group-has-[[end]]/row:group-has-[[category]]/row:group-has-[[city]]/row:text-success-400
                             mt-2 size-5 rounded-[50%] bg-current fill-white
                             text-neutral-300"
                         xmlns="http://www.w3.org/2000/svg"
@@ -295,17 +307,10 @@
                     </svg>
                 </label>
                 <hr
-                    class="group-has-[[city]]/row:border-secondary-600
-                        col-span-3 -mt-2.5 w-[66%] border border-neutral-300
-                        opacity-50"
+                    class="group-has-[[city]]/row:border-success-600 col-span-3
+                        -mt-2.5 w-[66%] border border-neutral-300 opacity-50"
                 />
             </div>
         </div>
     </div>
-
-    <div
-        data-pdc="location-row-spacer"
-        class="PDC_HEIGHT transition-[height]"
-    ></div>
-    <!-- Empty div to avoid height transition jumps caused by having margin/padding on the parent element -->
 </li>

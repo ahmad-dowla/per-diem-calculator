@@ -1,4 +1,4 @@
-<fieldset class="z-10 p-6">
+<fieldset class="z-10 px-6 pt-6">
     <label class="block text-neutral-700">Location</label>
 
     <div class="grid auto-rows-fr grid-cols-1 gap-8">
@@ -21,6 +21,8 @@
             hidden
         />
         <label
+            tabindex="0"
+            data-pdc="label"
             class="peer/domestic-label peer-checked/domestic:ring-primary-300
                 peer-checked/domestic:bg-primary-50
                 peer-enabled/domestic:hover:bg-primary-50
@@ -29,15 +31,20 @@
                 peer-enabled/domestic:hover:[&_.state_path]:fill-primary-800
                 peer-checked/domestic:[&_.state_path]:stroke-primary-100
                 peer-enabled/domestic:hover:[&_.state_path]:stroke-primary-100
-                [.error]:ring-error-400 [.success]:!ring-secondary-400 mt-2 grid
-                cursor-pointer grid-cols-2 items-center justify-items-center
-                gap-4 rounded-lg bg-neutral-50 p-6 shadow-md ring
-                ring-neutral-200 transition ease-in-out select-none
-                peer-checked/domestic:ring-2
+                [.error]:ring-error-400 [.success]:!ring-success-400
+                peer-enabled/domestic:focus-visible:bg-primary-50
+                peer-enabled/domestic:focus-visible:ring-primary-300
+                peer-enabled/domestic:focus-visible:[&_.state_path]:fill-primary-800
+                peer-enabled/domestic:focus-visible:[&_.state_path]:stroke-primary-100
+                mt-2 grid cursor-pointer grid-cols-2 items-center
+                justify-items-center gap-4 rounded-lg bg-neutral-50 p-6
+                shadow-md ring ring-neutral-200 transition ease-in-out
+                select-none peer-checked/domestic:ring-2
                 peer-disabled/domestic:bg-neutral-200
                 peer-disabled/domestic:shadow-none
                 peer-enabled/domestic:hover:ring-2
-                peer-disabled/domestic:hover:cursor-not-allowed md:grid-cols-3
+                peer-disabled/domestic:hover:cursor-not-allowed
+                peer-enabled/domestic:focus-visible:outline-none md:grid-cols-3
                 md:gap-6 [.error]:ring-3 [.success]:ring-3"
             for="domestic"
         >
@@ -406,6 +413,8 @@
             </div>
         </label>
         <label
+            tabindex="0"
+            data-pdc="label"
             class="peer/intl-label peer-checked/intl:ring-primary-300
                 peer-checked/intl:bg-primary-50
                 peer-enabled/intl:hover:bg-primary-50
@@ -414,13 +423,18 @@
                 peer-enabled/intl:hover:[&_.land]:fill-primary-800
                 peer-checked/intl:[&_.water]:fill-primary-100
                 peer-enabled/intl:hover:[&_.water]:fill-primary-100
-                [.success]:!ring-secondary-400 [.error]:ring-error-400 grid
+                [.success]:!ring-success-400 [.error]:ring-error-400
+                peer-enabled/intl:focus-visible:bg-primary-50
+                peer-enabled/intl:focus-visible:ring-primary-300
+                peer-enabled/intl:focus-visible:[&_.land]:fill-primary-800
+                peer-enabled/intl:focus-visible:[&_.water]:fill-primary-100 grid
                 cursor-pointer grid-cols-2 items-center justify-items-center
                 gap-4 rounded-lg bg-neutral-50 p-6 shadow-md ring-1
                 ring-neutral-200 transition ease-in-out select-none
                 peer-checked/intl:ring-2 peer-disabled/intl:bg-neutral-200
                 peer-disabled/intl:shadow-none peer-enabled/intl:hover:ring-2
-                peer-disabled/intl:hover:cursor-not-allowed md:grid-cols-3
+                peer-disabled/intl:hover:cursor-not-allowed
+                peer-enabled/intl:focus-visible:outline-none md:grid-cols-3
                 md:gap-6 [.error]:ring-3 [.success]:ring-3"
             for="intl"
         >
@@ -516,3 +530,11 @@
         </label>
     </div>
 </fieldset>
+
+<div
+    id="error"
+    class="[.active]:text-error-600 px-6 pt-3 text-transparent
+        transition-colors"
+>
+    &nbsp;
+</div>

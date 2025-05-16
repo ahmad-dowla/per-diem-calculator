@@ -7,7 +7,6 @@ import {
     applyStyles,
     removeStyles,
     highlightSuccess,
-    highlightError,
 } from '../../utils/styles';
 
 // HTML/CSS
@@ -35,15 +34,16 @@ export class PdcExpenseRow extends HTMLElement {
         this.attachShadow({ mode: 'open' });
 
         this.#expense = expense;
-        const { deductions, rates, lodgingAmount, mieAmount } = this.#expense;
         this.#expensesCategory = expensesCategory;
+        this.#styled = styled;
+
+        const { deductions, rates, lodgingAmount, mieAmount } = this.#expense;
         this.#maxLodging = rates.maxLodging;
         this.#maxMie =
             deductions.FirstLastDay ? rates.maxMieFirstLast : rates.maxMie;
         this.#lodgingAmount = lodgingAmount;
         this.#mieAmount = mieAmount;
 
-        this.#styled = styled;
         this.render(styled);
     }
 
@@ -54,29 +54,31 @@ export class PdcExpenseRow extends HTMLElement {
                 'Failed to create ShadowRoot for Meal custom element',
             );
         this.shadowRoot.innerHTML = '';
-        if (!styled) {
-            template.innerHTML = removeStyles(templateHTML);
-        } else {
+        if (styled) {
             template.innerHTML = templateHTML;
             this.shadowRoot && applyStyles(this.shadowRoot);
-        }
+        } else template.innerHTML = removeStyles(templateHTML);
         this.shadowRoot?.appendChild(template.content.cloneNode(true));
 
         // Pull values from expense object
         const { date, city, country } = this.#expense;
 
         // Get elements for each value
-        const dateEl = this.shadowRoot.querySelector('#date');
-        const locationEl = this.shadowRoot.querySelector('#location');
-        const lodgingEl = this.shadowRoot.querySelector('#lodging');
-        const lodgingRateEl = this.shadowRoot.querySelector('#lodging-rate');
-        const mieEl = this.shadowRoot.querySelector('#mie');
-        const mieRateEl = this.shadowRoot.querySelector('#mie-rate');
-        const deductionsEl = this.shadowRoot.querySelector('#deductions');
-        const totalEl = this.shadowRoot.querySelector('#total');
+        const {
+            row,
+            dateEl,
+            locationEl,
+            lodgingEl,
+            lodgingRateEl,
+            mieEl,
+            mieRateEl,
+            deductionsEl,
+            totalEl,
+        } = this.#getRowEls();
 
         if (
             !(
+                row &&
                 dateEl &&
                 locationEl &&
                 lodgingEl &&
@@ -116,22 +118,24 @@ export class PdcExpenseRow extends HTMLElement {
         this.#updateTotalAmount();
 
         // Event listeners for inputs
-        this.shadowRoot.addEventListener('change', e => {
+        row.addEventListener('change', e => {
             this.#handleInputs(e);
         });
+
+        this.toggleRow('close');
 
         // Event listener for clicks
         let pointerStartX = 0;
         let pointerStartY = 0;
 
-        this.shadowRoot.addEventListener('pointerdown', e => {
+        row.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
 
-        this.shadowRoot.addEventListener('pointerup', e => {
+        row.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -143,6 +147,109 @@ export class PdcExpenseRow extends HTMLElement {
                 pointerStartY = result.pointerStartY;
             }
         });
+
+        // Keyboard events
+        row.addEventListener('keyup', e => {
+            if (!(e.key === 'Enter' || e.key === ' ')) return;
+            this.#handleClicks(e);
+        });
+    }
+
+    #getRowEls = () => {
+        if (!this.shadowRoot)
+            throw new Error(
+                'Failed to create ShadowRoot for Meal custom element',
+            );
+        const row = this.shadowRoot.querySelector<HTMLElement>('#expense-row');
+        const rowSummary = this.shadowRoot.querySelector<HTMLElement>(
+            '#expense-row-summary',
+        );
+        const rowDetails = this.shadowRoot.querySelector<HTMLElement>(
+            '#expense-row-details',
+        );
+        const dateEl = this.shadowRoot.querySelector('#date');
+        const locationEl = this.shadowRoot.querySelector('#location');
+        const lodgingEl = this.shadowRoot.querySelector('#lodging');
+        const lodgingRateEl = this.shadowRoot.querySelector('#lodging-rate');
+        const mieEl = this.shadowRoot.querySelector('#mie');
+        const mieRateEl = this.shadowRoot.querySelector('#mie-rate');
+        const deductionsEl = this.shadowRoot.querySelector('#deductions');
+        const totalEl = this.shadowRoot.querySelector('#total');
+
+        return {
+            row,
+            rowSummary,
+            rowDetails,
+            dateEl,
+            locationEl,
+            lodgingEl,
+            lodgingRateEl,
+            mieEl,
+            mieRateEl,
+            deductionsEl,
+            totalEl,
+        };
+    };
+
+    toggleRow(toggle: 'open' | 'close' | 'resize' | null = null): void {
+        if (!this.#styled) return;
+        const { row, rowDetails, rowSummary } = this.#getRowEls();
+        if (!(row && rowSummary && rowDetails))
+            throw new Error(
+                `Failed to generate expense row elements for ${this.#expense.date} - ${this.#expense.city}.`,
+            );
+        row.classList.add('toggling');
+        setTimeout(() => {
+            switch (toggle) {
+                case 'open':
+                    row.classList.add('pdc-row-open');
+                    rowSummary.style.height = 56 + 'px';
+                    rowDetails.style.height = rowDetails.scrollHeight + 'px';
+                    row.style.height = 56 + rowDetails.scrollHeight + 34 + 'px';
+                    return;
+                case 'close':
+                    row.classList.remove('pdc-row-open');
+                    rowSummary.style.height = 80 + 'px';
+                    rowDetails.style.height = 0 + 'px';
+                    row.style.height = 80 + 34 + 'px';
+                    return;
+                case 'resize':
+                    rowSummary.style.height =
+                        (rowSummary.clientHeight === 56 ? 56 : 80) + 'px';
+                    rowDetails.style.height =
+                        (rowDetails.clientHeight ?
+                            rowDetails.scrollHeight
+                        :   0) + 'px';
+                    row.style.height =
+                        (rowSummary.clientHeight === 56 ? 56 : 80) +
+                        (rowDetails.clientHeight ?
+                            rowDetails.scrollHeight
+                        :   0) +
+                        34 +
+                        'px';
+                    return;
+                default:
+                    row.classList.toggle('pdc-row-open');
+                    rowSummary.style.height =
+                        (rowSummary.clientHeight === 80 ? 56 : 80) + 'px';
+                    rowDetails.style.height =
+                        (!rowDetails.clientHeight ?
+                            rowDetails.scrollHeight
+                        :   0) + 'px';
+                    row.style.height =
+                        (rowSummary.clientHeight === 80 ? 56 : 80) +
+                        (!rowDetails.clientHeight ?
+                            rowDetails.scrollHeight
+                        :   0) +
+                        34 +
+                        'px';
+
+                    return;
+            }
+        }, 0);
+        setTimeout(() => {
+            row.classList.remove('toggling');
+        }, 700);
     }
 
     #handleInputs(e: Event) {
@@ -167,18 +274,14 @@ export class PdcExpenseRow extends HTMLElement {
         if (!(target instanceof SVGElement || target instanceof HTMLElement))
             return;
 
-        const row = target.closest('[data-pdc="expense-row"]');
+        const { row } = this.#getRowEls();
         // Only fire if it's an element within expense-row-summary
-        !!target.closest('[data-pdc="expense-row-summary"]') &&
-            row &&
-            row.classList.toggle('pdc-row-open');
-    }
-
-    expand(run: boolean) {
-        const row = this.shadowRoot?.querySelector('[data-pdc="expense-row"]');
-        run ?
-            row && row.classList.add('pdc-row-open')
-        :   row && row.classList.remove('pdc-row-open');
+        if (
+            !!row &&
+            !!target.closest('#expense-row-summary') &&
+            !row.classList.contains('toggling')
+        )
+            this.toggleRow();
     }
 
     updateFirstLastDay(name: 'first' | 'last') {

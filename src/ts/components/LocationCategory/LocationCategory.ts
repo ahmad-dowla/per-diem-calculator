@@ -18,15 +18,17 @@ const template = document.createElement('template');
 // Custom Element
 export class PdcLocationCategory extends HTMLElement {
     #valid: boolean = false;
-    #errorContainer: Element | null = null;
-    #errorMsgEl: Element | null = null;
+    #error: Element;
     #styled = false;
+    #enabled = false;
 
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.#styled = this.getAttribute('styled') === 'true';
         this.#render();
+        const { error } = this.#getEls();
+        this.#error = error;
     }
 
     #render() {
@@ -43,29 +45,23 @@ export class PdcLocationCategory extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
-        const errorContainer = this.closest(
-            '[data-pdc="location-row"]',
-        )?.querySelector('#error');
-        const errorMsgEl = errorContainer?.querySelector('#error-message');
-        if (!(errorContainer && errorMsgEl))
-            throw new Error(
-                `Failed to render category's error elements in Location view.`,
-            );
-        this.#errorContainer = errorContainer;
-        this.#errorMsgEl = errorMsgEl;
+
+        const { fieldset, error } = this.#getEls();
+        this.#error = error;
+        this.enableTabIndex(false);
 
         // Event listener for clicks
         let pointerStartX = 0;
         let pointerStartY = 0;
 
-        this.shadowRoot.addEventListener('pointerdown', e => {
+        fieldset.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
 
-        this.shadowRoot.addEventListener('pointerup', e => {
+        fieldset.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -77,21 +73,46 @@ export class PdcLocationCategory extends HTMLElement {
                 pointerStartY = result.pointerStartY;
             }
         });
+
+        // Keyboard events
+        fieldset.addEventListener('keyup', e => {
+            if (!(e.key === 'Enter' || e.key === ' ')) return;
+            this.#handleClicks(e);
+        });
     }
 
+    #getEls = () => {
+        const fieldset = this.shadowRoot?.querySelector('fieldset');
+        const error = this.shadowRoot?.querySelector('#error');
+        const inputs = this.shadowRoot?.querySelectorAll('input');
+        const labels = this.shadowRoot?.querySelectorAll<HTMLLabelElement>(
+            'label[data-pdc="label"]',
+        );
+        if (!(error && fieldset && inputs && labels))
+            throw new Error(
+                `Failed to render category's elements in Location view.`,
+            );
+        return { fieldset, error, inputs, labels };
+    };
+
     #handleClicks(e: Event) {
+        if (!this.#enabled) return;
         const target = e.composedPath()[0];
-        const input = this.shadowRoot?.querySelector('input:not([disabled])');
-        if (
-            !(
-                input &&
-                (target instanceof HTMLElement || target instanceof SVGElement)
-            )
-        )
+        if (!(target instanceof HTMLElement || target instanceof SVGElement))
             return;
-        if (!input) return;
+        const { fieldset } = this.#getEls();
         const label = target.closest('label');
         const labelVal = label?.getAttribute('for');
+        // In case the selection was made with keyboard presses, ensure the input fields are properly checked/unchecked so that the CSS can reflect that
+        const checkedInput = fieldset.querySelector<HTMLInputElement>(
+            `#${labelVal}`,
+        );
+        const uncheckedInput = fieldset.querySelector<HTMLInputElement>(
+            `#${labelVal === 'domestic' ? 'intl' : 'domestic'}`,
+        );
+        if (!(checkedInput && uncheckedInput)) return;
+        uncheckedInput.checked = false;
+        checkedInput.checked = true;
         labelVal && this.setAttribute('category', labelVal);
         if (this.#styled) label && highlightSuccess(label);
         if (this.#styled) this.#renderError(false);
@@ -99,45 +120,55 @@ export class PdcLocationCategory extends HTMLElement {
 
     enableCategory(enable: boolean) {
         this.#render();
-        const inputs = this.shadowRoot?.querySelectorAll('input');
-        if (!inputs)
-            throw new Error(
-                'Failed to get category input fieldset in location View.',
-            );
+        const { inputs } = this.#getEls();
         inputs.forEach(input => {
             enable ?
                 input.removeAttribute('disabled')
             :   input.setAttribute('disabled', 'true');
         });
+        this.enableTabIndex(enable);
+        this.#enabled = enable;
     }
 
-    #renderError(
-        enable: boolean,
-        msg: string = `Select the location category.`,
-    ) {
-        if (!(this.#errorContainer && this.#errorMsgEl))
-            throw new Error(
-                `Failed to render category's error elements in Location view.`,
-            );
+    enableTabIndex(enable: boolean) {
+        const { fieldset } = this.#getEls();
+        const els = fieldset.querySelectorAll('[tabindex]');
+        enable ?
+            els.forEach(el => el.setAttribute('tabindex', '0'))
+        :   els.forEach(el => el.setAttribute('tabindex', '-1'));
+    }
+
+    #renderError(enable: boolean, msg: string = `Select a category.`) {
         if (enable) {
-            this.#errorMsgEl.textContent = msg;
-            this.#errorContainer.classList.add('active');
+            this.#error.textContent = msg;
+            this.#error.classList.add('active');
             return;
         }
-        this.#errorMsgEl.textContent = msg;
-        this.#errorContainer.classList.remove('active');
+        this.#error.classList.remove('active');
+        setTimeout(() => {
+            this.#error.innerHTML = '&nbsp;';
+        }, 300);
     }
 
     validate() {
         this.#valid = false;
         if (!this.hasAttribute('category')) {
-            const labels = this.shadowRoot?.querySelectorAll('label');
-            if (this.#styled) labels?.forEach(label => highlightError(label));
+            const { labels } = this.#getEls();
+            if (this.#styled) labels.forEach(label => highlightError(label));
             if (this.#styled) this.#renderError(true);
             return this.#valid;
         }
         this.#valid = true;
         return this.#valid;
+    }
+
+    focusEl(number: 0 | 1) {
+        const { labels } = this.#getEls();
+        [...labels][number].focus();
+    }
+
+    get isEnabled() {
+        return this.#enabled;
     }
 
     get pdcValue() {

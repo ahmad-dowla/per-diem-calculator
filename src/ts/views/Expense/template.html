@@ -1,15 +1,19 @@
+<!-- LAST On firefox mobile, expenses table doesn't have bottom border for date and location header-->
+<!-- TODO2 event listeners for keydown for accessiblity in Expense View -->
+<!-- TODO refactor to a more table UI? -->
+
 <div
-    data-pdc="expense-container"
-    class="group relative mx-auto mb-12 grid max-w-4xl grid-cols-1 gap-4
-        rounded-md bg-neutral-100 p-6 shadow-md print:gap-0 print:p-0
-        print:shadow-none **:print:bg-white **:print:text-black"
+    id="expense-container"
+    class="group/container relative mx-auto mb-12 max-w-4xl rounded-md
+        bg-neutral-100 p-6 pt-0 shadow-md print:hidden"
 >
     <!-- Indicator that results are still loading -->
     <div
         data-pdc="loading-spinner"
         class="flex min-h-20 w-full items-center justify-center opacity-100
-            transition-opacity duration-500 ease-in group-[.active]:hidden
-            group-[.active]:opacity-0"
+            transition-opacity duration-500 ease-in
+            group-[.active]/container:hidden
+            group-[.active]/container:opacity-0"
     >
         <div
             class="border-primary-50 border-t-primary-600 h-10 w-10 animate-spin
@@ -17,17 +21,19 @@
         ></div>
     </div>
 
+    <!-- Heading, toggle rows button -->
     <div
-        class="my-2.5 hidden justify-between group-[.active]:flex print:!block"
+        class="hidden items-center justify-between
+            group-[.active]/container:flex"
     >
         <h3 id="heading" class="text-xl font-semibold text-neutral-900"></h3>
         <button
             type="button"
             id="toggle-expand"
-            class="group/btn relative ml-3 text-neutral-600 duration-500
-                *:size-5 *:overflow-visible *:fill-current **:origin-center
-                **:transition-all hover:cursor-pointer print:hidden
-                [&_.down]:[transform:translateY(15%)]
+            class="group/toggle hover:text-primary-900 relative ml-3 py-8 pl-3
+                text-neutral-600 duration-500 *:size-5 *:overflow-visible
+                *:fill-current **:origin-center **:transition-all
+                hover:cursor-pointer [&_.down]:[transform:translateY(15%)]
                 [&_.up]:[transform:translateY(-15%)]
                 [&.active_.down]:[transform:scaleY(-1)_translateY(-70%)]
                 [&.active_.up]:[transform:scaleY(-1)_translateY(70%)]"
@@ -35,7 +41,7 @@
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 data-pdc-delete="Toggle Expenses"
-                class="size-6 fill-current"
+                class="size-18 fill-current"
                 viewBox="0 0 16 16"
             >
                 <path
@@ -55,86 +61,114 @@
             </svg>
         </button>
     </div>
+    <p id="body" class="peer mb-4 hidden group-[.active]/container:block"></p>
 
-    <p id="body" class="hidden group-[.active]:block print:!hidden"></p>
-
-    <p id="body-print" class="mb-3 hidden text-sm print:block"></p>
-
-    <table
-        class="hidden w-full max-w-max table-fixed **:text-center
-            **:align-middle **:text-xs print:block"
-    >
-        <thead>
-            <tr class="border-t-2 border-b-2 *:font-semibold">
-                <th class="w-[12.5%] border-r-2" rowspan="2">Eff.<br />Date</th>
-                <th class="w-[22.5%] border-r-2" rowspan="2">City</th>
-                <th class="w-[42.5%] border-r-2" colspan="4">Rates</th>
-                <th class="w-[22.5%]" colspan="3">Deductions</th>
-            </tr>
-            <tr class="*:font-base border-b-3">
-                <th>Lodging</th>
-                <th>M&IE<br />(Standard)</th>
-                <th>M&IE<br />(First/Last)</th>
-                <th class="border-r-2">Incid.</th>
-                <th>Break.</th>
-                <th>Lunch</th>
-                <th>Dinner</th>
-            </tr>
-        </thead>
-        <tbody id="rates"></tbody>
-    </table>
-
-    <div
-        class="mb-3 hidden pb-3 **:py-2.5 **:text-xs print:block
-            print:border-b-3 print:border-b-black [&>a]:ml-5 [&>a]:list-item
-            [&>a]:pl-2.5"
-        id="sources"
-    >
-        <p>Source:</p>
-    </div>
-
+    <!-- Rows -->
     <div
         id="rows"
-        class="hidden group-[.active]:block print:!contents print:divide-y-2"
+        class="hidden not-peer-[*]:mt-2 group-[.active]/container:block"
     ></div>
 
+    <!-- Totals -->
     <div
         id="total-amounts"
-        class="my-5 hidden text-lg group-[.active]:block print:p-0"
+        class="my-8 hidden text-lg group-[.active]/container:block"
     >
-        <div class="flex print:border-t-2 print:border-t-black">
+        <div class="flex">
             <p class="grow">M&IE</p>
             <p id="mie-subtotal" class="text-right">$0.00</p>
         </div>
-        <div class="flex print:border-t-2 print:border-t-black">
+        <div class="flex">
             <p class="grow">Lodging</p>
             <p id="lodging-subtotal" class="text-right">$0.00</p>
         </div>
-        <div
-            class="flex font-semibold print:border-t-2 print:border-b-2
-                print:border-t-black"
-        >
+        <div class="flex font-semibold">
             <p class="grow">Total</p>
             <p id="total" class="text-right">$0.00</p>
         </div>
     </div>
 
-    <button
-        class="group/btn relative -mb-14 hidden group-[.active]:block
-            hover:cursor-pointer focus:outline-hidden print:!hidden"
-        type="button"
-        id="print-expenses"
-    >
-        <span
-            aria-hidden="true"
-            class="border-primary-900 absolute inset-0 z-0 mx-auto w-9/12 border
-                bg-neutral-50 py-3.5"
-        ></span>
-        <span
-            class="border-primary-900 bg-primary-900 relative z-10 mx-auto block
-                w-9/12 border py-4 text-neutral-50 transition-transform
-                group-hover/btn:-translate-x-1 group-hover/btn:-translate-y-1"
-            >Print Expenses</span
+    <!-- Button print expenses -->
+    <div class="-mb-14 w-full text-center">
+        <pdc-button-text
+            id="print-expenses"
+            styled="true"
+            bg-color="primary-900"
+            border-color="primary-900"
+            text="Print Expenses"
+            text-color="neutral-50"
+        ></pdc-button-text>
+    </div>
+</div>
+
+<!-- Print section-->
+<div class="hidden w-full print:block">
+    <!-- Print heading, body-->
+    <h3 id="heading-print" class="mt-2.5 text-xl font-semibold"></h3>
+    <p id="body-print" class="text-sm"></p>
+
+    <!-- Print rates table, sources -->
+    <div class="mt-8 w-full">
+        <h3 class="mb-2.5 text-xl font-semibold">Rates</h3>
+        <table
+            class="w-full table-fixed **:text-center **:align-middle **:text-xs"
         >
-    </button>
+            <thead>
+                <tr class="border-t-2 border-b-2 *:font-semibold">
+                    <th class="w-[12.5%] border-r-2" rowspan="2">
+                        Eff.<br />Date
+                    </th>
+                    <th class="w-[22%] border-r-2" rowspan="2">Location</th>
+                    <th class="w-[41.5%] border-r-2 py-1.5" colspan="4">
+                        Rates
+                    </th>
+                    <th class="w-[24%]" colspan="3">Deductions</th>
+                </tr>
+                <tr class="*:font-base border-b-3">
+                    <th>Lodging</th>
+                    <th class="py-1.5">
+                        M&IE<br /><span class="font-normal">(Standard)</span>
+                    </th>
+                    <th>
+                        M&IE<br /><span class="font-normal">(First/Last)</span>
+                    </th>
+                    <th class="border-r-2">Incid.</th>
+                    <th>Break.</th>
+                    <th>Lunch</th>
+                    <th>Dinner</th>
+                </tr>
+            </thead>
+            <tbody id="rates-table"></tbody>
+        </table>
+        <!-- Sources -->
+        <div
+            class="**:pb-2.5 **:text-xs [&>a]:ml-5 [&>a]:list-item [&>a]:pl-2.5"
+            id="sources"
+        >
+            <p class="pt-2.5">Source:</p>
+        </div>
+    </div>
+
+    <!-- Print expenses table -->
+    <div class="mt-8 w-full">
+        <h3 class="mb-2.5 text-xl font-semibold">Expenses</h3>
+
+        <table class="w-full table-fixed **:align-middle **:text-xs">
+            <thead>
+                <tr class="border-t-2 border-b-3 *:p-3 *:font-semibold">
+                    <th class="w-[12.5%] text-center" rowspan="2">Date</th>
+                    <th class="w-[40%] text-left" rowspan="2">
+                        Location / Deductions
+                    </th>
+                    <th class="text-right">M&IE</th>
+                    <th class="text-right">Lodging</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody
+                class="**:align-middle [&_td]:p-3 [&_tr]:border-b-2"
+                id="expenses-table"
+            ></tbody>
+        </table>
+    </div>
 </div>

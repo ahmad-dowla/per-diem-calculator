@@ -24,9 +24,12 @@ export const sanitizeConfig = (configUser: Partial<Config> | null): Config => {
 
     // Sanitize 'expense'
     if (configUser.expense) {
-        const { heading, body, bodyPrint } = configUser.expense;
+        const { heading, headingPrint, body, bodyPrint } = configUser.expense;
         if (heading)
             sanitizedConfig.expense.heading = DOMPurify.sanitize(heading);
+        if (headingPrint)
+            sanitizedConfig.expense.headingPrint =
+                DOMPurify.sanitize(headingPrint);
         if (body) sanitizedConfig.expense.body = DOMPurify.sanitize(body);
         if (bodyPrint)
             sanitizedConfig.expense.bodyPrint = DOMPurify.sanitize(bodyPrint);
