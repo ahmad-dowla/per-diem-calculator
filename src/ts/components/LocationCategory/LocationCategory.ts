@@ -2,12 +2,7 @@
 
 // Utils
 import { handlePointerDown, handlePointerUp } from '../../utils/misc';
-import {
-    applyStyles,
-    removeStyles,
-    highlightSuccess,
-    highlightError,
-} from '../../utils/styles';
+import { applyStyles, removeStyles } from '../../utils/styles';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
@@ -17,8 +12,37 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationCategory extends HTMLElement {
+    static observedAttributes = ['bg'];
+
+    attributeChangedCallback(
+        _name: string,
+        _oldValue: string,
+        newValue: string,
+    ) {
+        if (
+            !(
+                this.#styled &&
+                (newValue === 'white' || newValue === 'neutral-50')
+            )
+        )
+            return;
+        this.#setBg(`bg-${newValue}`);
+    }
+
+    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        this.shadowRoot
+            ?.querySelector('fieldset')
+            ?.classList.remove(`bg-white`, `bg-neutral-50`);
+        this.shadowRoot
+            ?.querySelector('fieldset')
+            ?.classList.add(
+                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
+            );
+    }
+
     #valid: boolean = false;
-    #error: Element;
+    #errorEl: Element;
     #styled = false;
     #enabled = false;
 
@@ -27,8 +51,8 @@ export class PdcLocationCategory extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.#styled = this.getAttribute('styled') === 'true';
         this.#render();
-        const { error } = this.#getEls();
-        this.#error = error;
+        const { errorEl } = this.#getEls();
+        this.#errorEl = errorEl;
     }
 
     #render() {
@@ -46,9 +70,10 @@ export class PdcLocationCategory extends HTMLElement {
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-        const { fieldset, error } = this.#getEls();
-        this.#error = error;
+        const { fieldset, errorEl } = this.#getEls();
+        this.#errorEl = errorEl;
         this.enableTabIndex(false);
+        this.#setBg();
 
         // Event listener for clicks
         let pointerStartX = 0;
@@ -75,7 +100,7 @@ export class PdcLocationCategory extends HTMLElement {
         });
 
         // Keyboard events
-        fieldset.addEventListener('keyup', e => {
+        fieldset.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
@@ -83,16 +108,16 @@ export class PdcLocationCategory extends HTMLElement {
 
     #getEls = () => {
         const fieldset = this.shadowRoot?.querySelector('fieldset');
-        const error = this.shadowRoot?.querySelector('#error');
-        const inputs = this.shadowRoot?.querySelectorAll('input');
-        const labels = this.shadowRoot?.querySelectorAll<HTMLLabelElement>(
-            'label[data-pdc="label"]',
+        const errorEl = this.closest('#locations-container')?.querySelector(
+            '#error',
         );
-        if (!(error && fieldset && inputs && labels))
+        const inputs = this.shadowRoot?.querySelectorAll('input');
+        const labels = this.shadowRoot?.querySelectorAll('label');
+        if (!(errorEl && fieldset && inputs && labels))
             throw new Error(
                 `Failed to render category's elements in Location view.`,
             );
-        return { fieldset, error, inputs, labels };
+        return { fieldset, errorEl, inputs, labels };
     };
 
     #handleClicks(e: Event) {
@@ -114,18 +139,23 @@ export class PdcLocationCategory extends HTMLElement {
         uncheckedInput.checked = false;
         checkedInput.checked = true;
         labelVal && this.setAttribute('category', labelVal);
-        if (this.#styled) label && highlightSuccess(label);
-        if (this.#styled) this.#renderError(false);
+        if (this.#styled) {
+            label?.classList.add('success');
+            this.#renderError(false);
+        }
     }
 
-    enableCategory(enable: boolean) {
+    enable(enable: boolean) {
         this.#render();
         const { inputs } = this.#getEls();
-        inputs.forEach(input => {
-            enable ?
-                input.removeAttribute('disabled')
-            :   input.setAttribute('disabled', 'true');
-        });
+        setTimeout(() => {
+            // To allow for transitions to happen after immmediate rerender
+            inputs.forEach(input => {
+                enable ?
+                    input.removeAttribute('disabled')
+                :   input.setAttribute('disabled', 'true');
+            });
+        }, 50);
         this.enableTabIndex(enable);
         this.#enabled = enable;
     }
@@ -140,21 +170,25 @@ export class PdcLocationCategory extends HTMLElement {
 
     #renderError(enable: boolean, msg: string = `Select a category.`) {
         if (enable) {
-            this.#error.textContent = msg;
-            this.#error.classList.add('active');
+            if (this.#styled)
+                this.#getEls().labels.forEach(label =>
+                    label.classList.add('error'),
+                );
+            this.#errorEl.textContent = msg;
+            this.#errorEl.classList.add('active');
             return;
         }
-        this.#error.classList.remove('active');
-        setTimeout(() => {
-            this.#error.innerHTML = '&nbsp;';
-        }, 300);
+        if (this.#styled) {
+            this.#getEls().labels.forEach(label =>
+                label.classList.remove('error'),
+            );
+            this.#errorEl.classList.remove('active');
+        }
     }
 
     validate() {
         this.#valid = false;
         if (!this.hasAttribute('category')) {
-            const { labels } = this.#getEls();
-            if (this.#styled) labels.forEach(label => highlightError(label));
             if (this.#styled) this.#renderError(true);
             return this.#valid;
         }
@@ -162,9 +196,9 @@ export class PdcLocationCategory extends HTMLElement {
         return this.#valid;
     }
 
-    focusEl(number: 0 | 1) {
+    focusEl() {
         const { labels } = this.#getEls();
-        [...labels][number].focus();
+        [...labels][0].focus();
     }
 
     get isEnabled() {

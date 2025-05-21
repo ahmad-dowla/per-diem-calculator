@@ -60,21 +60,262 @@
     --color-error-200: hsl(360, 100%, 80%);
     --color-error-100: hsl(360, 100%, 87%);
     --color-error-50: hsl(360, 100%, 95%);
+
+    --row-close: 96px;
+    --row-location-open: 445px;
+    --row-expense-open: 373px;
+
+    /* Row open, close, delete */
+    @keyframes row-location-open {
+        0% {
+            height: var(--row-close);
+        }
+        100% {
+            height: var(--row-location-open);
+        }
+    }
+    @keyframes row-expense-open {
+        0% {
+            height: var(--row-close);
+        }
+        100% {
+            height: var(--row-expense-open);
+        }
+    }
+    @keyframes row-location-close {
+        0% {
+            height: var(--row-location-open);
+        }
+        100% {
+            height: var(--row-close);
+        }
+    }
+    @keyframes row-expense-close {
+        0% {
+            height: var(--row-expense-open);
+        }
+        100% {
+            height: var(--row-close);
+        }
+    }
+    @keyframes row-delete {
+        0% {
+            height: var(--row-close);
+        }
+        100% {
+            height: 0;
+        }
+    }
+    @keyframes row-add {
+        0% {
+            height: 0;
+        }
+        100% {
+            height: var(--row-location-open);
+        }
+    }
+
+    /* Row details */
+    @keyframes row-open-details {
+        0% {
+            transform: translateX(0);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(100%);
+            opacity: 100;
+        }
+    }
+    @keyframes row-close-details {
+        0% {
+            transform: translateX(100%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 0;
+        }
+    }
+
+    /* Row summary */
+    @keyframes row-open-summary {
+        0% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateY(-200%);
+            opacity: 0;
+        }
+    }
+    @keyframes row-close-summary {
+        0% {
+            transform: translateY(-200%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+    }
+
+    /* Row delete button */
+    @keyframes row-open-deletebtn {
+        0% {
+            transform: translateX(0%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateX(200%);
+            opacity: 0;
+        }
+    }
+    @keyframes row-close-deletebtn {
+        0% {
+            transform: translateX(200%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0%);
+            opacity: 100;
+        }
+    }
+
+    /* Row add row button */
+    @keyframes rows-open-addRowBtn {
+        0% {
+            transform: translateY(0%);
+            opacity: 100;
+            z-index: 50;
+        }
+        33% {
+            transform: translateY(75%);
+            opacity: 100;
+            z-index: 0;
+        }
+        70% {
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(-100%);
+            z-index: 0;
+            opacity: 0;
+        }
+    }
+    @keyframes rows-closed-addRowBtn {
+        0% {
+            transform: translateY(-100%);
+            z-index: 0;
+            opacity: 0;
+        }
+        30% {
+            opacity: 100;
+        }
+        66% {
+            transform: translateY(75%);
+            z-index: 0;
+        }
+        100% {
+            transform: translateY(0%);
+            z-index: 50;
+            opacity: 100;
+        }
+    }
+
+    /* Row expense category button */
+    @keyframes rows-open-expenseCategoryBtn {
+        0% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateY(400%);
+            opacity: 0;
+        }
+    }
+    @keyframes rows-closed-expenseCategoryBtn {
+        0% {
+            transform: translateY(400%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+    }
+
+    /* Row generate expenses button */
+    @keyframes rows-open-expensesGenerateBtn {
+        0% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateY(200%);
+            opacity: 0;
+        }
+    }
+    @keyframes rows-closed-expensesGenerateBtn {
+        0% {
+            transform: translateY(200%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+    }
+
+    /* Row open, close, delete */
+    --animate-row-location-open: row-location-open 0.35s 0.45s ease-in forwards;
+    --animate-row-expense-open: row-expense-open 0.35s 0.45s ease-in forwards;
+    --animate-row-location-close: row-location-close 0.35s 0.35s ease-in
+        forwards;
+    --animate-row-expense-close: row-expense-close 0.35s 0.35s ease-in forwards;
+    --animate-row-delete: row-delete 0.35s 0.45s ease-out forwards;
+    --animate-row-add: row-add 0.35s 0.45s ease-in forwards;
+
+    /* Row add row button */
+    --animate-rows-open-addRowBtn: rows-open-addRowBtn 0.45s forwards;
+    --animate-rows-closed-addRowBtn: rows-closed-addRowBtn 0.45s ease-out
+        forwards;
+
+    /* Row expense category button */
+    --animate-rows-open-expenseCategoryBtn: rows-open-expenseCategoryBtn 0.35s
+        0.45s forwards;
+    --animate-rows-closed-expenseCategoryBtn: rows-closed-expenseCategoryBtn
+        0.45s forwards;
+
+    --animate-rows-open-expensesGenerateBtn: rows-open-expensesGenerateBtn 0.35s
+        0.45s forwards;
+    --animate-rows-closed-expensesGenerateBtn: rows-closed-expensesGenerateBtn
+        0.45s forwards;
+
+    --animate-row-open-details: row-open-details 0.35s 0.45s ease-in forwards;
+    --animate-row-close-details: row-close-details 0.35s ease-in forwards;
+
+    --animate-row-open-summary: row-open-summary 0.35s 0.35s ease-in forwards;
+    --animate-row-close-summary: row-close-summary 0.35s 0.7s ease-out forwards;
+
+    --animate-row-open-deletebtn: row-open-deletebtn 0.35s 0.35s ease-in
+        forwards;
+    --animate-row-close-deletebtn: row-close-deletebtn 0.35s 0.7s ease-out
+        forwards;
 }
 
 .ts-wrapper {
-    @apply !static !ml-0 w-full focus-visible:!outline-1;
+    @apply [.has-items]:[&_.ts-control]:!border-r-success-400 !static min-h-10 w-[68%] [.has-items]:[&_.ts-control]:after:!content-none;
 }
 
 .ts-control,
 .ts-wrapper.single .ts-control,
 .plugin-dropdown_input.focus.dropdown-active .ts-control,
 .ts-wrapper.single.input-active .ts-control {
-    @apply [.error]:ring-error-400 [.success]:ring-success-400 mt-2 min-h-[46px] rounded-lg border-none bg-neutral-50 bg-none !px-5 !py-2.5 text-base shadow-sm ring ring-neutral-200 transition ease-in-out after:top-4 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] [.error]:ring-3 [.success]:ring-3;
+    @apply [.error]:border-r-error-400 [.success]:border-r-success-400 my-3 min-h-10 rounded-none border-t-0 border-r-3 border-b-0 border-l-0 border-r-transparent bg-transparent bg-none !p-0 !py-2 !pr-3 text-base shadow-none transition-[border-color] after:top-3.5 after:right-3 after:h-5 after:w-5 after:border-0 after:bg-[url("data:image/svg+xml,%3Csvg%20%20xmlns='http://www.w3.org/2000/svg'%20fill='none'%20viewBox='0%200%2024%2024'%20stroke='currentColor'%20%3E%3Cpath%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='2'%20d='M19%209l-7%207-7-7'%20/%3E%3C/svg%3E")] after:bg-size-[16px_16px] after:bg-no-repeat after:transition-transform after:duration-300 after:ease-in after:content-['_'] focus:outline-none;
 }
 
 .ts-control .item {
-    @apply truncate pr-5;
+    @apply truncate;
 }
 
 .ts-wrapper.single.input-active .ts-control {
@@ -85,20 +326,16 @@
     @apply !cursor-not-allowed;
 }
 
-.disabled .ts-control {
-    @apply !bg-neutral-200 opacity-100;
-}
-
 .ts-dropdown,
 .ts-dropdown.single {
-    @apply ring-primary-300 top-0 left-[50%] z-100 m-0 mt-6 max-w-[94%] [transform:translate(-50%)] overflow-hidden rounded-lg border-none text-base leading-normal shadow-lg ring-2;
+    @apply ring-primary-300 top-1 left-[5px] z-100 m-0 mt-[5px] max-w-[96%] overflow-hidden rounded-lg border-none text-base leading-normal shadow-lg ring-2;
 }
 
 .ts-dropdown [data-selectable].option {
     @apply truncate px-5 py-2.5;
 }
 .plugin-dropdown_input .dropdown-input {
-    @apply px-5 py-2.5;
+    @apply px-5;
 }
 
 .ts-dropdown .create:hover,
@@ -111,11 +348,15 @@
 }
 
 .ts-dropdown-content {
-    @apply !h-lvh max-h-[324px] sm:max-h-[380px];
+    @apply !h-lvh max-h-[375px];
 }
 
 .plugin-dropdown_input .dropdown-input {
     @apply border-none focus:outline-none;
+}
+
+.items-placeholder {
+    @apply py-2.5 !text-base text-neutral-700;
 }
 
 .no-results {

@@ -105,11 +105,11 @@ export class Pdc {
 
     #createSelectOptions = async (row: StateLocationItem) => {
         const { index } = row;
-        this.#viewLocation.rowLoadingSpinner(index, true);
-        const list = await model.returnOptions(row);
         const locationCategory = !!row.country ? 'city' : 'country';
+        this.#viewLocation.showLoadingSpinner(index, true, locationCategory);
+        const list = await model.returnOptions(row);
         this.#viewLocation.setOptions(index, list, locationCategory);
-        this.#viewLocation.rowLoadingSpinner(index, false);
+        this.#viewLocation.showLoadingSpinner(index, false, locationCategory);
     };
 
     #locationsValidate = async (viewValidator: AllViewLocationsValid) => {

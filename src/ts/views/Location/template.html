@@ -1,47 +1,86 @@
 <!-- TODO2 dark mode -->
 
-<div id="location-container">
-    <!-- Main container heading from config, body from config, rows, and button to add row -->
+<div
+    id="view-container"
+    class="group relative mx-auto max-w-3xl overflow-hidden p-3
+        [transition:height_0.7s_ease] print:hidden"
+>
+    <!-- Heading, rows, error container -->
     <div
-        class="mx-auto max-w-4xl rounded-md bg-neutral-100 p-6 pt-5 shadow-md
-            transition-[height] duration-700 print:hidden"
+        id="locations-container"
+        class="relative z-10 overflow-hidden rounded-lg ring-2 ring-neutral-300
+            [transition:height_0.7s_eas]"
     >
         <h3
-            id="heading"
-            class="my-2.5 text-xl font-semibold text-neutral-900"
-        ></h3>
-        <p id="body" class="peer mb-8"></p>
-        <ul id="rows" class="not-peer-[*]:mt-8"></ul>
+            class="h-14 border-b-2 border-b-neutral-200 bg-white p-4 text-xl
+                font-semibold text-neutral-900"
+        >
+            Trip Details
+        </h3>
+        <ul
+            id="rows"
+            class="z-10 overflow-hidden [transition:height_0.7s_ease]"
+        ></ul>
+        <!-- Error msg -->
+        <div
+            id="error"
+            class="bg-error-50 text-error-700 border-b-error-400 absolute
+                -top-14 z-20 flex h-14 w-full translate-y-0 border-b-3 p-4
+                font-medium transition-transform [.active]:translate-y-14"
+        ></div>
+    </div>
 
-        <div class="-mb-14 w-full text-center">
-            <pdc-button-text
-                id="add-row"
-                styled="true"
-                bg-color="neutral-50"
-                border-color="neutral-300"
-                text="+ Add Location"
-                text-color="neutral-600"
-            ></pdc-button-text>
-        </div>
+    <!-- Add location button-->
+    <div
+        class="[.rows-open]:animate-rows-open-addRowBtn
+            [.rows-closed]:animate-rows-closed-addRowBtn relative z-0 -mt-5
+            w-full [transform:translateY(-100%)] text-center opacity-0"
+    >
+        <button
+            type="button"
+            id="add-row"
+            title="Add additional location"
+            class="focus-visible:bg-primary-50 focus-visible:text-primary-800
+                focus-visible:ring-primary-800 hover:ring-primary-800
+                hover:text-primary-800 hover:bg-primary-50 translate-y-0
+                cursor-pointer rounded-full bg-neutral-50 p-1 text-neutral-300
+                ring-2 ring-neutral-300
+                transition-[box-shadow_background-color_transform] duration-500
+                hover:-translate-y-1 focus:outline-none focus-visible:ring-6"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="size-8 fill-current transition-colors"
+                viewBox="0 0 16 16"
+            >
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"
+                />
+            </svg>
+        </button>
     </div>
 
     <!-- Input for type of per diem (mie vs lodging vs both)-->
     <fieldset
         id="expense-category"
-        class="mt-20 space-y-6 text-center print:hidden"
+        class="[.rows-open]:animate-rows-open-expenseCategoryBtn
+            [.rows-closed]:animate-rows-closed-expenseCategoryBtn relative mt-8
+            [transform:translateY(400%)] space-y-6 text-center print:hidden"
     >
         <div
-            class="bg-primary-50 text-primary-800 border-primary-900
-                *:border-primary-900 mx-auto grid max-w-3xs grid-cols-3 divide-x
-                overflow-hidden rounded-lg border text-center text-sm
-                font-medium *:p-2.5 sm:max-w-2xs md:max-w-xs"
+            class="*:hover:bg-primary-900 *:hover:text-primary-50
+                *:has-checked:bg-primary-900 *:has-checked:text-primary-50
+                bg-primary-50 text-primary-800 *:focus-visible:ring-primary-800
+                divide-primary-800 *:ring- *:focus-visible:!bg-primary-50
+                *:focus-visible:!text-primary-800 border-primary-200 mx-auto
+                grid max-w-3xs grid-cols-3 divide-x overflow-hidden rounded-lg
+                border-2 text-center text-sm font-medium *:cursor-pointer
+                *:p-2.5 *:ring-2 *:ring-transparent
+                *:transition-[box-shadow_background-color_color] *:duration-500
+                *:select-none *:ring-inset *:focus:outline-none
+                *:focus-visible:ring-6 sm:max-w-2xs md:max-w-xs"
         >
-            <label
-                class="hover:bg-primary-900 hover:text-primary-50
-                    has-checked:bg-primary-900 has-checked:text-primary-50
-                    cursor-pointer transition-colors ease-in-out select-none"
-                for="mie"
-            >
+            <label tabindex="0" class="" for="mie">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -51,12 +90,7 @@
                 />
                 M&IE
             </label>
-            <label
-                class="hover:bg-primary-900 hover:text-primary-50
-                    has-checked:bg-primary-900 has-checked:text-primary-50
-                    cursor-pointer transition-colors ease-in-out select-none"
-                for="lodging"
-            >
+            <label tabindex="0" class="" for="lodging">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -66,12 +100,7 @@
                 />
                 Lodging
             </label>
-            <label
-                class="hover:bg-primary-900 hover:text-primary-50
-                    has-checked:bg-primary-900 has-checked:text-primary-50
-                    cursor-pointer transition-colors ease-in-out select-none"
-                for="both"
-            >
+            <label tabindex="0" class="" for="both">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -86,14 +115,16 @@
     </fieldset>
 
     <!-- Button to generate Expense view -->
-    <div class="mt-6 mb-8 w-full text-center print:hidden">
+    <div
+        class="[.rows-open]:animate-rows-open-expensesGenerateBtn
+            [.rows-closed]:animate-rows-closed-expensesGenerateBtn mt-6 mb-8
+            w-full [transform:translateY(200%)] text-center print:hidden"
+    >
         <pdc-button-text
-            id="generate-expenses"
             styled="true"
-            bg-color="primary-900"
-            border-color="primary-900"
+            id="generate-expenses"
             text="Generate Expenses"
-            text-color="neutral-50"
+            title="Generate expenses"
         ></pdc-button-text>
     </div>
 </div>

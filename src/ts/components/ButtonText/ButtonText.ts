@@ -15,21 +15,17 @@ export class PdcButtonText extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.#styled = this.getAttribute('styled') === 'true';
-        const bgColor = this.getAttribute('bg-color');
-        const borderColor = this.getAttribute('border-color');
-        const text = this.getAttribute('text');
-        const textColor = this.getAttribute('text-color');
 
-        if (!(this.shadowRoot && bgColor && borderColor && text && textColor))
+        const text = this.getAttribute('text');
+        const title = this.getAttribute('title');
+
+        if (!(this.shadowRoot && text && title))
             throw new Error('Failed to render button.');
 
         let btnMarkup =
             this.#styled ? templateHTML : removeStyles(templateHTML);
-        btnMarkup = btnMarkup
-            .replaceAll('BG_COLOR', bgColor)
-            .replaceAll('BORDER_COLOR', borderColor)
-            .replaceAll('BTN_TEXT', text)
-            .replaceAll('TEXT_COLOR', textColor);
+
+        btnMarkup = btnMarkup.replace('BTN_TEXT', text);
         template.innerHTML = btnMarkup;
 
         if (this.#styled) {
@@ -37,5 +33,8 @@ export class PdcButtonText extends HTMLElement {
         }
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+        const button = this.shadowRoot?.querySelector('button');
+
+        button?.setAttribute('title', title);
     }
 }

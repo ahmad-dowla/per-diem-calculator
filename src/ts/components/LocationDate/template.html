@@ -1,21 +1,24 @@
-<label for="date" class="block text-neutral-700"></label>
-<input
-    tabindex="0"
-    disabled
-    type="date"
-    id="date"
-    min="2021-01-01"
-    max="2040-12-31"
-    class="focus:ring-primary-300 [.success]:ring-success-400
-        [.error]:ring-error-400 relative z-10 mt-2 block w-full rounded-lg px-5
-        py-2.5 text-neutral-800 ring-1 ring-neutral-200 transition ease-in-out
-        focus:ring-2 focus:outline-none enabled:bg-neutral-50
-        disabled:cursor-not-allowed disabled:bg-neutral-200 [.error]:ring-3
-        [.success]:ring-3"
-/>
 <div
-    id="error"
-    class="[.active]:text-error-600 pt-3 text-transparent transition-colors"
+    class="group flex items-center justify-between border-b border-b-neutral-100
+        px-3"
 >
-    &nbsp;
+    <pdc-label styled="true"></pdc-label>
+    <input
+        tabindex="0"
+        disabled
+        type="date"
+        id="date"
+        min="2021-01-01"
+        max="2040-12-31"
+        required
+        class="[.error]:border-r-error-400 [.success]:border-r-success-400
+            relative my-3 w-[68%] border-r-3 border-r-transparent bg-transparent
+            py-2 pr-3 text-neutral-800 opacity-100
+            transition-[border-color_opacity] after:absolute after:left-0
+            after:mt-1.5 after:w-full after:max-w-[70%] after:border-b-2
+            after:border-b-transparent after:transition-colors
+            after:content-['_'] group-focus-within:after:border-b-neutral-300
+            focus:outline-none disabled:cursor-not-allowed
+            disabled:border-r-transparent disabled:text-neutral-800/30"
+    />
 </div>

@@ -2,12 +2,7 @@
 import type { DateRaw } from '../../types/dates';
 
 // Utils
-import {
-    applyStyles,
-    removeStyles,
-    highlightSuccess,
-    highlightError,
-} from '../../utils/styles';
+import { applyStyles, removeStyles } from '../../utils/styles';
 import {
     isDateRawType,
     offsetDateString,
@@ -26,10 +21,12 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationDate extends HTMLElement {
+    static observedAttributes = ['bg'];
+
     #attrName: 'start' | 'end';
     #valid = false;
     #input: HTMLInputElement;
-    #error: Element;
+    #errorEl: Element;
     #styled = false;
     #startEl: PdcLocationDate;
     #endEl: PdcLocationDate;
@@ -53,21 +50,24 @@ export class PdcLocationDate extends HTMLElement {
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-        const { input, label, error, startEl, endEl } = this.#getEls();
+        const { input, label, errorEl, startEl, endEl } = this.#getEls();
 
         this.#input = input;
-        this.#error = error;
+        this.#errorEl = errorEl;
         this.#startEl = startEl;
         this.#endEl = endEl;
 
-        label.textContent =
-            this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1);
+        label.setAttribute(
+            'text',
+            this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1),
+        );
 
         this.#attrName === 'start' ?
             this.restrictStartInput()
         :   this.restrictEndInput();
 
         this.enableTabIndex(false);
+        this.#setBg();
 
         // Apply listeners for inputs only after initial restrictInput(), and potentially any changes to input/attr by it, are done
         this.#input.addEventListener('change', e => {
@@ -76,6 +76,33 @@ export class PdcLocationDate extends HTMLElement {
             if (YEAR_INCOMPLETE_REGEX.test(target.value)) return;
             this.#handleChange(target);
         });
+    }
+
+    attributeChangedCallback(
+        _name: string,
+        _oldValue: string,
+        newValue: string,
+    ) {
+        if (
+            !(
+                this.#styled &&
+                (newValue === 'white' || newValue === 'neutral-50')
+            )
+        )
+            return;
+        this.#setBg(`bg-${newValue}`);
+    }
+
+    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        this.shadowRoot
+            ?.querySelector('div')
+            ?.classList.remove(`bg-white`, `bg-neutral-50`);
+        this.shadowRoot
+            ?.querySelector('div')
+            ?.classList.add(
+                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
+            );
     }
 
     enableTabIndex(enable: boolean) {
@@ -87,8 +114,10 @@ export class PdcLocationDate extends HTMLElement {
     #getEls = () => {
         const row = this.closest<HTMLUListElement>('[data-pdc="location-row"]');
         const input = this.shadowRoot?.querySelector('input');
-        const label = this.shadowRoot?.querySelector('label');
-        const error = this.shadowRoot?.querySelector('#error');
+        const label = this.shadowRoot?.querySelector('pdc-label');
+        const errorEl = this.closest('#locations-container')?.querySelector(
+            '#error',
+        );
         const startEl = row?.querySelector<PdcLocationDate>(
             'pdc-location-date[pdc="start"]',
         );
@@ -96,7 +125,7 @@ export class PdcLocationDate extends HTMLElement {
             'pdc-location-date[pdc="end"]',
         );
 
-        if (!(row && input && label && error && startEl && endEl))
+        if (!(row && input && label && errorEl && startEl && endEl))
             throw new Error(
                 `Failed to render ${this.#attrName} date elements in Location view.`,
             );
@@ -105,7 +134,7 @@ export class PdcLocationDate extends HTMLElement {
             row,
             input,
             label,
-            error,
+            errorEl,
             startEl,
             endEl,
         };
@@ -128,6 +157,8 @@ export class PdcLocationDate extends HTMLElement {
     }
 
     async updateInput(date: string | null = null) {
+        if (this.#styled) this.#input.classList.remove('success');
+
         // If no input value, reset element's values and return
         if (!date) {
             this.#reset();
@@ -187,8 +218,11 @@ export class PdcLocationDate extends HTMLElement {
             this.setAttr(date);
         await this.#startEl.restrictStartInput();
         this.#endEl.restrictEndInput();
-        if (this.#styled) highlightSuccess(this.#input);
-        if (this.#styled) this.renderError(false);
+        if (this.#styled) {
+            this.#input.classList.remove('error');
+            this.#input.classList.add('success');
+            this.renderError(false);
+        }
     }
 
     async restrictStartInput() {
@@ -297,16 +331,15 @@ export class PdcLocationDate extends HTMLElement {
         msg: string = `Enter a valid ${this.#attrName} date.`,
     ) {
         if (enable) {
-            highlightError(this.#input);
-            this.focusEl();
-            this.#error.textContent = msg;
-            this.#error.classList.add('active');
+            this.#input.classList.add('error');
+            this.#errorEl.classList.add('active');
+            this.#errorEl.textContent = msg;
             return;
         }
-        this.#error.classList.remove('active');
+        this.#errorEl.classList.remove('active');
         setTimeout(() => {
-            this.#error.innerHTML = '&nbsp;';
-        }, 300);
+            this.#errorEl.innerHTML = '&nbsp;';
+        }, 100);
     }
 
     get inputValue() {

@@ -1,3 +1,5 @@
+// TODO Apply new table style to expenses
+
 // Types
 import type {
     AllViewLocationsValid,
@@ -14,6 +16,7 @@ import {
     handlePointerDown,
     handlePointerUp,
     debounce,
+    wait,
 } from '../../utils/misc';
 import { removeStyles, applyStyles } from '../../utils/styles';
 
@@ -27,11 +30,13 @@ import {
     PdcLocationSelect,
     PdcLocationDate,
     PdcButtonText,
+    PdcLabel,
 } from '../../components';
 customElements.define('pdc-location-date', PdcLocationDate);
 customElements.define('pdc-location-category', PdcLocationCategory);
 customElements.define('pdc-location-select', PdcLocationSelect);
 customElements.define('pdc-button-text', PdcButtonText);
+customElements.define('pdc-label', PdcLabel);
 
 // Template for this Custom Element
 const template = document.createElement('template');
@@ -54,22 +59,24 @@ export class PdcLocationView extends HTMLElement {
             applyStyles(this.shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+
         this.#addRow('initial');
 
         /* Event listeners
          */
-        const { rowsContainer, viewContainer } = this.#getViewEls();
+        const viewContainer =
+            this.shadowRoot?.querySelector<HTMLElement>('#view-container');
 
         // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-        viewContainer.addEventListener('pointerdown', e => {
+        viewContainer?.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
-        viewContainer.addEventListener('pointerup', e => {
+        viewContainer?.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -83,119 +90,70 @@ export class PdcLocationView extends HTMLElement {
         });
 
         // Keyboard events
-        viewContainer.addEventListener('keyup', e => {
+        viewContainer?.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
 
-        // Focus events
-        viewContainer.addEventListener('focusin', e => {
-            this.#handleFocus(e);
-        });
-
         // Resize events
-        const handleResize = () => {
-            const rows = rowsContainer?.querySelectorAll<HTMLElement>(
-                '[data-pdc="location-row"]',
-            );
-            rows?.forEach(row => {
-                this.#rowToggle(row, 'resize');
-            });
-        };
-        const debouncedHandleResize = debounce(handleResize, 300);
+        const debouncedHandleResize = debounce(
+            this.#windowResize.bind(this),
+            300,
+            // MAGIC 300
+        );
         window.addEventListener('resize', debouncedHandleResize);
     }
 
     /* Event handlers
      */
-
-    #handleFocus(e: Event) {
-        const target = e.target;
-        if (!(target instanceof SVGElement || target instanceof HTMLElement))
-            return;
-        const row = target.closest('[data-pdc="location-row"]');
-        if (!row) return;
-        const pdc = target.dataset.pdc;
-        if (pdc === 'switchToDates') {
-            this.#rowSwitchToDates(row);
-            return;
-        }
-        if (pdc === 'switchToCategory0' || pdc === 'switchToCategory1') {
-            this.#rowSwitchToCategory(row, pdc);
-            return;
-        }
-        if (pdc === 'switchToCountryCity') {
-            this.#rowSwitchToCountryCity(row);
-            return;
-        }
-    }
-
     #handleClicks(e: Event) {
         const target = e.target;
-
         if (!(target instanceof SVGElement || target instanceof HTMLElement))
             return;
-        const btn = target.closest('button');
-        const btnText = target.closest<PdcButtonText>('pdc-button-text');
+
+        const btnEl = target.closest('button');
+        const btnPdcEl = target.closest<PdcButtonText>('pdc-button-text');
         const row = target.closest<HTMLElement>('[data-pdc="location-row"]');
-        const label = target.closest<HTMLLabelElement>('.group\\/label');
-        const { rowsContainer } = this.#getViewEls();
 
         switch (true) {
-            case !!target.closest('#error'):
-                const errorContainer = target.closest('#error');
-                errorContainer?.classList.remove('active');
+            case btnEl?.getAttribute('id') === 'add-row':
+                this.#addRow();
                 return;
-            case btn?.dataset.pdc === 'location-delete':
+            case btnEl?.dataset.pdc === 'delete-row':
                 row && this.#deleteRow(row);
                 return;
-            case btnText?.getAttribute('id') === 'add-row':
-                this.#validateRows() && this.#addRow();
+            case btnPdcEl?.getAttribute('id') === 'generate-expenses':
+                this.#validateRows('generate');
                 return;
-            case btnText?.getAttribute('id') === 'generate-expenses':
-                this.#validateRows() &&
-                    rowsContainer.setAttribute('validate', 'true');
+            case !!target.closest('[data-pdc="location-row-toggle"]'):
+                row && this.#rowToggle(row);
                 return;
-            case !!label:
-                const labelFor = label.getAttribute('for');
-                if (labelFor?.includes('pdc-el-date'))
-                    row && this.#rowSwitchToDates(row);
-                if (labelFor?.includes('pdc-el-category'))
-                    row && this.#rowSwitchToCategory(row, 'switchToCategory0');
-                if (labelFor?.includes('pdc-el-countrycity'))
-                    row && this.#rowSwitchToCountryCity(row);
-                return;
-            case !!row && !!target.closest('[data-pdc="location-row-summary"]'):
-                if (!row.classList.contains('toggling')) this.#rowToggle(row);
+            case !!target.closest('#error'):
+                target.closest('#error')?.classList.remove('active');
                 return;
             default:
                 return;
         }
     }
 
-    /* Get view and row elements
+    /* Getters for elements needed in multiple methods
      */
 
     #getViewEls = () => {
         const rowsContainer =
             this.shadowRoot?.querySelector<HTMLElement>('#rows');
-        const viewContainer = this.shadowRoot?.querySelector<HTMLElement>(
-            '#location-container',
+        const rows = rowsContainer?.querySelectorAll<HTMLElement>(
+            '[data-pdc="location-row"]',
         );
-        if (!(rowsContainer && viewContainer))
+        if (!(rowsContainer && rows))
             throw new Error('Failed to render elements for location View.');
-        return { rowsContainer, viewContainer };
+        return {
+            rowsContainer,
+            rows,
+        };
     };
 
-    #getRowIndex(row: Element) {
-        if (!row || !row.parentNode)
-            throw new Error(`Failed to get row index in Location View.`);
-        return Array.from(
-            row.parentNode.querySelectorAll('[data-pdc="location-row"]'),
-        ).indexOf(row);
-    }
-
-    #getRowFromIndex(rowIndex: number) {
+    #getRowElFromIndex(rowIndex: number) {
         const { rowsContainer } = this.#getViewEls();
         const row = rowsContainer.children[rowIndex];
         if (!(row instanceof HTMLElement))
@@ -214,7 +172,7 @@ export class PdcLocationView extends HTMLElement {
             row.querySelector<PdcLocationSelect>('[pdc="country"]');
         const cityEl = row.querySelector<PdcLocationSelect>('[pdc="city"]');
         if (!(startEl && endEl && categoryEl && countryEl && cityEl))
-            throw new Error('Failed to render row elements.');
+            throw new Error('Failed to render row custom elements.');
         return {
             startEl,
             endEl,
@@ -224,182 +182,94 @@ export class PdcLocationView extends HTMLElement {
         };
     }
 
-    #getRowFocusEls(row: Element) {
-        const switchToDatesFocus = row.querySelector<HTMLInputElement>(
-            '[data-pdc="switchToDates"]',
+    #getRowAnimatedEls(row: Element) {
+        const rowDeleteAnimateEl = row.querySelector<HTMLButtonElement>(
+            'button[data-pdc="delete-row"]',
         );
-        const switchToCategory0Focus = row.querySelector<HTMLInputElement>(
-            '[data-pdc="switchToCategory0"]',
-        );
-        const switchToCategory1Focus = row.querySelector<HTMLInputElement>(
-            '[data-pdc="switchToCategory1"]',
-        );
-        const switchToCountryCityFocus = row.querySelector<HTMLInputElement>(
-            '[data-pdc="switchToCountryCity"]',
-        );
-        if (
-            !(
-                switchToDatesFocus &&
-                switchToCategory0Focus &&
-                switchToCategory1Focus &&
-                switchToCountryCityFocus
-            )
-        )
-            throw new Error('Failed to render row focus elements.');
-        return {
-            switchToDatesFocus,
-            switchToCategory0Focus,
-            switchToCategory1Focus,
-            switchToCountryCityFocus,
-        };
-    }
-
-    #getRowSwitcherEls(row: Element) {
-        const switchToDatesBtn = row.querySelector<HTMLInputElement>(
-            'input[id^="pdc-el-date"]',
-        );
-        const switchToCategoryBtn = row.querySelector<HTMLInputElement>(
-            'input[id^="pdc-el-category"]',
-        );
-        const switchToCountryCityBtn = row.querySelector<HTMLInputElement>(
-            'input[id^="pdc-el-countrycity"]',
-        );
-        const rowNavLabels =
-            row.querySelectorAll<HTMLLabelElement>('.group\\/label');
-        if (
-            !(
-                switchToDatesBtn &&
-                switchToCategoryBtn &&
-                switchToCountryCityBtn &&
-                rowNavLabels
-            )
-        )
-            throw new Error('Failed to render row switch button elements.');
-        return {
-            switchToDatesBtn,
-            switchToCategoryBtn,
-            switchToCountryCityBtn,
-            rowNavLabels,
-        };
-    }
-
-    #getRowSummaryEls(row: Element) {
-        const rowSummaryNumberEl = row.querySelector('h3');
-        const rowSummaryDatesEl = row.querySelector('h4');
-        const rowSummaryLocationEl = row.querySelector('h5');
-        const rowDetails = row.querySelector<HTMLElement>(
-            '[data-pdc="location-row-details"]',
-        );
-        const rowSummary = row.querySelector<HTMLElement>(
+        const rowSummaryAnimateEl = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-summary"]',
         );
-        if (
-            !(
-                rowSummaryNumberEl &&
-                rowSummaryDatesEl &&
-                rowSummaryLocationEl &&
-                rowDetails &&
-                rowSummary
-            )
-        )
+        const rowDetailsAnimateEl = row.querySelector<HTMLElement>(
+            '[data-pdc="location-row-details"]',
+        );
+        if (!(rowDeleteAnimateEl && rowSummaryAnimateEl && rowDetailsAnimateEl))
             throw new Error('Failed to render row summary elements.');
         return {
-            rowSummaryNumberEl,
-            rowSummaryDatesEl,
-            rowSummaryLocationEl,
-            rowDetails,
-            rowSummary,
+            rowDeleteAnimateEl,
+            rowSummaryAnimateEl,
+            rowDetailsAnimateEl,
         };
     }
 
-    /* Row data methods incl. add, delete, update summary
+    /* Row add/delete/update methods
      */
 
     #addRow(initial: 'initial' | null = null) {
-        const { rowsContainer } = this.#getViewEls();
-        const totalRowCount = rowsContainer.childElementCount;
-        const newRowCount = totalRowCount ? totalRowCount + 1 : 1;
-        const rowId = Date.now();
-
-        let newRowMarkup =
+        if (!this.#validateRows()) return; // Validate before adding rows
+        templateRow.innerHTML =
             this.#styled ? templateRowHTML : removeStyles(templateRowHTML);
-        newRowMarkup = newRowMarkup
-            .replace('PDC_ROW_COUNT', newRowCount.toString().padStart(2, '0'))
-            .replaceAll('ROW_ID', rowId.toString())
-            .replaceAll('PDC_HEIGHT', initial ? '' : 'h-0');
-        templateRow.innerHTML = newRowMarkup;
-        rowsContainer.appendChild(templateRow.content.cloneNode(true));
-        const newRow = rowsContainer.lastElementChild;
+        this.#getViewEls().rowsContainer.appendChild(
+            templateRow.content.cloneNode(true),
+        );
+        const newRow = this.#getViewEls().rowsContainer.lastElementChild;
         if (!(newRow instanceof HTMLElement))
-            throw new Error(`Failed to render new row.`);
-        this.#returnRowObject(newRow); // Calling this will update row summary
-        this.#rowToggle(newRow, 'open');
-        setTimeout(() => {
-            newRow.removeAttribute('inert');
-        }, 500);
+            throw new Error('Failed to render new row');
+        this.#rowToggle(newRow, initial ? initial : 'add');
     }
 
-    #deleteRow(row: HTMLElement) {
-        this.#rowToggle(row, 'delete');
-        const { rowsContainer } = this.#getViewEls();
+    async #deleteRow(row: HTMLElement) {
+        if (this.#getViewEls().rowsContainer.childElementCount === 1) {
+            const errorEl = this.shadowRoot?.querySelector('#error');
+            errorEl?.classList.add('active');
+            if (errorEl) errorEl.textContent = '1 row required.';
+            return;
+        }
         const prevRow = row.previousElementSibling;
         const nextRow = row.nextElementSibling;
+        await this.#rowToggle(row, 'delete', nextRow);
 
-        setTimeout(() => {
-            // Slight delay to allow for element's transitions
-            row.remove();
+        // Update date input restrictions for existing rows
+        prevRow && this.#getRowPdcEls(prevRow).startEl.restrictStartInput();
+        prevRow && this.#getRowPdcEls(prevRow).endEl.restrictStartInput();
+        nextRow && this.#getRowPdcEls(nextRow).startEl.restrictStartInput();
+        nextRow && this.#getRowPdcEls(nextRow).endEl.restrictStartInput();
 
-            // Update restrictions on date inputs for both previously last row and new row
-            prevRow
-                ?.querySelector<PdcLocationDate>('[pdc="start"]')
-                ?.restrictStartInput();
-            prevRow
-                ?.querySelector<PdcLocationDate>('[pdc="end"]')
-                ?.restrictEndInput();
-            nextRow
-                ?.querySelector<PdcLocationDate>('[pdc="start"]')
-                ?.restrictStartInput();
-            nextRow?.querySelector<PdcLocationDate>('[pdc="end"]')
-                ?.restrictEndInput;
+        // Trigger #observer to update state
+        this.#getViewEls().rowsContainer.setAttribute('update-state', `true`);
+    }
 
-            // Update attribute to trigger listener that updates state
-            rowsContainer.setAttribute('update-state', `true`);
-            // Deleted row was only row -> add a blank template row
-            rowsContainer.childElementCount === 0 && this.#addRow();
-
-            // For any next rows, update summary number
-            if (nextRow) {
-                const index = this.#getRowIndex(nextRow);
-                const rows = rowsContainer.querySelectorAll(
-                    '[data-pdc="location-row"]',
-                );
-                if (!rows)
-                    throw new Error(
-                        'Failed to get row parent container when deleting row.',
-                    );
-                [...rows]
-                    .filter((_, i) => i >= index)
-                    .map(remainingRow => {
-                        this.#returnRowObject(remainingRow);
-                    });
-            }
-        }, 750);
-        return;
+    #getRowIndex(row: Element) {
+        if (!row.parentNode)
+            throw new Error(`Failed to get row index in Location View.`);
+        return Array.from(
+            row.parentNode.querySelectorAll('[data-pdc="location-row"]'),
+        ).indexOf(row);
     }
 
     #updateRowSummary(location: StateLocationItem): void {
         const { index, start, end, country, city } = location;
-        const row = this.#getRowFromIndex(index);
+        const row = this.#getRowElFromIndex(index);
+
         // Get elements
-        const { rowSummaryNumberEl, rowSummaryDatesEl, rowSummaryLocationEl } =
-            this.#getRowSummaryEls(row);
+        const rowNumberEl = row.querySelector(
+            '[data-pdc="location-row-number"]',
+        );
+        const rowSummaryDatesEl = row.querySelector(
+            '[data-pdc="location-row-summary-dates"]',
+        );
+        const rowSummaryLocationEl = row.querySelector(
+            '[data-pdc="location-row-summary-countrycity"]',
+        );
+        if (!(rowNumberEl && rowSummaryDatesEl && rowSummaryLocationEl))
+            throw new Error('Failed to render row summary elements.');
+
         // Get values
         const rowCount = (index + 1).toString().padStart(2, '0');
         const startDate = start ? getShortDate(start) : '\u00A0';
         const endDate = end ? ` to ${getShortDate(end)}` : '\u00A0';
         const countryCity = city && country ? `${city} (${country})` : '\u00A0';
         // Update els with values
-        rowSummaryNumberEl.textContent = rowCount;
+        rowNumberEl.textContent = rowCount;
         rowSummaryDatesEl.textContent = startDate + endDate;
         rowSummaryLocationEl.textContent = countryCity;
     }
@@ -409,170 +279,213 @@ export class PdcLocationView extends HTMLElement {
         arr: Location[],
         locationCategory: Extract<LocationKeys, 'country' | 'city'>,
     ) {
-        const row = this.#getRowFromIndex(rowIndex);
+        const row = this.#getRowElFromIndex(rowIndex);
         const rowSelect = row.querySelector<PdcLocationSelect>(
             `[pdc="${locationCategory}"]`,
         );
         rowSelect?.setOptions(arr);
     }
 
-    /* Row navigation methods rows incl. toggle, switch input page
+    #enableRowTabIndex(row: Element, enable: boolean) {
+        // Disable tab index for row's PdcEls
+        Object.values(this.#getRowPdcEls(row)).forEach(el =>
+            el.enableTabIndex(enable),
+        );
+        // Activate tabindex for delete icon which is hidden while row open
+        this.#getRowAnimatedEls(row).rowDeleteAnimateEl.setAttribute(
+            'tabindex',
+            enable ? '-1' : '0',
+        );
+    }
+
+    /* Row visual methods
      */
 
-    #rowToggle = (
+    #clearErrorEl() {
+        this.shadowRoot?.querySelector('#error')?.classList.remove('active');
+    }
+
+    #rowToggle = async (
         row: HTMLElement,
-        toggle: 'open' | 'close' | 'new' | 'delete' | 'resize' | null = null,
-        validate: 'validate' | null = null,
-    ): void => {
-        if (!this.#styled) return;
-        const { rowDetails, rowSummary } = this.#getRowSummaryEls(row);
-        const { startEl, endEl, categoryEl, countryEl, cityEl } =
-            this.#getRowPdcEls(row);
-        const { rowNavLabels, switchToDatesBtn } = this.#getRowSwitcherEls(row);
-        const {
-            switchToDatesFocus,
-            switchToCategory0Focus,
-            switchToCategory1Focus,
-            switchToCountryCityFocus,
-        } = this.#getRowFocusEls(row);
-        row.classList.add('toggling');
-        setTimeout(() => {
-            switch (toggle) {
-                case 'open':
-                    row.classList.add('pdc-row-open');
-                    rowSummary.style.height = 56 + 'px';
-                    rowDetails.style.height = rowDetails.scrollHeight + 'px';
-                    row.style.height = 56 + rowDetails.scrollHeight + 34 + 'px';
-                    [startEl, endEl, categoryEl, countryEl, cityEl].forEach(
-                        el => el.enableTabIndex(el.isEnabled),
-                    );
-                    rowNavLabels.forEach(el =>
-                        el.setAttribute('tabindex', '0'),
-                    );
-                    [
-                        switchToDatesFocus,
-                        switchToCategory1Focus,
-                        switchToCountryCityFocus,
-                    ].forEach(focus => focus.setAttribute('tabindex', '-1'));
-                    switchToCategory0Focus.setAttribute(
-                        'tabindex',
-                        endEl.pdcValue ? '0' : '-1',
-                    );
-                    return;
-                case 'close':
-                    row.classList.remove('pdc-row-open');
-                    rowSummary.style.height = 80 + 'px';
-                    rowDetails.style.height = 0 + 'px';
-                    row.style.height = 80 + 34 + 'px';
-                    [startEl, endEl, categoryEl, countryEl, cityEl].forEach(
-                        el => el.enableTabIndex(false),
-                    );
-                    [
-                        switchToDatesFocus,
-                        switchToCategory0Focus,
-                        switchToCategory1Focus,
-                        switchToCountryCityFocus,
-                        ...rowNavLabels,
-                    ].forEach(el => {
-                        el.setAttribute('tabindex', '-1');
-                    });
-                    return;
-                case 'delete':
-                    row.setAttribute('inert', '');
-                    row.classList.remove('active');
-                    row.style.height = 0 + 'px';
-                    return;
-                case 'resize':
-                    rowSummary.style.height =
-                        (rowSummary.clientHeight === 56 ? 56 : 80) + 'px';
-                    rowDetails.style.height =
-                        (rowDetails.clientHeight ?
-                            rowDetails.scrollHeight
-                        :   0) + 'px';
-                    row.style.height =
-                        (rowSummary.clientHeight === 56 ? 56 : 80) +
-                        (rowDetails.clientHeight ?
-                            rowDetails.scrollHeight
-                        :   0) +
-                        34 +
-                        'px';
-                    return;
-                default:
-                    if (rowSummary.clientHeight === 80)
-                        this.#rowToggle(row, 'open');
-                    if (rowSummary.clientHeight === 56)
-                        this.#rowToggle(row, 'close');
-                    return;
-            }
-        }, 0);
-        setTimeout(() => {
-            if (toggle !== 'resize' && validate !== 'validate')
-                switchToDatesBtn.click();
-            if (toggle === 'open' && !!startEl.pdcValue && !endEl.pdcValue)
-                endEl.focusEl();
-            row.classList.remove('toggling');
-        }, 700);
-    };
-
-    #rowSwitchToDates = (row: Element) => {
-        const { startEl, endEl } = this.#getRowPdcEls(row);
-        const { switchToDatesBtn } = this.#getRowSwitcherEls(row);
-        const { switchToCategory0Focus, switchToDatesFocus } =
-            this.#getRowFocusEls(row);
-        switchToCategory0Focus.setAttribute('tabindex', '0');
-        switchToDatesFocus.setAttribute('tabindex', '-1');
-        switchToDatesBtn.click();
-        startEl.pdcValue ? endEl.focusEl() : startEl.focusEl();
-        return;
-    };
-
-    #rowSwitchToCategory = (
-        row: Element,
-        pdc: 'switchToCategory0' | 'switchToCategory1',
+        toggle: 'open' | 'close' | 'add' | 'initial' | 'delete' | null = null,
+        nextRow: Element | null = null,
     ) => {
-        const { switchToCategoryBtn } = this.#getRowSwitcherEls(row);
-        const { categoryEl } = this.#getRowPdcEls(row);
-        const {
-            switchToDatesFocus,
-            switchToCategory0Focus,
-            switchToCategory1Focus,
-            switchToCountryCityFocus,
-        } = this.#getRowFocusEls(row);
-        pdc === 'switchToCategory0' ?
-            switchToCategory0Focus.setAttribute('tabindex', '-1')
-        :   switchToCategory1Focus.setAttribute('tabindex', '-1');
-        switchToDatesFocus.setAttribute('tabindex', '0');
-        switchToCountryCityFocus.setAttribute('tabindex', '0');
-        switchToCategoryBtn.click();
-        setTimeout(() => {
-            categoryEl.focusEl(pdc === 'switchToCategory0' ? 0 : 1);
-        }, 300);
+        if (!this.#styled || row.classList.contains('toggling')) return;
+
+        // If no specific toggle set, fire either open or close based on current row height
+        if (!toggle) {
+            this.#rowToggle(row, row.offsetHeight === 96 ? 'open' : 'close');
+            return;
+        }
+
+        // Update classes/styles
+        row.classList.remove(
+            'pdc-row-open',
+            'pdc-row-initial',
+            'pdc-row-add',
+            'pdc-row-close',
+        );
+        row.classList.add('toggling', `pdc-row-${toggle}`);
+
+        // Pre-toggle adjustments
+        (toggle === 'close' || toggle === 'delete') && this.#clearErrorEl();
+        toggle === 'open' && this.#checkAllRowsClosed('open');
+        if (toggle === 'add' || toggle === 'initial') {
+            if (
+                this.#getViewEls().rowsContainer.childElementCount > 1 &&
+                toggle === 'add'
+            )
+                this.#checkAllRowsClosed('open'); // Trigger animation only if there are existing rows
+            this.#setRowBgColor(row);
+            this.#returnRowObject(row); // Sets row count
+        }
+
+        // Fire toggles
+        if (toggle === 'open' || toggle === 'add' || toggle === 'initial')
+            await this.#rowToggleOpen(row);
+        if (toggle === 'close') await this.#rowToggleClose(row);
+        if (toggle === 'delete') await this.#rowToggleDelete(row, nextRow);
+
+        if (toggle !== 'delete') {
+            row.classList.remove('ring-transparent');
+            row.classList.add('ring-neutral-200');
+        }
+        row.classList.remove('toggling');
     };
 
-    #rowSwitchToCountryCity = (row: Element) => {
-        const { countryEl } = this.#getRowPdcEls(row);
-        const { switchToCountryCityBtn } = this.#getRowSwitcherEls(row);
-        const { switchToCategory1Focus, switchToCountryCityFocus } =
-            this.#getRowFocusEls(row);
-        switchToCountryCityFocus.setAttribute('tabindex', '-1');
-        switchToCategory1Focus.setAttribute('tabindex', '0');
-        switchToCountryCityBtn.click();
-        setTimeout(() => {
-            countryEl.focusEl();
-        }, 300);
+    #rowToggleOpen = async (row: HTMLElement) => {
+        // MAGIC 700
+        await wait(700);
+        this.#enableRowTabIndex(row, true);
+        row.style.height = row.scrollHeight + 'px';
+        const { rowDetailsAnimateEl, rowSummaryAnimateEl, rowDeleteAnimateEl } =
+            this.#getRowAnimatedEls(row);
+        [rowSummaryAnimateEl, rowDeleteAnimateEl].forEach(
+            el => (el.style.opacity = '0'),
+        );
+        rowDetailsAnimateEl.style.opacity = '100';
+        rowDetailsAnimateEl.style.transform = `translateX(100%)`;
+        rowSummaryAnimateEl.style.transform = `translateY(-200%)`;
+        rowDeleteAnimateEl.style.transform = `translateX(200%)`;
     };
 
-    rowLoadingSpinner(rowIndex: number, enabled: boolean) {
+    #rowToggleClose = async (row: HTMLElement) => {
+        // MAGIC 750
+        await wait(750);
+        this.#enableRowTabIndex(row, false);
+        row.style.height = row.clientHeight + 'px';
+        const { rowDetailsAnimateEl, rowSummaryAnimateEl, rowDeleteAnimateEl } =
+            this.#getRowAnimatedEls(row);
+        [rowSummaryAnimateEl, rowDeleteAnimateEl].forEach(
+            el => (el.style.opacity = '100'),
+        );
+        rowDetailsAnimateEl.style.opacity = '0';
+        rowDetailsAnimateEl.style.transform = `translateX(0%)`;
+        rowSummaryAnimateEl.style.transform = `translateY(0%)`;
+        rowDeleteAnimateEl.style.transform = `translateX(0%)`;
+        this.#checkAllRowsClosed();
+    };
+
+    #rowToggleDelete = async (
+        row: HTMLElement,
+        nextRow: Element | null = null,
+    ) => {
+        row.classList.remove('ring-neutral-300');
+        row.classList.add('ring-transparent');
+        await wait(800);
+        // Deleted row was only row -> add a blank template row
+        row.remove();
+        this.#checkAllRowsClosed();
+        if (nextRow) {
+            // For any next rows
+            const index = this.#getRowIndex(nextRow);
+            [...this.#getViewEls().rows]
+                .filter((_, i) => i >= index)
+                .map(remainingRow => {
+                    this.#returnRowObject(remainingRow); // Update summary number
+                    this.#setRowBgColor(remainingRow); // Update background color
+                });
+        }
+    };
+
+    #checkAllRowsClosed(open: 'open' | null = null) {
+        const addRowBtnEl = this.shadowRoot
+            ?.querySelector('#add-row')
+            ?.closest('div');
+        const expenseCategoryBtnEl =
+            this.shadowRoot?.querySelector<HTMLElement>('#expense-category');
+        const generateExpensesBtnEl = this.shadowRoot
+            ?.querySelector('#generate-expenses')
+            ?.closest('div');
+        if (!(addRowBtnEl && expenseCategoryBtnEl && generateExpensesBtnEl))
+            throw new Error('Failed to render view buttons.');
+        const btns = [addRowBtnEl, expenseCategoryBtnEl, generateExpensesBtnEl];
+        const rowsOpen = [...this.#getViewEls().rows].some(
+            // MAGIC 96
+            row => row.offsetHeight !== 96,
+        );
+        if (!!open || rowsOpen) this.#animateBtnsRowsOpen(btns);
+        else this.#animateBtnsRowsClosed(btns);
+    }
+
+    async #animateBtnsRowsOpen(btns: HTMLElement[]) {
+        btns.forEach(btn => btn.classList.remove('rows-closed'));
+        btns.forEach(btn => btn.classList.add('rows-open'));
+        const addRowBtnEl = btns[0];
+        const expenseCategoryBtnEl = btns[1];
+        const generateExpensesBtnEl = btns[2];
+        // MAGIC 450
+        await wait(450);
+        btns.forEach(btn => (btn.style.zIndex = '0'));
+        addRowBtnEl.style.transform = `translateY(-100%)`;
+        expenseCategoryBtnEl.style.transform = `translateY(400%)`;
+        generateExpensesBtnEl.style.transform = `translateY(200%)`;
+    }
+
+    async #animateBtnsRowsClosed(btns: HTMLElement[]) {
+        btns.forEach(btn => btn.classList.remove('rows-open'));
+        btns.forEach(btn => btn.classList.add('rows-closed'));
+        // MAGIC 450
+        await wait(450);
+        btns.forEach(btn => {
+            btn.style.zIndex = '50';
+            btn.style.transform = `translateY(0%)`;
+        });
+    }
+
+    #windowResize = () => {
+        [...this.#getViewEls().rows].forEach(row => {
+            if (row.offsetHeight === 96) return;
+            row.style.height =
+                this.#getRowAnimatedEls(row).rowDetailsAnimateEl.scrollHeight +
+                'px';
+        });
+    };
+
+    #setRowBgColor = (row: HTMLElement) => {
+        const index = this.#getRowIndex(row);
+        const color = index % 2 === 0 ? 'neutral-50' : 'white';
+        const oppColor = color === 'neutral-50' ? 'white' : 'neutral-50';
+        row.classList.remove('bg-white', 'bg-neutral-50');
+        row.classList.add(`bg-${color}`);
+        row.style.zIndex = index.toString();
+        [...this.#getRowAnimatedEls(row).rowDetailsAnimateEl.children].forEach(
+            (el, i) => {
+                el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
+            },
+        );
+    };
+
+    showLoadingSpinner(
+        rowIndex: number,
+        enabled: boolean,
+        locationCategory: Extract<LocationKeys, 'country' | 'city'>,
+    ) {
         if (!this.#styled) return;
-        const row = this.#getRowFromIndex(rowIndex);
-        const spinner = row.querySelector('[data-pdc="loading-spinner"]');
-        if (!spinner)
-            throw new Error(
-                `Failed to get loading spinner element for rowIndex ${rowIndex} in Location view.`,
-            );
-        enabled ?
-            spinner.classList.add('active')
-        :   spinner.classList.remove('active');
+        const row = this.#getRowElFromIndex(rowIndex);
+        row
+            .querySelector<PdcLocationSelect>(`[pdc='${locationCategory}']`)
+            ?.showLoadingSpinner(enabled);
     }
 
     /* Validation
@@ -583,47 +496,40 @@ export class PdcLocationView extends HTMLElement {
         | PdcLocationCategory
         | PdcLocationSelect
     )[] => {
-        if (!this.shadowRoot)
-            throw new Error('Failed to render ShadowRoot for location View.');
         const dates =
-            this.shadowRoot.querySelectorAll<PdcLocationDate>(
+            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationDate>(
                 'pdc-location-date',
             );
         const categories =
-            this.shadowRoot.querySelectorAll<PdcLocationCategory>(
+            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationCategory>(
                 'pdc-location-category',
             );
-        const selects = this.shadowRoot.querySelectorAll<PdcLocationSelect>(
-            'pdc-location-select',
-        );
+        const selects =
+            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationSelect>(
+                'pdc-location-select',
+            );
         return [...dates, ...categories, ...selects];
     };
 
-    #validateEl = (
+    #validatePdcEl = (
         el: PdcLocationDate | PdcLocationCategory | PdcLocationSelect,
     ): boolean => {
-        const valid = el.validate();
-        if (!valid) {
+        if (!el.validate()) {
             const row = el.closest<HTMLElement>('[data-pdc="location-row"]');
-            if (!row) throw new Error('Failed to get row during validation.');
-            const {
-                switchToDatesBtn,
-                switchToCategoryBtn,
-                switchToCountryCityBtn,
-            } = this.#getRowSwitcherEls(row);
-
-            if (el instanceof PdcLocationDate) switchToDatesBtn.click();
-            if (el instanceof PdcLocationCategory) switchToCategoryBtn.click();
-            if (el instanceof PdcLocationSelect) switchToCountryCityBtn.click();
-
-            this.#rowToggle(row, 'open', 'validate');
+            if (row?.classList.contains('pdc-row-close'))
+                this.#rowToggle(row, 'open');
         }
-        return valid;
+        return el.validate();
     };
 
-    #validateRows = (): boolean => {
+    #validateRows = (generate: 'generate' | null = null): boolean => {
         const validators = this.#getValidators();
-        this.#valid = validators.every(el => this.#validateEl(el));
+        this.#valid = validators.every(el => this.#validatePdcEl(el));
+        if (generate === 'generate')
+            this.#getViewEls().rowsContainer.setAttribute(
+                'validate',
+                `${this.#valid}`,
+            );
         return this.#valid;
     };
 
@@ -687,10 +593,7 @@ export class PdcLocationView extends HTMLElement {
         );
     }
 
-    #returnRowObject = (
-        target: Element,
-        updateSummary: boolean = true,
-    ): StateLocationItem => {
+    #returnRowObject = (target: Element): StateLocationItem => {
         const row = target.closest('[data-pdc="location-row"]');
         if (!row) throw new Error('Failed to get row.');
         const getPdcValue = <
@@ -717,18 +620,13 @@ export class PdcLocationView extends HTMLElement {
             ...(country && { country }),
             ...(city && { city }),
         };
-        if (updateSummary) this.#updateRowSummary(result);
+        this.#updateRowSummary(result);
         return result;
     };
 
     #returnAllRowsOjbect = (): StateLocationItem[] => {
-        const { rowsContainer } = this.#getViewEls();
-        const rows = rowsContainer.querySelectorAll(
-            '[data-pdc="location-row"]',
-        );
-        if (!rows) throw new Error('Failed to get all rows.');
-        const result = [...rows].map(row => {
-            return this.#returnRowObject(row, false);
+        const result = [...this.#getViewEls().rows].map(row => {
+            return this.#returnRowObject(row);
         });
         this.removeAttribute('update-state');
         return result;
@@ -736,11 +634,7 @@ export class PdcLocationView extends HTMLElement {
 
     #returnValidation = (): AllViewLocationsValid => {
         this.removeAttribute('validate');
-        const { rowsContainer } = this.#getViewEls();
-        const rows = rowsContainer.querySelectorAll<HTMLElement>(
-            '[data-pdc="location-row"]',
-        );
-        rows && rows.forEach(row => this.#rowToggle(row, 'close'));
+        this.#getViewEls().rows.forEach(row => this.#rowToggle(row, 'close'));
         const inputValue = this.shadowRoot?.querySelector<HTMLInputElement>(
             'input[name="expenses-category"]:checked',
         )?.value;
@@ -754,16 +648,16 @@ export class PdcLocationView extends HTMLElement {
         };
     };
 
-    transitionRow(index: number, updatedAttr: LocationKeys): void {
+    async transitionRow(index: number, updatedAttr: LocationKeys) {
         if (!this.#styled) return; // No transitions in unstyled config
         // Switch between input pages/row opening based on current row values
-        const row = this.#getRowFromIndex(index);
+        const row = this.#getRowElFromIndex(index);
         const { cityEl } = this.#getRowPdcEls(row);
+        // MAGIC 250
         switch (updatedAttr) {
             case 'city':
-                setTimeout(() => {
-                    this.#rowToggle(row, 'close');
-                }, 250);
+                await wait(250);
+                this.#rowToggle(row, 'close');
                 return;
             case 'country':
                 cityEl.enable(true);
@@ -783,29 +677,32 @@ export class PdcLocationView extends HTMLElement {
     #transitionStart(row: Element): void {
         const { startEl, endEl, categoryEl, countryEl, cityEl } =
             this.#getRowPdcEls(row);
-        startEl.restrictStartInput();
-        endEl.restrictEndInput();
-        categoryEl.enableCategory(false);
+        categoryEl.enable(false);
         countryEl.enable(false);
         cityEl.enable(false);
-        endEl.focusEl();
+
+        startEl.restrictStartInput();
+        endEl.restrictEndInput();
     }
 
     #transitionEnd(row: Element): void {
         const { startEl, endEl, categoryEl, countryEl, cityEl } =
             this.#getRowPdcEls(row);
-        startEl.restrictStartInput();
-        endEl.restrictEndInput();
-        categoryEl.enableCategory(true);
+
         countryEl.enable(false);
         cityEl.enable(false);
-        this.#rowSwitchToCategory(row, 'switchToCategory0');
+
+        startEl.restrictStartInput();
+        endEl.restrictEndInput();
+
+        categoryEl.enable(true);
     }
 
     #transitionCategory(row: Element) {
         const { countryEl, cityEl } = this.#getRowPdcEls(row);
-        countryEl.enable(true);
+
         cityEl.enable(false);
-        this.#rowSwitchToCountryCity(row);
+
+        countryEl.enable(true);
     }
 }

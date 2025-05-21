@@ -1,17 +1,33 @@
 <button
-    class="group relative min-w-3xs hover:cursor-pointer sm:min-w-2xs
-        md:min-w-xs"
+    class="group focus-visible:after:!border-b-primary-800 after:content-[_]
+        offset after: relative cursor-pointer border-none bg-transparent p-0
+        font-medium [transition:filter_0.25s] after:absolute after:-bottom-4
+        after:left-0 after:w-full after:rounded-lg after:transition-colors
+        after:duration-500 after:[border-bottom:8px_solid_transparent]
+        hover:brightness-110 focus-visible:outline-none"
     type="button"
 >
     <span
-        aria-hidden="true"
-        class="border-BORDER_COLOR absolute inset-0 border bg-white"
+        class="bg-[hsl(0deg 0% 0% / 0.25)] absolute top-0 left-0 h-full w-full
+            translate-y-0.5 rounded-lg will-change-transform
+            [transition:transform_1s_ease-out] group-hover:translate-y-1
+            group-hover:[transition:transform_0.5s_ease-out]
+            group-active:translate-y-[1px]
+            group-active:[transition:transform_0.25s]"
+    ></span>
+
+    <span
+        class="from-primary-700 via-primary-500 to-primary-700 absolute top-0
+            left-0 h-full w-full rounded-lg bg-gradient-to-l
+            via-[percentage:5%_95%]"
     ></span>
     <span
-        id="button-text"
-        class="border-BORDER_COLOR bg-BG_COLOR text-TEXT_COLOR relative z-10
-            block border py-3.5 font-medium shadow-xl transition-transform
-            duration-100 group-hover:-translate-x-1 group-hover:-translate-y-1"
+        class="text-primary-50 bg-primary-900 relative block -translate-y-1
+            rounded-lg px-11 py-3 will-change-transform
+            [transition:transform_1s_ease-out] group-hover:-translate-y-1.5
+            group-hover:[transition:transform_0.5s_ease-out]
+            group-active:-translate-y-0.5
+            group-active:[transition:transform_0.25s]"
         >BTN_TEXT</span
     >
 </button>

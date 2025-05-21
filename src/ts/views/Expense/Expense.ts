@@ -7,7 +7,6 @@ import {
     StateExpenseItemUpdate,
     ExpenseRateTableRow,
 } from '../../types/expenses';
-import type { ConfigSectionText } from '../../types/config';
 
 // Utils
 import {
@@ -15,6 +14,7 @@ import {
     handlePointerDown,
     handlePointerUp,
     debounce,
+    wait,
 } from '../../utils/misc';
 import { applyStyles, removeStyles } from '../../utils/styles';
 import { isDateRawType } from '../../utils/dates';
@@ -23,7 +23,7 @@ import { isDateRawType } from '../../utils/dates';
 import templateHTML from './template.html?raw';
 
 // Custom Elements
-import { PdcExpenseRow, PdcButtonText } from '../../components';
+import { PdcExpenseRow, PdcButtonText, PdcLabel } from '../../components';
 customElements.define('pdc-expense-row', PdcExpenseRow);
 
 // Template for this Custom Element
@@ -41,17 +41,20 @@ export class PdcExpenseView extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    render(styled: boolean, config: ConfigSectionText) {
+    /* View render methods
+     */
+
+    render(styled: boolean) {
         if (!this.shadowRoot)
             throw new Error(`Failed to render ShadowRoot for location View.`);
         if (this.shadowRoot !== null) this.shadowRoot.innerHTML = '';
 
         const handleResize = () => {
             const rows =
-                viewContainer?.querySelectorAll<PdcExpenseRow>(
+                this.#getViewEls().viewContainer?.querySelectorAll<PdcExpenseRow>(
                     'pdc-expense-row',
                 );
-            rows?.forEach(row => row.toggleRow('resize'));
+            rows?.forEach(row => row.windowResize());
         };
         const debouncedHandleResize = debounce(handleResize, 300);
         window.removeEventListener('resize', debouncedHandleResize);
@@ -63,22 +66,20 @@ export class PdcExpenseView extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-        const { viewContainer } = this.#getViewEls();
+        /* Event listeners
+         */
 
-        this.#applyConfig(config);
-
-        // Event listeners for the delete location, add location, and generate expenses buttons
-        // Pointer events (mouse, touch)
+        // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-        viewContainer?.addEventListener('pointerdown', e => {
+        this.#getViewEls().viewContainer.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
 
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
-        viewContainer?.addEventListener('pointerup', e => {
+        this.#getViewEls().viewContainer.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -90,229 +91,78 @@ export class PdcExpenseView extends HTMLElement {
                 pointerStartY = result.pointerStartY;
             }
         });
+
         // Keyboard events
-        viewContainer.addEventListener('keyup', e => {
+        this.#getViewEls().viewContainer.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
 
+        // Resize events
         window.addEventListener('resize', debouncedHandleResize);
     }
 
-    #getViewEls = () => {
-        const heading =
-            this.shadowRoot?.querySelector<HTMLHeadingElement>('#heading');
-        const headingPrint =
-            this.shadowRoot?.querySelector<HTMLHeadingElement>(
-                '#heading-print',
-            );
-        const body =
-            this.shadowRoot?.querySelector<HTMLParagraphElement>('#body');
-        const bodyPrint =
-            this.shadowRoot?.querySelector<HTMLParagraphElement>('#body-print');
-        const viewContainer =
-            this.shadowRoot?.querySelector<HTMLElement>('#expense-container');
-        const rowsContainer =
-            this.shadowRoot?.querySelector<HTMLDivElement>('#rows');
-        const mieSubtotalEl = this.shadowRoot?.querySelector('#mie-subtotal');
-        const lodgingSubtotalEl =
-            this.shadowRoot?.querySelector('#lodging-subtotal');
-        const totalEl = this.shadowRoot?.querySelector('#total');
-        const ratesTable = this.shadowRoot?.querySelector('#rates-table');
-        const expensesTable = this.shadowRoot?.querySelector('#expenses-table');
+    renderLoadingSpinner(enabled: boolean) {
+        if (!this.#styled) return;
+        const spinner = this.shadowRoot?.querySelector(
+            '[data-pdc="loading-spinner"]',
+        );
+        enabled ?
+            spinner?.classList.add('active')
+        :   spinner?.classList.remove('active');
+    }
 
-        if (
-            !(
-                heading &&
-                viewContainer &&
-                rowsContainer &&
-                mieSubtotalEl &&
-                lodgingSubtotalEl &&
-                totalEl &&
-                ratesTable &&
-                expensesTable
-            )
-        )
-            throw new Error('Failed to render elements for location View.');
-
-        return {
-            heading,
-            headingPrint,
-            body,
-            bodyPrint,
-            viewContainer,
-            rowsContainer,
-            mieSubtotalEl,
-            lodgingSubtotalEl,
-            totalEl,
-            ratesTable,
-            expensesTable,
-        };
-    };
-
-    #applyConfig = (config: ConfigSectionText) => {
-        const { heading, headingPrint, body, bodyPrint } = this.#getViewEls();
-        if (config.heading) {
-            heading.innerHTML = '';
-            heading.insertAdjacentHTML('beforeend', config.heading);
-        } else heading.remove();
-
-        if (headingPrint && config.headingPrint) {
-            headingPrint.innerHTML = '';
-            headingPrint.insertAdjacentHTML('beforeend', config.headingPrint);
-        } else headingPrint?.remove();
-
-        if (body && config.body) {
-            body.innerHTML = '';
-            body.insertAdjacentHTML('beforeend', config.body);
-        } else body?.remove();
-
-        if (bodyPrint && config.bodyPrint) {
-            bodyPrint.innerHTML = '';
-            bodyPrint.insertAdjacentHTML('beforeend', config.bodyPrint);
-        } else bodyPrint?.remove();
-    };
-
+    /* Event handlers
+     */
     #handleClicks(e: Event) {
         const target = e.target;
         if (!(target instanceof Element || target instanceof SVGElement))
             return;
         const btn = target.closest('button');
-        const btnText = target.closest<PdcButtonText>('pdc-button-text');
-        const { viewContainer } = this.#getViewEls();
-        if (!(btn || btnText)) return;
+        const btnPdcEl = target.closest<PdcButtonText>('pdc-button-text');
+        if (!(btn || btnPdcEl)) return;
         switch (true) {
             case btn?.getAttribute('id') === 'toggle-expand':
-                if (this.#styled) this.#expandAllRows(btn);
-                break;
-            case btnText?.getAttribute('id') === 'print-expenses':
-                viewContainer.setAttribute('table', 'true');
-                break;
+                this.#expandAllRows(btn);
+                return;
+            case btnPdcEl?.getAttribute('id') === 'print-expenses':
+                this.#getViewEls().viewContainer.setAttribute('table', 'true');
+                return;
             default:
-                break;
+                return;
         }
     }
 
-    #expandAllRows(btn: HTMLButtonElement) {
-        btn.classList.toggle('active');
-        const toggle = btn.classList.contains('active') ? 'open' : 'close';
+    /* Getters for elements needed in multiple methods
+     */
+    #getViewEls = () => {
+        const viewContainer =
+            this.shadowRoot?.querySelector<HTMLElement>('#expense-container');
+        const expensesTable = this.shadowRoot?.querySelector('#expenses-table');
         const rows =
             this.shadowRoot?.querySelectorAll<PdcExpenseRow>('pdc-expense-row');
-        rows?.forEach(row => row.toggleRow(toggle));
-    }
+        if (!(viewContainer && expensesTable && rows))
+            throw new Error('Failed to render elements for location View.');
 
-    renderLoadingSpinner(enabled: boolean) {
-        if (!this.#styled) return;
-        const { viewContainer } = this.#getViewEls();
-        enabled ?
-            viewContainer.classList.remove('active')
-        :   viewContainer.classList.add('active');
-    }
+        return {
+            viewContainer,
+            expensesTable,
+            rows,
+        };
+    };
 
-    renderEmtpy() {
-        if (!this.shadowRoot)
-            throw new Error(`Failed to render ShadowRoot for location View.`);
-        this.shadowRoot.innerHTML = '';
-    }
-
-    addRows(
-        expenses: StateExpenseItemValid[],
-        expensesCategory: 'mie' | 'lodging' | 'both',
-    ) {
-        this.#mieSubtotal = 0;
-        this.#lodgingSubtotal = 0;
-
-        const { rowsContainer, ratesTable } = this.#getViewEls();
-        rowsContainer.innerHTML = '';
-        const rows: PdcExpenseRow[] = [];
-        const rates = new Set<string>();
-        const sources = new Set<string>();
-        expenses.forEach((expense, i, arr) => {
-            const row = new PdcExpenseRow(
-                expense,
-                this.#styled,
-                expensesCategory,
-            );
-            rowsContainer.appendChild(row);
-            this.#mieSubtotal += expense.mieAmount;
-            this.#lodgingSubtotal += expense.lodgingAmount;
-            rows.push(row);
-
-            sources.add(expense.source);
-
-            const { date, country, city } = expense;
-            const monthYear = `${date.slice(5, 7)}/${date.slice(0, 4)}`;
-            const createRateTableData = (expense: StateExpenseItemValid) => {
-                const { effDate: _, ...rates } = expense.rates;
-                return {
-                    city,
-                    country,
-                    rates,
-                };
-            };
-
-            if (
-                i === 0 ||
-                JSON.stringify(createRateTableData(expense)) !==
-                    JSON.stringify(createRateTableData(arr[i - 1]))
-            ) {
-                rates.add(
-                    JSON.stringify({
-                        monthYear,
-                        ...createRateTableData(expense),
-                    }),
-                );
-            }
-        });
-        rows[0].updateFirstLastDay('first');
-        rows[rows.length - 1].updateFirstLastDay('last');
-        const position = this.getBoundingClientRect().top + window.pageYOffset;
-        window.scrollTo({ top: position, behavior: 'smooth' });
-
-        const sourcesEl = this.shadowRoot?.querySelector('#sources');
-        sourcesEl &&
-            sources.forEach(source => {
-                sourcesEl.insertAdjacentHTML(
-                    'beforeend',
-                    `<a href="${source}" target="_blank">${source}</a>`,
-                );
-            });
-
-        rates.forEach(item => {
-            const rate: ExpenseRateTableRow = JSON.parse(item);
-            const { monthYear, country, city } = rate;
-            const {
-                maxLodging,
-                maxMie,
-                maxMieFirstLast,
-                maxIncidental,
-                deductionBreakfast,
-                deductionLunch,
-                deductionDinner,
-            } = rate.rates;
-
-            const markup = /*HTML*/ `
-                <tr class="border-b-2">
-                    <td class="border-r-2 p-3">${monthYear}</td>
-                    <td class="border-r-2 p-3">${city}, ${country}</td>
-                    <td>${maxLodging.toFixed(2)}</td>
-                    <td>${maxMie.toFixed(2)}</td>
-                    <td>${maxMieFirstLast.toFixed(2)}</td>
-                    <td class="border-r-2">${maxIncidental.toFixed(2)}</td>
-                    <td>${deductionBreakfast.toFixed(2)}</td>
-                    <td>${deductionLunch.toFixed(2)}</td>
-                    <td>${deductionDinner.toFixed(2)}</td>
-                </tr>
-            `;
-            ratesTable.insertAdjacentHTML('beforeend', markup);
-        });
-
-        this.#updateTotals();
-    }
+    /* Row update methods
+     */
 
     #updateTotals() {
-        const { mieSubtotalEl, lodgingSubtotalEl, totalEl } =
-            this.#getViewEls();
+        const mieSubtotalEl = this.shadowRoot?.querySelector('#mie-subtotal');
+        const lodgingSubtotalEl =
+            this.shadowRoot?.querySelector('#lodging-subtotal');
+        const totalEl = this.shadowRoot?.querySelector('#total');
+        if (!(mieSubtotalEl && lodgingSubtotalEl && totalEl))
+            throw new Error(
+                'Failed to render subtotal/total elements in Expense view.',
+            );
         mieSubtotalEl.textContent = `${USD.format(this.#mieSubtotal)}`;
         lodgingSubtotalEl.textContent = `${USD.format(this.#lodgingSubtotal)}`;
         totalEl.textContent = `${USD.format(this.#mieSubtotal + this.#lodgingSubtotal)}`;
@@ -324,17 +174,148 @@ export class PdcExpenseView extends HTMLElement {
         totalMie: number,
         totalLodging: number,
     ) {
-        const row = this.shadowRoot?.querySelector<PdcExpenseRow>(
-            `[date="${date}"]`,
-        );
-        if (!row)
-            throw new Error(
-                'Failed to get row in expense view to update M&IE total.',
-            );
-        row.updateMieAmount = newMieTotal;
+        this.shadowRoot
+            ?.querySelector<PdcExpenseRow>(`[date="${date}"]`)
+            ?.updateMieAmount(newMieTotal);
         this.#mieSubtotal = totalMie;
         this.#lodgingSubtotal = totalLodging;
         this.#updateTotals();
+    }
+
+    #createSourceList() {
+        const sources = new Set<string>();
+        this.#getViewEls().rows?.forEach(row => {
+            sources.add(row.getSource());
+        });
+        const sourcesEl = this.shadowRoot?.querySelector('#sources');
+        sourcesEl &&
+            sources.forEach(source => {
+                sourcesEl.insertAdjacentHTML(
+                    'beforeend',
+                    `<a href="${source}" target="_blank">${source}</a>`,
+                );
+            });
+    }
+
+    #createRateTableMarkup(item: string) {
+        const rate: ExpenseRateTableRow = JSON.parse(item);
+        const { monthYear, country, city } = rate;
+        const {
+            maxLodging,
+            maxMie,
+            maxMieFirstLast,
+            maxIncidental,
+            deductionBreakfast,
+            deductionLunch,
+            deductionDinner,
+        } = rate.rates;
+
+        return /*HTML*/ `
+            <tr class="border-b-2">
+                <td class="border-r-2 p-3">${monthYear}</td>
+                <td class="border-r-2 p-3">${city}, ${country}</td>
+                <td>${maxLodging.toFixed(2)}</td>
+                <td>${maxMie.toFixed(2)}</td>
+                <td>${maxMieFirstLast.toFixed(2)}</td>
+                <td class="border-r-2">${maxIncidental.toFixed(2)}</td>
+                <td>${deductionBreakfast.toFixed(2)}</td>
+                <td>${deductionLunch.toFixed(2)}</td>
+                <td>${deductionDinner.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+
+    #createRatesTable() {
+        const ratesTable = this.shadowRoot?.querySelector('#rates-table');
+        const rateSet = new Set<string>();
+        const createRateData = (
+            city: string,
+            country: string,
+            rates: object,
+        ) => {
+            return JSON.stringify({ city, country, rates });
+        };
+        this.#getViewEls().rows.forEach((row, i, arr) => {
+            const { date, country, city, rates } = row.getRateTableDate();
+            const rateData = createRateData(city, country, rates);
+            const monthYear = `${date.slice(5, 7)}/${date.slice(0, 4)}`;
+            if (i === 0) rateSet.add(JSON.stringify({ monthYear, rateData }));
+            if (i > 0) {
+                const {
+                    country: prevCountry,
+                    city: prevCity,
+                    rates: prevRates,
+                } = arr[i - 1].getRateTableDate();
+                const prevRateData = createRateData(
+                    prevCity,
+                    prevCountry,
+                    prevRates,
+                );
+                if (rateData === prevRateData) return;
+                rateSet.add(JSON.stringify({ monthYear, rateData }));
+            }
+        });
+        rateSet.forEach(item => {
+            ratesTable?.insertAdjacentHTML(
+                'beforeend',
+                this.#createRateTableMarkup(item),
+            );
+        });
+    }
+
+    async #updateSubtotals() {
+        this.#mieSubtotal = 0;
+        this.#lodgingSubtotal = 0;
+        this.#getViewEls().rows.forEach(row => {
+            this.#mieSubtotal += row.getAmounts().mieAmount;
+            this.#lodgingSubtotal += row.getAmounts().lodgingAmount;
+        });
+    }
+
+    async addRows(
+        expenses: StateExpenseItemValid[],
+        expensesCategory: 'mie' | 'lodging' | 'both',
+    ) {
+        const rowsContainer =
+            this.shadowRoot?.querySelector<HTMLDivElement>('#rows');
+        if (!rowsContainer)
+            throw new Error(
+                'Failed to render row container/rates table in Expense view.',
+            );
+        rowsContainer.innerHTML = '';
+
+        expenses.forEach(expense => {
+            const row = new PdcExpenseRow(
+                expense,
+                this.#styled,
+                expensesCategory,
+            );
+            rowsContainer.appendChild(row);
+            row.setRowBgColor();
+        });
+        const position = this.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({ top: position, behavior: 'smooth' });
+
+        await this.#updateSubtotals();
+        this.#updateTotals();
+    }
+
+    /* Row visual methods
+     */
+
+    #expandAllRows(btn: HTMLButtonElement) {
+        if (!this.#styled) return;
+        btn.classList.toggle('active');
+        const toggle = btn.classList.contains('active') ? 'open' : 'close';
+        const rows =
+            this.shadowRoot?.querySelectorAll<PdcExpenseRow>('pdc-expense-row');
+        rows?.forEach(row => row.rowToggle(toggle));
+    }
+
+    renderEmtpy() {
+        if (!this.shadowRoot)
+            throw new Error(`Failed to render ShadowRoot for location View.`);
+        this.shadowRoot.innerHTML = '';
     }
 
     controllerHandler(
@@ -402,7 +383,6 @@ export class PdcExpenseView extends HTMLElement {
     }
 
     createExpenseTable(expenses: StateExpenseItemValid[]) {
-        console.log(expenses);
         const { expensesTable } = this.#getViewEls();
 
         let mieTotal = 0;

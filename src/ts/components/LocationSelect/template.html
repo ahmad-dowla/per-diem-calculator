@@ -1,10 +1,27 @@
-<label class="block text-neutral-700"></label>
-<select hidden>
-    <option disabled selected value></option>
-</select>
 <div
-    id="error"
-    class="[.active]:text-error-600 pt-3 text-transparent transition-colors"
+    class="group flex items-center justify-between border-b border-b-neutral-100
+        px-3"
 >
-    &nbsp;
+    <pdc-label styled="true"></pdc-label>
+    <select hidden>
+        <option disabled selected value></option>
+    </select>
+    <!-- Input bottom border -->
+    <div
+        class="absolute mt-9 ml-[28.5%] w-[45%] border-b-2 border-b-transparent
+            transition-colors group-focus-within:border-b-neutral-300"
+    ></div>
+
+    <!-- Loading indicator-->
+    <div
+        id="loading-spinner"
+        class="absolute z-0 flex w-full items-center justify-center bg-inherit
+            opacity-0 transition-opacity duration-700 [.active]:z-50
+            [.active]:opacity-100"
+    >
+        <div
+            class="border-t-primary-600 border-primary-50 h-10 w-10 animate-spin
+                rounded-full border-4 border-t-4"
+        ></div>
+    </div>
 </div>

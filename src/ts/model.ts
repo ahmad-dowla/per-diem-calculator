@@ -35,13 +35,7 @@ export const updateAllStateLocations = (
     updatedRows: StateLocationItem[],
 ): void => {
     state.locations = updatedRows;
-    console.table(state.locations, [
-        'start',
-        'end',
-        'category',
-        'country',
-        'city',
-    ]);
+    // logStateLocation();
 };
 
 // Update single location
@@ -49,14 +43,19 @@ export const updateStateLocation = (
     updatedLocation: StateLocationItem,
 ): void => {
     state.locations[updatedLocation.index] = updatedLocation;
-    console.table(state.locations, [
-        'start',
-        'end',
-        'category',
-        'country',
-        'city',
-    ]);
+    // logStateLocation();
 };
+
+// Function to log every time state is updated during development
+// const logStateLocation = () => {
+//     console.table(state.locations, [
+//         'start',
+//         'end',
+//         'category',
+//         'country',
+//         'city',
+//     ]);
+// }
 
 // Return countries or cities based on category
 export const returnOptions = async (

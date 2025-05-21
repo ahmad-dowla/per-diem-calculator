@@ -2,12 +2,13 @@
 import type { Location } from '../../types/locations';
 
 // Utils
+import { applyStyles, removeStyles } from '../../utils/styles';
 import {
-    applyStyles,
-    removeStyles,
-    highlightSuccess,
-    highlightError,
-} from '../../utils/styles';
+    debounce,
+    handlePointerDown,
+    handlePointerUp,
+    wait,
+} from '../../utils/misc';
 import TomSelect from 'tom-select';
 
 // HTML/CSS
@@ -19,12 +20,42 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationSelect extends HTMLElement {
+    static observedAttributes = ['bg'];
+
+    attributeChangedCallback(
+        _name: string,
+        _oldValue: string,
+        newValue: string,
+    ) {
+        if (
+            !(
+                this.#styled &&
+                (newValue === 'white' || newValue === 'neutral-50')
+            )
+        )
+            return;
+        this.#setBg(`bg-${newValue}`);
+    }
+
+    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        this.shadowRoot
+            ?.querySelector('div')
+            ?.classList.remove(`bg-white`, `bg-neutral-50`);
+        this.shadowRoot
+            ?.querySelector('div')
+            ?.classList.add(
+                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
+            );
+    }
+
     #attrName: 'country' | 'city';
     #valid = false;
     #select: HTMLSelectElement;
     #tomSelect: TomSelect;
     #styled = false;
-    #error: Element;
+    #errorEl: Element;
+    #loadingSpinner: Element;
     #enabled = false;
 
     constructor() {
@@ -34,9 +65,10 @@ export class PdcLocationSelect extends HTMLElement {
         this.#styled = this.getAttribute('styled') === 'true';
         this.attachShadow({ mode: 'open' });
         const render = this.#render();
-        const { select, error } = this.#getEls();
+        const { select, errorEl, loadingSpinner } = this.#getEls();
         this.#select = select;
-        this.#error = error;
+        this.#errorEl = errorEl;
+        this.#loadingSpinner = loadingSpinner;
         this.#tomSelect = render.tomSelect;
         this.enableTabIndex(false);
     }
@@ -56,16 +88,21 @@ export class PdcLocationSelect extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
 
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#setBg();
 
-        const { select, label, error } = this.#getEls();
+        const { select, label, errorEl, loadingSpinner } = this.#getEls();
 
-        label.textContent = this.#attrName === 'country' ? 'State' : 'City';
+        label.setAttribute(
+            'text',
+            this.#attrName === 'country' ? 'State' : 'City',
+        );
         const noResultsText =
             this.#attrName === 'city' ?
                 `No results
         found.<br><br>Choose the first available option.<br><br>E.g. Standard Rate, [OTHER], etc.`
             :   `No results found.`;
         const tomSelect = new TomSelect(select, {
+            placeholder: `Select ${this.#attrName === 'country' ? 'state' : 'city'}`,
             maxItems: 1,
             plugins: ['dropdown_input'],
             selectOnTab: true,
@@ -82,7 +119,8 @@ export class PdcLocationSelect extends HTMLElement {
         tomSelect.disable();
 
         this.#select = select;
-        this.#error = error;
+        this.#errorEl = errorEl;
+        this.#loadingSpinner = loadingSpinner;
         this.#tomSelect = tomSelect;
         this.enableTabIndex(false);
         return { tomSelect }; // Returning only for constructor
@@ -91,14 +129,18 @@ export class PdcLocationSelect extends HTMLElement {
     #getEls = () => {
         const select =
             this.shadowRoot?.querySelector<HTMLSelectElement>('select');
-        const label = this.shadowRoot?.querySelector<HTMLLabelElement>('label');
-        const error = this.shadowRoot?.querySelector<HTMLElement>('#error');
-        if (!(select && label && error))
+        const label = this.shadowRoot?.querySelector('pdc-label');
+        const errorEl = this.closest('#locations-container')?.querySelector(
+            '#error',
+        );
+        const loadingSpinner =
+            this.shadowRoot?.querySelector('#loading-spinner');
+        if (!(select && label && errorEl && loadingSpinner))
             throw new Error(
                 `Failed to render elements for pdc-location-${this.#attrName} in location View.`,
             );
 
-        return { select, label, error };
+        return { select, label, errorEl, loadingSpinner };
     };
 
     enable(enable: boolean) {
@@ -124,21 +166,32 @@ export class PdcLocationSelect extends HTMLElement {
             this.#tomSelect.sync();
         });
 
-        ['click', 'keyup'].forEach(event => {
-            this.#tomSelect.control.addEventListener(event, e => {
-                const target = e.composedPath()[0];
-                console.log(target);
-                if (
-                    !(
-                        target instanceof HTMLElement &&
-                        target.classList.contains('ts-control')
-                    )
-                )
-                    return;
-                if (e instanceof KeyboardEvent && e.type === 'keyup')
-                    if (!(e.key === 'Enter' || e.key === ' ')) return;
-                this.#tomSelect.open();
-            });
+        // Mouse, touch events
+        let pointerStartX = 0;
+        let pointerStartY = 0;
+        this.#tomSelect.control.addEventListener('pointerdown', e => {
+            if (!(e instanceof PointerEvent)) return;
+            const result = handlePointerDown(e);
+            pointerStartX = result.pointerStartX;
+            pointerStartY = result.pointerStartY;
+        });
+        this.#tomSelect.control.addEventListener('pointerup', e => {
+            if (e instanceof PointerEvent) {
+                const result = handlePointerUp(
+                    e,
+                    this.#handleClicks.bind(this),
+                    pointerStartX,
+                    pointerStartY,
+                );
+                pointerStartX = result.pointerStartX;
+                pointerStartY = result.pointerStartY;
+            }
+        });
+
+        // Keyboard events
+        this.#tomSelect.control.addEventListener('keydown', e => {
+            if (!(e.key === 'Enter' || e.key === ' ')) return;
+            this.#handleClicks(e);
         });
 
         this.#tomSelect.on('change', () => {
@@ -148,28 +201,38 @@ export class PdcLocationSelect extends HTMLElement {
 
             if (this.#styled) {
                 this.#renderError(false);
-                highlightSuccess(this.#tomSelect.control);
+                this.#tomSelect.control.classList.remove('error');
+                this.#tomSelect.control.classList.add('success');
             }
 
-            this.#tomSelect.control.blur();
+            this.#tomSelect.focus();
         });
     }
 
-    #renderError(enable: boolean) {
+    #handleClicks = (e: Event) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement && target.closest('.ts-control')))
+            return;
+        const handler = debounce(() => {
+            this.#tomSelect.open();
+        }, 50);
+        handler();
+    };
+
+    async #renderError(enable: boolean) {
         if (enable) {
-            highlightError(this.#tomSelect.control);
+            this.#styled && this.#tomSelect.control.classList.add('error');
             const msg =
-                this.#attrName === 'country' ?
-                    `Select a state.`
-                :   `Select a city.`;
-            this.#error.textContent = msg;
-            this.#error.classList.add('active');
+                this.#attrName === 'country' ? `Select state.` : `Select city.`;
+            this.#errorEl.textContent = msg;
+            this.#errorEl.classList.add('active');
             return;
         }
-        this.#error.classList.remove('active');
-        setTimeout(() => {
-            this.#error.innerHTML = '&nbsp;';
-        }, 300);
+        this.#tomSelect.control.classList.remove('error');
+        this.#errorEl.classList.remove('active');
+        // MAGIC 300
+        await wait(300);
+        this.#errorEl.innerHTML = '&nbsp;';
     }
 
     enableTabIndex(enable: boolean) {
@@ -180,6 +243,13 @@ export class PdcLocationSelect extends HTMLElement {
 
     focusEl() {
         this.#tomSelect.control.focus();
+    }
+
+    showLoadingSpinner(enabled: boolean) {
+        if (!this.#styled) return;
+        enabled ?
+            this.#loadingSpinner.classList.add('active')
+        :   this.#loadingSpinner.classList.remove('active');
     }
 
     validate() {

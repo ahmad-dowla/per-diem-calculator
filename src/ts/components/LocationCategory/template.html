@@ -1,57 +1,32 @@
-<fieldset class="z-10 px-6 pt-6">
-    <label class="block text-neutral-700">Location</label>
-
-    <div class="grid auto-rows-fr grid-cols-1 gap-8">
-        <input
-            type="radio"
-            name="category"
-            value="domestic"
-            id="domestic"
-            class="peer/domestic hidden"
-            disabled
-            hidden
-        />
-        <input
-            type="radio"
-            name="category"
-            value="intl"
-            id="intl"
-            class="peer/intl hidden"
-            disabled
-            hidden
-        />
+<fieldset
+    class="group flex items-center justify-between border-b border-b-neutral-100
+        bg-white px-3"
+>
+    <pdc-label styled="true" text="Area"></pdc-label>
+    <div
+        class="w-[68%] opacity-15 transition-opacity **:text-sm
+            has-enabled:opacity-100"
+    >
         <label
             tabindex="0"
-            data-pdc="label"
-            class="peer/domestic-label peer-checked/domestic:ring-primary-300
-                peer-checked/domestic:bg-primary-50
-                peer-enabled/domestic:hover:bg-primary-50
-                peer-enabled/domestic:hover:ring-primary-300
-                peer-checked/domestic:[&_.state_path]:fill-primary-800
-                peer-enabled/domestic:hover:[&_.state_path]:fill-primary-800
-                peer-checked/domestic:[&_.state_path]:stroke-primary-100
-                peer-enabled/domestic:hover:[&_.state_path]:stroke-primary-100
-                [.error]:ring-error-400 [.success]:!ring-success-400
-                peer-enabled/domestic:focus-visible:bg-primary-50
-                peer-enabled/domestic:focus-visible:ring-primary-300
-                peer-enabled/domestic:focus-visible:[&_.state_path]:fill-primary-800
-                peer-enabled/domestic:focus-visible:[&_.state_path]:stroke-primary-100
-                mt-2 grid cursor-pointer grid-cols-2 items-center
-                justify-items-center gap-4 rounded-lg bg-neutral-50 p-6
-                shadow-md ring ring-neutral-200 transition ease-in-out
-                select-none peer-checked/domestic:ring-2
-                peer-disabled/domestic:bg-neutral-200
-                peer-disabled/domestic:shadow-none
-                peer-enabled/domestic:hover:ring-2
-                peer-disabled/domestic:hover:cursor-not-allowed
-                peer-enabled/domestic:focus-visible:outline-none md:grid-cols-3
-                md:gap-6 [.error]:ring-3 [.success]:ring-3"
+            class="group border-r-2-transparent
+                hover:[&_.state]:fill-primary-800
+                hover:[&_.state]:stroke-primary-100
+                focus-visible:[&_.state]:fill-primary-800
+                focus-visible:[&_.state]:stroke-primary-100
+                focus-visible:border-r-primary-300 hover:border-r-primary-300
+                [.error]:border-r-error-400 has-checked:border-r-success-400
+                my-3 grid cursor-pointer grid-cols-2 items-center
+                justify-items-center border-r-3 border-r-transparent
+                bg-transparent py-3 pr-3 transition-colors select-none *:pr-4
+                **:transition-colors focus-visible:outline-none
+                has-disabled:hover:cursor-not-allowed
+                [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
             for="domestic"
         >
             <svg
                 inert
-                class="max-h-[80px] **:transition-colors
-                    [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
+                class="max-h-[35px]"
                 viewBox="0 0 959 593"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -400,48 +375,47 @@
                     </path>
                 </g>
             </svg>
-            <div class="max-w-10/12 md:col-span-2">
-                <ul
-                    class="text-center text-sm *:hidden md:text-left
-                        md:*:list-item md:*:list-disc
-                        [&_li:first-child]:list-item
-                        md:[&_li:last-child]:list-item"
-                >
-                    <li>48 States</li>
-                    <li class="hidden md:list-item">Washington D.C.</li>
-                </ul>
-            </div>
+            <ul
+                class="text-center transition-colors *:hidden
+                    *:border-b-transparent group-focus:*:border-b-neutral-300
+                    *:first:list-item *:first:border-b-2 *:first:pb-2
+                    md:text-left md:*:list-item md:*:list-disc md:*:first:hidden
+                    md:*:first:border-none md:*:first:pb-0 md:*:last:border-b-2
+                    md:*:last:pb-2"
+            >
+                <li>48 States</li>
+                <li class="hidden md:list-item">Washington D.C.</li>
+            </ul>
+            <input
+                type="radio"
+                name="category"
+                value="domestic"
+                id="domestic"
+                class="hidden"
+                disabled
+                required
+                hidden
+            />
         </label>
         <label
             tabindex="0"
-            data-pdc="label"
-            class="peer/intl-label peer-checked/intl:ring-primary-300
-                peer-checked/intl:bg-primary-50
-                peer-enabled/intl:hover:bg-primary-50
-                peer-enabled/intl:hover:ring-primary-300
-                peer-checked/intl:[&_.land]:fill-primary-800
-                peer-enabled/intl:hover:[&_.land]:fill-primary-800
-                peer-checked/intl:[&_.water]:fill-primary-100
-                peer-enabled/intl:hover:[&_.water]:fill-primary-100
-                [.success]:!ring-success-400 [.error]:ring-error-400
-                peer-enabled/intl:focus-visible:bg-primary-50
-                peer-enabled/intl:focus-visible:ring-primary-300
-                peer-enabled/intl:focus-visible:[&_.land]:fill-primary-800
-                peer-enabled/intl:focus-visible:[&_.water]:fill-primary-100 grid
-                cursor-pointer grid-cols-2 items-center justify-items-center
-                gap-4 rounded-lg bg-neutral-50 p-6 shadow-md ring-1
-                ring-neutral-200 transition ease-in-out select-none
-                peer-checked/intl:ring-2 peer-disabled/intl:bg-neutral-200
-                peer-disabled/intl:shadow-none peer-enabled/intl:hover:ring-2
-                peer-disabled/intl:hover:cursor-not-allowed
-                peer-enabled/intl:focus-visible:outline-none md:grid-cols-3
-                md:gap-6 [.error]:ring-3 [.success]:ring-3"
+            class="group border-r-2-transparent hover:[&_.land]:fill-primary-800
+                hover:[&_.water]:fill-primary-100
+                focus-visible:[&_.land]:fill-primary-800
+                focus-visible:[&_.water]:fill-primary-100
+                focus-visible:border-r-primary-300 hover:border-r-primary-300
+                [.error]:border-r-error-400 has-checked:border-r-success-400
+                my-3 grid cursor-pointer grid-cols-2 items-center
+                justify-items-center border-r-3 border-r-transparent
+                bg-transparent py-3 pr-3 transition-colors select-none *:pr-4
+                **:transition-colors focus-visible:outline-none
+                has-disabled:hover:cursor-not-allowed [&_.land]:fill-neutral-800
+                [&_.water]:fill-neutral-100"
             for="intl"
         >
             <svg
                 inert
-                class="max-h-[60px] **:transition-colors
-                    [&_.land]:fill-neutral-800 [&_.water]:fill-neutral-100"
+                class="mr-5 max-h-[40px]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="1.52 1.58 3.77 3.77"
             >
@@ -514,27 +488,29 @@
                     d="M4.007 2.75c.012.001.013-.007.013-.016-.001-.01-.02-.016-.022-.01 0 0-.003.026.009.027zM3.997 2.779l.002.033.012.001.004-.008.01-.002.003-.035-.01-.01h-.01L4 2.762l-.009.005.007.012zM3.606 2.479c.016.005.015 0 .03-.005.015-.004.013-.004.034-.006.021-.002.006-.031.01-.036 0 0 .01.007-.002-.004-.013-.011-.02-.014.009-.012.03.002 0-.012-.007-.017-.008-.005-.011-.002-.031-.003s-.011.019-.011.019-.007.004-.021-.005c-.014-.008-.018-.002-.02.015-.001.018.005.012.016.013.011 0 0 .007-.01.009a.019.019 0 0 0-.016.018c0 .008.004.008.02.014zM3.988 1.885c.014 0 .018-.014.03-.014.013 0 .001.014.001.014-.033.007-.035.005-.01.023.026.017.02 0 .037.008.017.007.008 0 .018-.022.01-.021.006-.016.024-.018.019-.003.017.015.025.019 0 0 .019.008.036.008.018 0 .021-.007.013-.007-.007 0-.022 0-.037-.016s-.057-.024-.057-.024.012 0 .018.003c.006.002.03.005.046.005.015 0 .019 0 .038-.009.02-.007.009-.018.009-.018H4.077c-.021 0-.027.006-.058.006h-.05c-.016 0-.015.011-.014.026.002.015.02.016.033.016z"
                 ></path>
             </svg>
-            <div class="max-w-10/12 md:col-span-2 md:block">
-                <ul
-                    class="text-center text-sm *:hidden md:text-left
-                        md:*:list-item md:*:list-disc
-                        [&_li:first-child]:list-item
-                        md:[&_li:first-child]:hidden"
-                >
-                    <li>All Other Locations</li>
-                    <li>Alaska, Hawaii</li>
-                    <li>U.S. Territories</li>
-                    <li>Other Countries</li>
-                </ul>
-            </div>
+            <ul
+                class="text-center transition-colors *:hidden
+                    *:border-b-transparent group-focus:*:border-b-neutral-300
+                    *:first:list-item *:first:border-b-2 *:first:pb-2
+                    md:text-left md:*:list-item md:*:list-disc md:*:first:hidden
+                    md:*:first:border-none md:*:first:pb-0 md:*:last:border-b-2
+                    md:*:last:pb-2"
+            >
+                <li>All Other Locations</li>
+                <li>Alaska, Hawaii</li>
+                <li>U.S. Territories</li>
+                <li>Other Countries</li>
+            </ul>
+            <input
+                type="radio"
+                name="category"
+                value="intl"
+                id="intl"
+                class="hidden"
+                disabled
+                required
+                hidden
+            />
         </label>
     </div>
 </fieldset>
-
-<div
-    id="error"
-    class="[.active]:text-error-600 px-6 pt-3 text-transparent
-        transition-colors"
->
-    &nbsp;
-</div>
