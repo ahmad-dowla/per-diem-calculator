@@ -7,5 +7,6 @@ export const configDefault: Config = {
     },
     expense: {
         heading: 'Expenses',
+        body: 'Confirm meals provided/lodging amount for each day.',
     },
 };

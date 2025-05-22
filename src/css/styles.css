@@ -1,11 +1,3 @@
-/* TODO2 Test responsiveness */
-/* TODO3 Add CSS paths so shadow dom elements can be styled */
-/* TODO3 Research aria tags and other accessibility needs */
-/* TODO3 Test accessibility */
-/* TEST Custom styling via paths */
-/* TEST ZAP */
-/* TEST Page speeds */
-
 @import 'tailwindcss';
 
 @theme {
@@ -63,7 +55,7 @@
 
     --row-close: 96px;
     --row-location-open: 445px;
-    --row-expense-open: 373px;
+    --row-expense-open: 437px;
 
     /* Row open, close, delete */
     @keyframes row-location-open {

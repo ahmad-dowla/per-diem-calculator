@@ -22,9 +22,11 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcExpenseRow extends HTMLElement {
+    /* Initial setup
+     */
     #expense: StateExpenseItemValid;
-    #styled: boolean;
     #expensesCategory;
+    #styled: boolean;
     #maxLodging: number;
     #maxMie: number;
     #lodgingAmount: number;
@@ -39,8 +41,8 @@ export class PdcExpenseRow extends HTMLElement {
         this.attachShadow({ mode: 'open' });
 
         this.#expense = expense;
-        this.#expensesCategory = expensesCategory;
         this.#styled = styled;
+        this.#expensesCategory = expensesCategory;
 
         const { deductions, rates, lodgingAmount, mieAmount } = this.#expense;
         this.#maxLodging = rates.maxLodging;
@@ -53,71 +55,47 @@ export class PdcExpenseRow extends HTMLElement {
     }
 
     render(styled: boolean) {
-        // Clear shadowroot, determine if template should be styled, append template to shadowroot
-        if (!this.shadowRoot)
-            throw new Error(
-                'Failed to create ShadowRoot for Meal custom element',
-            );
-        this.shadowRoot.innerHTML = '';
+        this.#shadowRoot.innerHTML = '';
         if (styled) {
             template.innerHTML = templateHTML;
-            this.shadowRoot && applyStyles(this.shadowRoot);
+            applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
-        this.shadowRoot?.appendChild(template.content.cloneNode(true));
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
 
-        // Pull values from expense object
-        const { city, country } = this.#expense;
+        // Update text elements w/ values
+        this.#setRowDateText();
+        this.#setRowDetailsText();
 
-        // Get elements for each value
-        const {
-            row,
-            monthEl,
-            dayEl,
-            yearEl,
-            locationEl,
-            lodgingEl,
-            lodgingRateEl,
-            mieEl,
-            mieRateEl,
-            deductionsEl,
-            totalEl,
-        } = this.#getRowEls();
+        // Update custom element's attribute values
+        this.setAttribute('date', this.#expense.date);
+        this.#updateLodgingAmount(this.#lodgingAmount.toString());
+        this.updateMieAmount(this.#mieAmount);
+        this.#updateTotalAmount();
 
-        const lodgingSummary =
-            this.shadowRoot?.querySelector<HTMLInputElement>(
-                '#summary-lodging',
-            );
+        this.#disableUnusedRowEls();
+        this.#addEventListeners();
+    }
 
-        const mieSummary =
-            this.shadowRoot?.querySelector<HTMLInputElement>('#summary-mie');
-
-        const totalSummary =
-            this.shadowRoot?.querySelector<HTMLInputElement>('#summary-total');
-
-        if (
-            !(
-                locationEl &&
-                lodgingEl &&
-                lodgingRateEl &&
-                mieEl &&
-                deductionsEl &&
-                mieRateEl &&
-                totalEl &&
-                lodgingSummary &&
-                mieSummary &&
-                totalSummary
-            )
-        )
-            throw new Error(
-                `Failed to generate expense row elements for ${this.#expense.date} - ${this.#expense.city}.`,
-            );
-
-        // Update elements w/ values
+    #setRowDateText() {
+        const monthEl = this.#shadowRoot.querySelector('#month');
+        const dayEl = this.#shadowRoot.querySelector('#day');
+        const yearEl = this.#shadowRoot.querySelector('#year');
         const date = new Date(this.#expense.date);
+        if (!(monthEl && dayEl && yearEl))
+            throw new Error(`Failed to render row's date elements.`);
         monthEl.textContent = date.toUTCString().slice(7, 11);
         dayEl.textContent = date.getUTCDate().toString().padStart(2, '0');
         yearEl.textContent = date.getUTCFullYear().toString();
-        locationEl.textContent = `${city} (${country})`;
+    }
+
+    #setRowDetailsText() {
+        const locationEl = this.#shadowRoot.querySelector('#location');
+        const lodgingRateEl = this.#shadowRoot.querySelector('#lodging-rate');
+        const mieRateEl = this.#shadowRoot.querySelector('#mie-rate');
+        if (!(locationEl && lodgingRateEl && mieRateEl))
+            throw new Error(`Failed to render row's rate elements.`);
+
+        locationEl.textContent = `${this.#expense.city} (${this.#expense.country})`;
         lodgingRateEl.setAttribute(
             'text',
             `<p class="font-semibold">Lodging</p>
@@ -128,46 +106,45 @@ export class PdcExpenseRow extends HTMLElement {
             `<p class="font-semibold">M&IE</p>
             <p class="text-sm">Max ${USD.format(this.#maxMie)}</p>`,
         );
+    }
 
-        // Update row's values
-        this.setAttribute('date', this.#expense.date);
-        this.#updateLodgingAmount(this.#lodgingAmount.toString());
-        this.updateMieAmount(this.#mieAmount);
-
-        // Delete elements if expenses category is not 'Both'
+    #disableUnusedRowEls() {
+        const lodgingEl = this.#shadowRoot.querySelector('#lodging');
+        const mieEl = this.#shadowRoot.querySelector('#mie');
+        const deductionsEl = this.#shadowRoot.querySelector('#deductions');
         if (this.#expensesCategory === 'mie') {
-            lodgingEl.classList.add('disabled');
-            this.shadowRoot
-                ?.querySelector<HTMLInputElement>('#lodging-amount')
+            lodgingEl?.classList.add('disabled');
+            this.#shadowRoot
+                .querySelector<HTMLInputElement>('#lodging-amount')
                 ?.setAttribute('disabled', '');
         }
         if (this.#expensesCategory === 'lodging') {
-            mieEl.classList.add('disabled');
-            deductionsEl.classList.add('disabled');
+            mieEl?.classList.add('disabled');
+            deductionsEl?.classList.add('disabled');
             deductionsEl
-                .querySelectorAll('input')
+                ?.querySelectorAll('input')
                 .forEach(el => el.setAttribute('disabled', ''));
         }
+    }
 
-        this.#updateTotalAmount();
-
-        // Event listeners for inputs
-        row.addEventListener('change', e => {
+    /* Events
+     */
+    #addEventListeners() {
+        // Input change events
+        this.#row.addEventListener('change', e => {
             this.#handleInputs(e);
         });
 
-        // Event listener for clicks
+        // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-
-        row.addEventListener('pointerdown', e => {
+        this.#row.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
-
-        row.addEventListener('pointerup', e => {
+        this.#row.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -181,157 +158,141 @@ export class PdcExpenseRow extends HTMLElement {
         });
 
         // Keyboard events
-        row.addEventListener('keydown', e => {
+        this.#row.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
     }
 
-    #getRowEls = () => {
-        if (!this.shadowRoot)
-            throw new Error(
-                'Failed to create ShadowRoot for Meal custom element',
-            );
-        const row = this.shadowRoot.querySelector<HTMLElement>('#expense-row');
-        const rowSummary = this.shadowRoot.querySelector<HTMLElement>(
-            '#expense-row-summary',
-        );
-        const monthEl = this.shadowRoot.querySelector('#month');
-        const dayEl = this.shadowRoot.querySelector('#day');
-        const yearEl = this.shadowRoot.querySelector('#year');
-        const locationEl = this.shadowRoot.querySelector('#location');
-        const lodgingEl = this.shadowRoot.querySelector('#lodging');
-        const lodgingRateEl = this.shadowRoot.querySelector('#lodging-rate');
-        const mieEl = this.shadowRoot.querySelector('#mie');
-        const mieRateEl = this.shadowRoot.querySelector('#mie-rate');
-        const deductionsEl = this.shadowRoot.querySelector('#deductions');
-        const totalEl = this.shadowRoot.querySelector('#total');
-
-        if (!(row && monthEl && dayEl && yearEl))
-            throw new Error('Failed to render row elements.');
-
-        return {
-            row,
-            rowSummary,
-            monthEl,
-            dayEl,
-            yearEl,
-            locationEl,
-            lodgingEl,
-            lodgingRateEl,
-            mieEl,
-            mieRateEl,
-            deductionsEl,
-            totalEl,
-        };
-    };
-
-    rowToggle = async (toggle: 'open' | 'close' | null = null) => {
-        const { row } = this.#getRowEls();
-        if (!this.#styled || row.classList.contains('toggling')) return;
-
-        // If no specific toggle set, fire either open or close based on current row height
-        if (!toggle) {
-            this.rowToggle(row.offsetHeight === 96 ? 'open' : 'close');
-            return;
-        }
-
-        // Update classes/styles
-        row.classList.remove('pdc-row-open', 'pdc-row-close');
-        row.classList.add('toggling', `pdc-row-${toggle}`);
-
-        // Fire toggles
-        if (toggle === 'open') await this.#rowToggleOpen(row);
-        if (toggle === 'close') await this.#rowToggleClose(row);
-
-        row.classList.remove('toggling');
-    };
-
-    #rowToggleOpen = async (row: HTMLElement) => {
-        // MAGIC 700
-        await wait(700);
-        // this.#enableRowTabIndex(row, true);
-        row.style.height = row.scrollHeight + 'px';
-        const { rowDetailsAnimateEl, rowSummaryAnimateEl } =
-            this.#getRowAnimatedEls(row);
-        rowSummaryAnimateEl.style.opacity = '0';
-        rowDetailsAnimateEl.style.opacity = '100';
-        rowDetailsAnimateEl.style.transform = `translateX(100%)`;
-        rowSummaryAnimateEl.style.transform = `translateY(-200%)`;
-    };
-
-    #rowToggleClose = async (row: HTMLElement) => {
-        // MAGIC 750
-        await wait(750);
-        // this.#enableRowTabIndex(row, false);
-        row.style.height = row.clientHeight + 'px';
-        const { rowDetailsAnimateEl, rowSummaryAnimateEl } =
-            this.#getRowAnimatedEls(row);
-        rowSummaryAnimateEl.style.opacity = '100';
-        rowDetailsAnimateEl.style.opacity = '0';
-        rowDetailsAnimateEl.style.transform = `translateX(0%)`;
-        rowSummaryAnimateEl.style.transform = `translateY(0%)`;
-    };
-
-    #getRowAnimatedEls(row: Element) {
-        const rowSummaryAnimateEl = row.querySelector<HTMLElement>(
-            '[data-pdc="expense-row-summary"]',
-        );
-        const rowDetailsAnimateEl = row.querySelector<HTMLElement>(
-            '[data-pdc="expense-row-details"]',
-        );
-        if (!(rowSummaryAnimateEl && rowDetailsAnimateEl))
-            throw new Error('Failed to render row summary elements.');
-        return {
-            rowSummaryAnimateEl,
-            rowDetailsAnimateEl,
-        };
-    }
-
-    windowResize = () => {
-        const { row } = this.#getRowEls();
-        if (row.offsetHeight === 96) return;
-        row.style.height =
-            this.#getRowAnimatedEls(row).rowDetailsAnimateEl.scrollHeight +
-            'px';
-    };
-
     #handleInputs(e: Event) {
         const target = e.target;
         if (!(target instanceof HTMLInputElement)) return;
-        target.getAttribute('id') === 'lodging-amount' &&
+        if (target.getAttribute('id') === 'lodging-amount') {
             this.#updateLodgingAmount(target.value);
-        target.getAttribute('name') === 'breakfast' &&
-            this.setAttribute(
-                'breakfastprovided',
-                target.checked ? 'yes' : 'no',
-            );
-        target.getAttribute('name') === 'lunch' &&
-            this.setAttribute('lunchprovided', target.checked ? 'yes' : 'no');
-        target.getAttribute('name') === 'dinner' &&
-            this.setAttribute('dinnerprovided', target.checked ? 'yes' : 'no');
+            return;
+        }
+        const attrName = target.getAttribute.name;
+        if (
+            !(
+                attrName === 'breakfast' ||
+                attrName === 'lunch' ||
+                attrName === 'dinner'
+            )
+        )
+            return;
+
+        this.setAttribute(`${attrName}provided`, target.checked ? 'yes' : 'no');
     }
 
     #handleClicks(e: Event) {
         const target = e.target;
-        // Ignore (1) clicks on input elements and (2) clicks on non-SVG/HTML elements
         if (!(target instanceof SVGElement || target instanceof HTMLElement))
             return;
-
-        // Only fire if it's an element within expense-row-summary
         if (!!target.closest('[data-pdc="expense-row-toggle"]'))
             this.rowToggle();
     }
 
+    /* Get row elements
+     */
+    get #row() {
+        const row = this.#shadowRoot.querySelector<HTMLElement>('#expense-row');
+        if (!row) throw new Error('Failed to render row elements.');
+        return row;
+    }
+
+    get #rowAnimatedEls() {
+        const summary = this.#row.querySelector<HTMLElement>(
+            '[data-pdc="expense-row-summary"]',
+        );
+        const details = this.#row.querySelector<HTMLElement>(
+            '[data-pdc="expense-row-details"]',
+        );
+        if (!(summary && details))
+            throw new Error('Failed to render row summary elements.');
+        return {
+            summary,
+            details,
+        };
+    }
+
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(
+                'Failed to create ShadowRoot for expense row custom element',
+            );
+        return this.shadowRoot;
+    }
+
+    /* Visual methods
+     */
+    rowToggle = async (toggle: 'open' | 'close' | null = null) => {
+        if (!this.#styled || this.#row.classList.contains('toggling')) return;
+
+        // MAGIC 96
+        if (!toggle) {
+            this.rowToggle(this.#row.offsetHeight === 96 ? 'open' : 'close');
+            return;
+        }
+
+        this.#row.classList.remove('pdc-row-open', 'pdc-row-close');
+        this.#row.classList.add('toggling', `pdc-row-${toggle}`);
+
+        await this.#animateRow(toggle);
+        this.#row.classList.remove('toggling');
+    };
+
+    #animateRow = async (direction: 'open' | 'close') => {
+        // MAGIC 750
+        await wait(750);
+        // this.#enableRowTabIndex(row, false);
+        this.#row.style.height = `${direction === 'open' ? this.#row.scrollHeight : this.#row.clientHeight}px`;
+        this.#rowAnimatedEls.summary.style.opacity =
+            direction === 'open' ? '0' : '100';
+        this.#rowAnimatedEls.summary.style.transform =
+            direction === 'open' ? `translateY(-200%)` : `translateY(0%)`;
+        this.#rowAnimatedEls.details.style.opacity =
+            direction === 'open' ? '100' : '0';
+        this.#rowAnimatedEls.details.style.transform =
+            direction === 'open' ? `translateX(100%)` : `translateX(0%)`;
+    };
+
+    windowResize = () => {
+        if (this.#row.offsetHeight === 96) return;
+        this.#row.style.height =
+            this.#rowAnimatedEls.details.scrollHeight + 'px';
+    };
+
+    styleRow = () => {
+        if (!this.parentNode)
+            throw new Error(`Failed to get row index in Expense view.`);
+        const index = Array.from(
+            this.parentNode.querySelectorAll('pdc-expense-row'),
+        ).indexOf(this);
+        const color = index % 2 === 0 ? 'neutral-50' : 'white';
+        const oppColor = color === 'neutral-50' ? 'white' : 'neutral-50';
+        this.#row.classList.remove('bg-neutral-50', 'bg-white');
+        this.#row.classList.add(`bg-${color}`);
+        [...this.#rowAnimatedEls.details.children].forEach((el, i) => {
+            el.classList.remove('bg-white', 'bg-neutral-50');
+            el.classList.add(i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`);
+        });
+        this.style.position = 'relative';
+        this.style.overflow = 'hidden';
+        this.style.zIndex = index.toString();
+    };
+
+    /* Update methods
+     */
     updateMieAmount(amount: number) {
         const mieTotalAmountInp =
-            this.shadowRoot?.querySelector<HTMLInputElement>(
+            this.#shadowRoot.querySelector<HTMLInputElement>(
                 '#mie-total-amount',
             );
-        const mieSummary = this.shadowRoot?.querySelector<HTMLInputElement>(
+        const mieSummary = this.#shadowRoot.querySelector<HTMLInputElement>(
             '#summary-mie-amount',
         );
-        if (!(mieTotalAmountInp && mieSummary)) return; // Not throwing error b/c of lodging-only option
+        if (!(mieTotalAmountInp && mieSummary))
+            throw new Error(`Failed to render row's M&IE elements.`);
         const oldAmount = mieTotalAmountInp.value;
         const newAmount = amount.toFixed(2).toString();
         if (oldAmount === newAmount) return;
@@ -345,8 +306,8 @@ export class PdcExpenseRow extends HTMLElement {
 
     #updateLodgingAmount(value: string) {
         const lodgingInput =
-            this.shadowRoot?.querySelector<HTMLInputElement>('#lodging-amount');
-        const lodgingSummary = this.shadowRoot?.querySelector<HTMLInputElement>(
+            this.#shadowRoot.querySelector<HTMLInputElement>('#lodging-amount');
+        const lodgingSummary = this.#shadowRoot.querySelector<HTMLInputElement>(
             '#summary-lodging-amount',
         );
         if (!(lodgingInput && lodgingSummary))
@@ -369,15 +330,14 @@ export class PdcExpenseRow extends HTMLElement {
                 (+value).toFixed(2).toString()
             :   this.#maxLodging.toFixed(2).toString();
         this.#lodgingAmount = valid ? +value : this.#maxLodging;
-        lodgingSummary.textContent =
-            valid ? USD.format(+value) : USD.format(this.#maxLodging);
+
         if (this.#styled) highlightSuccess(lodgingInput);
         this.#updateTotalAmount();
     }
 
     #updateTotalAmount() {
         const totalAmount = this.#lodgingAmount + this.#mieAmount;
-        const totalEls = this.shadowRoot?.querySelectorAll(
+        const totalEls = this.#shadowRoot.querySelectorAll(
             '[data-pdc="expense-total"]',
         );
         totalEls?.forEach(el => {
@@ -390,46 +350,25 @@ export class PdcExpenseRow extends HTMLElement {
         });
     }
 
-    getSource() {
+    /* Get row data
+     */
+    get rateSource() {
         return this.#expense.source;
     }
 
-    getRateTableDate() {
-        const { effDate: _, ...rates } = this.#expense.rates;
-        const { date, country, city } = this.#expense;
-        return { date, country, city, rates };
+    get rateString() {
+        const { country, city, rates } = this.#expense;
+        return JSON.stringify({ city, country, rates });
     }
 
-    getAmounts() {
-        const { mieAmount, lodgingAmount } = this.#expense;
-        return { mieAmount, lodgingAmount };
+    get rateStringForTable() {
+        const { date, country, city, rates } = this.#expense;
+        const monthYear = `${date.slice(5, 7)}/${date.slice(0, 4)}`;
+        return JSON.stringify({ monthYear, country, city, rates });
     }
 
-    #getRowIndex() {
-        if (!this.parentNode)
-            throw new Error(`Failed to get row index in Expense view.`);
-        return Array.from(
-            this.parentNode.querySelectorAll('pdc-expense-row'),
-        ).indexOf(this);
+    get amount() {
+        const { mieAmount: mie, lodgingAmount: lodging } = this.#expense;
+        return { mie, lodging };
     }
-
-    setRowBgColor = () => {
-        const { row } = this.#getRowEls();
-        const index = this.#getRowIndex();
-        const color = index % 2 === 0 ? 'neutral-50' : 'white';
-        const oppColor = color === 'neutral-50' ? 'white' : 'neutral-50';
-        row.classList.remove('bg-neutral-50', 'bg-white');
-        row.classList.add(`bg-${color}`);
-        [...this.#getRowAnimatedEls(row).rowDetailsAnimateEl.children].forEach(
-            (el, i) => {
-                el.classList.remove('bg-white', 'bg-neutral-50');
-                el.classList.add(
-                    i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`,
-                );
-            },
-        );
-        this.style.position = 'relative';
-        this.style.overflow = 'hidden';
-        this.style.zIndex = index.toString();
-    };
 }

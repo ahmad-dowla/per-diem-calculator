@@ -1,5 +1,7 @@
-<!-- LAST On firefox mobile, expenses table doesn't have bottom border for date and location header-->
-<!-- TODO refactor to a more table UI? -->
+<!-- TODO Cleanup ts (components, types, utils, controller, model) -->
+<!-- TODO Cleanup html-->
+<!-- TODO Cleanup CSS -->
+<!-- TODO Test keyboard inputs in Expense View -->
 
 <div
     id="expense-container"
@@ -25,45 +27,50 @@
         class="relative z-10 overflow-hidden rounded-lg ring-2 ring-neutral-300
             [transition:height_0.7s_eas]"
     >
-        <h3
-            class="h-14 border-b-2 border-b-neutral-200 bg-white p-4 text-xl
-                font-semibold text-neutral-900"
+        <!-- Heading, toggle -->
+        <div
+            class="flex justify-between border-b-2 border-b-neutral-200 bg-white
+                p-4 text-neutral-900"
         >
-            Expense Details
-        </h3>
-        <!-- <button
-            type="button"
-            id="toggle-expand"
-            class="hover:text-primary-900 relative ml-3 py-8 pl-3
-                text-neutral-600 duration-500 *:size-5 *:overflow-visible
-                *:fill-current **:origin-center **:transition-all
-                hover:cursor-pointer [&_.down]:[transform:translateY(15%)]
-                [&_.up]:[transform:translateY(-15%)]
-                [&.active_.down]:[transform:scaleY(-1)_translateY(-70%)]
-                [&.active_.up]:[transform:scaleY(-1)_translateY(70%)]"
-        >
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                data-pdc-delete="Toggle Expenses"
-                class="size-18 fill-current"
-                viewBox="0 0 16 16"
+            <div>
+                <h3 id="heading" class="text-xl font-semibold"></h3>
+                <p id="body" class="mt-2"></p>
+            </div>
+            <button
+                type="button"
+                id="toggle-expand"
+                class="hover:text-primary-900 relative ml-3 pl-3
+                    text-neutral-600 duration-500 *:size-5 *:overflow-visible
+                    *:fill-current **:origin-center **:transition-all
+                    hover:cursor-pointer [&_.down]:[transform:translateY(15%)]
+                    [&_.up]:[transform:translateY(-15%)]
+                    [&.active_.down]:[transform:scaleY(-1)_translateY(-70%)]
+                    [&.active_.up]:[transform:scaleY(-1)_translateY(70%)]"
             >
-                <path
-                    class="down"
-                    fill-rule="evenodd"
-                    d="M3.646 14.854a.5.5 0 0 0 .708 0L8 11.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708"
-                />
-                <path
-                    fill-rule="evenodd"
-                    d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8"
-                />
-                <path
-                    class="up"
-                    fill-rule="evenodd"
-                    d="M3.646 1.146a.5.5 0 0 1 .708 0L8 4.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708"
-                />
-            </svg>
-        </button> -->
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    data-pdc-delete="Toggle Expenses"
+                    class="size-18 fill-current"
+                    viewBox="0 0 16 16"
+                >
+                    <path
+                        class="down"
+                        fill-rule="evenodd"
+                        d="M3.646 14.854a.5.5 0 0 0 .708 0L8 11.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708"
+                    />
+                    <path
+                        fill-rule="evenodd"
+                        d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8"
+                    />
+                    <path
+                        class="up"
+                        fill-rule="evenodd"
+                        d="M3.646 1.146a.5.5 0 0 1 .708 0L8 4.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708"
+                    />
+                </svg>
+            </button>
+        </div>
+
         <!-- Rows -->
         <div
             id="rows"
@@ -72,7 +79,7 @@
     </div>
 
     <!-- Totals -->
-    <div id="total-amounts" class="my-8 text-lg">
+    <div id="total-amounts" class="my-8 px-3 text-lg">
         <div class="flex">
             <p class="grow">M&IE</p>
             <p id="mie-subtotal" class="text-right">$0.00</p>
@@ -108,23 +115,21 @@
     <div class="mt-8 w-full">
         <h3 class="mb-2.5 text-xl font-semibold">Rates</h3>
         <table
-            class="w-full table-fixed **:text-center **:align-middle **:text-xs"
+            class="w-full table-auto **:text-center **:align-middle **:text-xs"
         >
             <thead>
-                <tr class="border-t-2 border-b-2 *:font-semibold">
+                <tr class="border-t-2 border-b-2 *:px-2 *:font-semibold">
                     <th class="w-[12.5%] border-r-2" rowspan="2">
                         Eff.<br />Date
                     </th>
                     <th class="w-[22%] border-r-2" rowspan="2">Location</th>
-                    <th class="w-[41.5%] border-r-2 py-1.5" colspan="4">
-                        Rates
-                    </th>
-                    <th class="w-[24%]" colspan="3">Deductions</th>
+                    <th class="border-r-2 py-1.5" colspan="4">Maximums</th>
+                    <th colspan="3">Deductions</th>
                 </tr>
-                <tr class="*:font-base border-b-3">
+                <tr class="*:font-base border-b-3 *:px-2">
                     <th>Lodging</th>
                     <th class="py-1.5">
-                        M&IE<br /><span class="font-normal">(Standard)</span>
+                        M&IE<br /><span class="font-normal">(Full)</span>
                     </th>
                     <th>
                         M&IE<br /><span class="font-normal">(First/Last)</span>
@@ -155,7 +160,9 @@
                 <tr class="border-t-2 border-b-3 *:p-3 *:font-semibold">
                     <th class="w-[12.5%] text-center" rowspan="2">Date</th>
                     <th class="w-[40%] text-left" rowspan="2">
-                        Location / Deductions
+                        Location
+                        <br />
+                        <span class="font-normal">Deductions</span>
                     </th>
                     <th class="text-right">M&IE</th>
                     <th class="text-right">Lodging</th>

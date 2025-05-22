@@ -1,6 +1,6 @@
 // TODO3 Refine controller class method for getting data
 // TODO2 Double-check errors, trace to root function and eliminate try/catch in child functions
-// LAST Testing (Jest)
+// LAST Testing
 // LAST Search to see if API key in build files
 // LAST Restrict access control allow origin on proxy
 
@@ -30,14 +30,18 @@ export class Pdc {
     #config: Config;
     #viewLocation;
     #viewExpense;
+    #styled;
     #eventTarget;
 
     constructor(container: Element, configUser: Partial<Config> | null = null) {
         this.#container = container;
         this.#config = sanitizeConfig(configUser);
-        const { styled } = this.#config;
+        this.#styled = this.#config.styled;
 
-        this.#viewLocation = new PdcLocationView(styled);
+        this.#viewLocation = new PdcLocationView(
+            this.#styled,
+            this.#config.location,
+        );
         this.#viewExpense = new PdcExpenseView();
 
         this.#viewLocation.controllerHandler(
@@ -67,18 +71,18 @@ export class Pdc {
 
         switch (true) {
             case !newValue && !!country && !!category && !!end && !!start:
-                this.#viewLocation.transitionRow(index, 'country');
+                this.#viewLocation.restrictRow(index, 'country');
                 await this.#createSelectOptions(row);
                 return;
             case !newValue && !!category && !!end && !!start:
-                this.#viewLocation.transitionRow(index, 'category');
+                this.#viewLocation.restrictRow(index, 'category');
                 await this.#createSelectOptions(row);
                 return;
             case !newValue && !!end && !!start:
-                this.#viewLocation.transitionRow(index, 'end');
+                this.#viewLocation.restrictRow(index, 'end');
                 return;
             case !newValue:
-                this.#viewLocation.transitionRow(index, 'start');
+                this.#viewLocation.restrictRow(index, 'start');
                 return;
             case (changedAttr === 'start' || changedAttr === 'end') && // To account for when rows are deleted and the only updates are to the start/end dates of prev/next rows
                 !!start &&
@@ -91,11 +95,11 @@ export class Pdc {
                 if (startDate <= endDate) {
                     return;
                 } else {
-                    this.#viewLocation.transitionRow(index, changedAttr);
+                    this.#viewLocation.restrictRow(index, changedAttr);
                 }
                 return;
             default:
-                this.#viewLocation.transitionRow(index, changedAttr);
+                this.#viewLocation.restrictRow(index, changedAttr);
                 if (changedAttr === 'category' || changedAttr === 'country') {
                     await this.#createSelectOptions(row);
                 }
@@ -108,7 +112,7 @@ export class Pdc {
         const locationCategory = !!row.country ? 'city' : 'country';
         this.#viewLocation.showLoadingSpinner(index, true, locationCategory);
         const list = await model.returnOptions(row);
-        this.#viewLocation.setOptions(index, list, locationCategory);
+        this.#viewLocation.createOptions(index, list, locationCategory);
         this.#viewLocation.showLoadingSpinner(index, false, locationCategory);
     };
 
@@ -120,8 +124,7 @@ export class Pdc {
             const modelValidate = model.validateStateLocations();
             if (!modelValidate) return;
 
-            const { styled, expense: config } = this.#config;
-            this.#viewExpense.render(styled, { ...config });
+            this.#viewExpense.render(this.#styled, this.#config.expense);
             this.#viewExpense.renderLoadingSpinner(true);
             this.#viewExpense.controllerHandler(
                 this.#expenseUpdated,

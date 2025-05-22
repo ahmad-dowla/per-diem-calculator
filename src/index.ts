@@ -1,4 +1,3 @@
-// TODO3 Review all files for final improvements
 // TEST Try different config options
 
 import { Pdc } from './ts/controller';

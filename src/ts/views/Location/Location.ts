@@ -1,5 +1,3 @@
-// TODO Apply new table style to expenses
-
 // Types
 import type {
     AllViewLocationsValid,
@@ -7,6 +5,7 @@ import type {
     LocationKeys,
     StateLocationItem,
 } from '../../types/locations';
+import type { ConfigSectionText } from '../../types/config';
 
 // Utils
 import { isDateRawType, getShortDate } from '../../utils/dates';
@@ -44,26 +43,45 @@ const templateRow = document.createElement('template');
 
 // Custom Element
 export class PdcLocationView extends HTMLElement {
+    /* Initial setup
+     */
     #styled: boolean;
     #valid = false;
 
-    constructor(styled: boolean) {
+    constructor(styled: boolean, config: ConfigSectionText) {
         super();
         this.attachShadow({ mode: 'open' });
-        if (!this.shadowRoot)
-            throw new Error(`Failed to render ShadowRoot for location View.`);
 
         this.#styled = styled;
         if (this.#styled) {
             template.innerHTML = templateHTML;
-            applyStyles(this.shadowRoot);
+            applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
 
+        this.#applyConfig(config);
+        this.#createEventListeners();
         this.#addRow('initial');
+    }
 
-        /* Event listeners
-         */
+    #applyConfig = (config: ConfigSectionText) => {
+        const heading = this.shadowRoot?.querySelector<HTMLElement>('#heading');
+        const body = this.shadowRoot?.querySelector<HTMLElement>('#body');
+
+        if (heading && config.heading) {
+            heading.innerHTML = '';
+            heading.insertAdjacentHTML('beforeend', config.heading);
+        } else heading?.remove();
+
+        if (body && config.body) {
+            body.innerHTML = '';
+            body.insertAdjacentHTML('beforeend', config.body);
+        } else body?.remove();
+    };
+
+    /* Events
+     */
+    #createEventListeners() {
         const viewContainer =
             this.shadowRoot?.querySelector<HTMLElement>('#view-container');
 
@@ -104,8 +122,6 @@ export class PdcLocationView extends HTMLElement {
         window.addEventListener('resize', debouncedHandleResize);
     }
 
-    /* Event handlers
-     */
     #handleClicks(e: Event) {
         const target = e.target;
         if (!(target instanceof SVGElement || target instanceof HTMLElement))
@@ -136,26 +152,30 @@ export class PdcLocationView extends HTMLElement {
         }
     }
 
-    /* Getters for elements needed in multiple methods
+    /* Get view elements
      */
 
-    #getViewEls = () => {
+    get #rowsContainer() {
         const rowsContainer =
-            this.shadowRoot?.querySelector<HTMLElement>('#rows');
-        const rows = rowsContainer?.querySelectorAll<HTMLElement>(
+            this.#shadowRoot.querySelector<HTMLElement>('#rows');
+        if (!rowsContainer)
+            throw new Error(
+                'Failed to render rows container for location View.',
+            );
+        return rowsContainer;
+    }
+
+    get #rows() {
+        const rows = this.#shadowRoot.querySelectorAll<HTMLElement>(
             '[data-pdc="location-row"]',
         );
-        if (!(rowsContainer && rows))
-            throw new Error('Failed to render elements for location View.');
-        return {
-            rowsContainer,
-            rows,
-        };
-    };
+        if (!rows)
+            throw new Error('Failed to render row elements for location View.');
+        return rows;
+    }
 
-    #getRowElFromIndex(rowIndex: number) {
-        const { rowsContainer } = this.#getViewEls();
-        const row = rowsContainer.children[rowIndex];
+    #getRowFromIndex(rowIndex: number) {
+        const row = this.#rowsContainer.children[rowIndex];
         if (!(row instanceof HTMLElement))
             throw new Error(
                 `Failed to get row using row index of ${rowIndex} in Location view.`,
@@ -164,78 +184,70 @@ export class PdcLocationView extends HTMLElement {
     }
 
     #getRowPdcEls(row: Element) {
-        const startEl = row.querySelector<PdcLocationDate>('[pdc="start"]');
-        const endEl = row.querySelector<PdcLocationDate>('[pdc="end"]');
-        const categoryEl =
+        const start = row.querySelector<PdcLocationDate>('[pdc="start"]');
+        const end = row.querySelector<PdcLocationDate>('[pdc="end"]');
+        const category =
             row.querySelector<PdcLocationCategory>('[pdc="category"]');
-        const countryEl =
-            row.querySelector<PdcLocationSelect>('[pdc="country"]');
-        const cityEl = row.querySelector<PdcLocationSelect>('[pdc="city"]');
-        if (!(startEl && endEl && categoryEl && countryEl && cityEl))
+        const country = row.querySelector<PdcLocationSelect>('[pdc="country"]');
+        const city = row.querySelector<PdcLocationSelect>('[pdc="city"]');
+        if (!(start && end && category && country && city))
             throw new Error('Failed to render row custom elements.');
         return {
-            startEl,
-            endEl,
-            categoryEl,
-            countryEl,
-            cityEl,
+            start,
+            end,
+            category,
+            country,
+            city,
         };
     }
 
     #getRowAnimatedEls(row: Element) {
-        const rowDeleteAnimateEl = row.querySelector<HTMLButtonElement>(
+        const deleteBtn = row.querySelector<HTMLButtonElement>(
             'button[data-pdc="delete-row"]',
         );
-        const rowSummaryAnimateEl = row.querySelector<HTMLElement>(
+        const summary = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-summary"]',
         );
-        const rowDetailsAnimateEl = row.querySelector<HTMLElement>(
+        const details = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-details"]',
         );
-        if (!(rowDeleteAnimateEl && rowSummaryAnimateEl && rowDetailsAnimateEl))
+        if (!(deleteBtn && summary && details))
             throw new Error('Failed to render row summary elements.');
         return {
-            rowDeleteAnimateEl,
-            rowSummaryAnimateEl,
-            rowDetailsAnimateEl,
+            deleteBtn,
+            summary,
+            details,
         };
     }
 
-    /* Row add/delete/update methods
-     */
-
-    #addRow(initial: 'initial' | null = null) {
-        if (!this.#validateRows()) return; // Validate before adding rows
-        templateRow.innerHTML =
-            this.#styled ? templateRowHTML : removeStyles(templateRowHTML);
-        this.#getViewEls().rowsContainer.appendChild(
-            templateRow.content.cloneNode(true),
-        );
-        const newRow = this.#getViewEls().rowsContainer.lastElementChild;
-        if (!(newRow instanceof HTMLElement))
-            throw new Error('Failed to render new row');
-        this.#rowToggle(newRow, initial ? initial : 'add');
+    get #viewBtns() {
+        const addRow = this.shadowRoot
+            ?.querySelector('#add-row')
+            ?.closest('div');
+        const expenseCategory =
+            this.shadowRoot?.querySelector<HTMLElement>('#expense-category');
+        const generateExpenses = this.shadowRoot
+            ?.querySelector('#generate-expenses')
+            ?.closest('div');
+        if (!(addRow && expenseCategory && generateExpenses))
+            throw new Error('Failed to render buttons for location View.');
+        return {
+            addRow,
+            expenseCategory,
+            generateExpenses,
+        };
     }
 
-    async #deleteRow(row: HTMLElement) {
-        if (this.#getViewEls().rowsContainer.childElementCount === 1) {
-            const errorEl = this.shadowRoot?.querySelector('#error');
-            errorEl?.classList.add('active');
-            if (errorEl) errorEl.textContent = '1 row required.';
-            return;
-        }
-        const prevRow = row.previousElementSibling;
-        const nextRow = row.nextElementSibling;
-        await this.#rowToggle(row, 'delete', nextRow);
+    get #errorEl() {
+        const errorEl = this.#shadowRoot.querySelector('#error');
+        if (!errorEl) throw new Error('Failed to render row summary elements.');
+        return errorEl;
+    }
 
-        // Update date input restrictions for existing rows
-        prevRow && this.#getRowPdcEls(prevRow).startEl.restrictStartInput();
-        prevRow && this.#getRowPdcEls(prevRow).endEl.restrictStartInput();
-        nextRow && this.#getRowPdcEls(nextRow).startEl.restrictStartInput();
-        nextRow && this.#getRowPdcEls(nextRow).endEl.restrictStartInput();
-
-        // Trigger #observer to update state
-        this.#getViewEls().rowsContainer.setAttribute('update-state', `true`);
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(`Failed to render ShadowRoot for location View.`);
+        return this.shadowRoot;
     }
 
     #getRowIndex(row: Element) {
@@ -246,11 +258,44 @@ export class PdcLocationView extends HTMLElement {
         ).indexOf(row);
     }
 
+    /* Update methods
+     */
+
+    #addRow(initial: 'initial' | null = null) {
+        if (!this.#validateRows()) return; // Validate before adding rows
+        templateRow.innerHTML =
+            this.#styled ? templateRowHTML : removeStyles(templateRowHTML);
+        this.#rowsContainer.appendChild(templateRow.content.cloneNode(true));
+        const newRow = this.#rowsContainer.lastElementChild;
+        if (!(newRow instanceof HTMLElement))
+            throw new Error('Failed to render new row');
+        this.#rowToggle(newRow, initial ? initial : 'add');
+    }
+
+    async #deleteRow(row: HTMLElement) {
+        if (this.#rowsContainer.childElementCount === 1) {
+            this.#errorEl.classList.add('active');
+            this.#errorEl.textContent = '1 row required.';
+            return;
+        }
+        const prevRow = row.previousElementSibling;
+        const nextRow = row.nextElementSibling;
+        await this.#rowToggle(row, 'delete', nextRow);
+
+        // Update date input restrictions for existing rows
+        prevRow && this.#getRowPdcEls(prevRow).start.restrictStartInput();
+        prevRow && this.#getRowPdcEls(prevRow).end.restrictStartInput();
+        nextRow && this.#getRowPdcEls(nextRow).start.restrictStartInput();
+        nextRow && this.#getRowPdcEls(nextRow).end.restrictStartInput();
+
+        // Trigger #observer to update state
+        this.#rowsContainer.setAttribute('update-state', `true`);
+    }
+
     #updateRowSummary(location: StateLocationItem): void {
         const { index, start, end, country, city } = location;
-        const row = this.#getRowElFromIndex(index);
+        const row = this.#getRowFromIndex(index);
 
-        // Get elements
         const rowNumberEl = row.querySelector(
             '[data-pdc="location-row-number"]',
         );
@@ -263,23 +308,22 @@ export class PdcLocationView extends HTMLElement {
         if (!(rowNumberEl && rowSummaryDatesEl && rowSummaryLocationEl))
             throw new Error('Failed to render row summary elements.');
 
-        // Get values
         const rowCount = (index + 1).toString().padStart(2, '0');
         const startDate = start ? getShortDate(start) : '\u00A0';
         const endDate = end ? ` to ${getShortDate(end)}` : '\u00A0';
         const countryCity = city && country ? `${city} (${country})` : '\u00A0';
-        // Update els with values
+
         rowNumberEl.textContent = rowCount;
         rowSummaryDatesEl.textContent = startDate + endDate;
         rowSummaryLocationEl.textContent = countryCity;
     }
 
-    setOptions(
+    createOptions(
         rowIndex: number,
         arr: Location[],
         locationCategory: Extract<LocationKeys, 'country' | 'city'>,
     ) {
-        const row = this.#getRowElFromIndex(rowIndex);
+        const row = this.#getRowFromIndex(rowIndex);
         const rowSelect = row.querySelector<PdcLocationSelect>(
             `[pdc="${locationCategory}"]`,
         );
@@ -292,17 +336,17 @@ export class PdcLocationView extends HTMLElement {
             el.enableTabIndex(enable),
         );
         // Activate tabindex for delete icon which is hidden while row open
-        this.#getRowAnimatedEls(row).rowDeleteAnimateEl.setAttribute(
+        this.#getRowAnimatedEls(row).deleteBtn.setAttribute(
             'tabindex',
             enable ? '-1' : '0',
         );
     }
 
-    /* Row visual methods
+    /* Visual methods
      */
 
     #clearErrorEl() {
-        this.shadowRoot?.querySelector('#error')?.classList.remove('active');
+        this.#errorEl.classList.remove('active');
     }
 
     #rowToggle = async (
@@ -311,14 +355,11 @@ export class PdcLocationView extends HTMLElement {
         nextRow: Element | null = null,
     ) => {
         if (!this.#styled || row.classList.contains('toggling')) return;
-
-        // If no specific toggle set, fire either open or close based on current row height
+        // MAGIC 96
         if (!toggle) {
             this.#rowToggle(row, row.offsetHeight === 96 ? 'open' : 'close');
             return;
         }
-
-        // Update classes/styles
         row.classList.remove(
             'pdc-row-open',
             'pdc-row-initial',
@@ -326,26 +367,20 @@ export class PdcLocationView extends HTMLElement {
             'pdc-row-close',
         );
         row.classList.add('toggling', `pdc-row-${toggle}`);
-
         // Pre-toggle adjustments
-        (toggle === 'close' || toggle === 'delete') && this.#clearErrorEl();
-        toggle === 'open' && this.#checkAllRowsClosed('open');
+        if (toggle === 'close' || toggle === 'delete') this.#clearErrorEl();
+        if (toggle === 'open') this.#animateBtns('open');
         if (toggle === 'add' || toggle === 'initial') {
-            if (
-                this.#getViewEls().rowsContainer.childElementCount > 1 &&
-                toggle === 'add'
-            )
-                this.#checkAllRowsClosed('open'); // Trigger animation only if there are existing rows
-            this.#setRowBgColor(row);
+            if (this.#rowsContainer.childElementCount > 1 && toggle === 'add')
+                this.#animateBtns('open'); // Trigger animation only if there are existing rows
+            this.#styleRow(row);
             this.#returnRowObject(row); // Sets row count
         }
-
         // Fire toggles
         if (toggle === 'open' || toggle === 'add' || toggle === 'initial')
-            await this.#rowToggleOpen(row);
-        if (toggle === 'close') await this.#rowToggleClose(row);
-        if (toggle === 'delete') await this.#rowToggleDelete(row, nextRow);
-
+            await this.#animateRow(row, 'open');
+        if (toggle === 'close') await this.#animateRow(row, 'close');
+        if (toggle === 'delete') await this.#animateRowDelete(row, nextRow);
         if (toggle !== 'delete') {
             row.classList.remove('ring-transparent');
             row.classList.add('ring-neutral-200');
@@ -353,127 +388,96 @@ export class PdcLocationView extends HTMLElement {
         row.classList.remove('toggling');
     };
 
-    #rowToggleOpen = async (row: HTMLElement) => {
-        // MAGIC 700
-        await wait(700);
-        this.#enableRowTabIndex(row, true);
-        row.style.height = row.scrollHeight + 'px';
-        const { rowDetailsAnimateEl, rowSummaryAnimateEl, rowDeleteAnimateEl } =
-            this.#getRowAnimatedEls(row);
-        [rowSummaryAnimateEl, rowDeleteAnimateEl].forEach(
-            el => (el.style.opacity = '0'),
-        );
-        rowDetailsAnimateEl.style.opacity = '100';
-        rowDetailsAnimateEl.style.transform = `translateX(100%)`;
-        rowSummaryAnimateEl.style.transform = `translateY(-200%)`;
-        rowDeleteAnimateEl.style.transform = `translateX(200%)`;
-    };
-
-    #rowToggleClose = async (row: HTMLElement) => {
+    #animateRow = async (row: HTMLElement, direction: 'open' | 'close') => {
         // MAGIC 750
         await wait(750);
-        this.#enableRowTabIndex(row, false);
-        row.style.height = row.clientHeight + 'px';
-        const { rowDetailsAnimateEl, rowSummaryAnimateEl, rowDeleteAnimateEl } =
-            this.#getRowAnimatedEls(row);
-        [rowSummaryAnimateEl, rowDeleteAnimateEl].forEach(
-            el => (el.style.opacity = '100'),
+        this.#enableRowTabIndex(row, direction === 'open' ? true : false);
+        row.style.height = `${direction === 'open' ? row.scrollHeight : row.clientHeight}px`;
+        const { details, summary, deleteBtn } = this.#getRowAnimatedEls(row);
+        [summary, deleteBtn].forEach(
+            el => (el.style.opacity = direction === 'open' ? '0' : '100'),
         );
-        rowDetailsAnimateEl.style.opacity = '0';
-        rowDetailsAnimateEl.style.transform = `translateX(0%)`;
-        rowSummaryAnimateEl.style.transform = `translateY(0%)`;
-        rowDeleteAnimateEl.style.transform = `translateX(0%)`;
-        this.#checkAllRowsClosed();
+        details.style.opacity = direction === 'open' ? '100' : '0';
+        details.style.transform =
+            direction === 'open' ? 'translateX(100%)' : `translateX(0%)`;
+        summary.style.transform =
+            direction === 'open' ? 'translateY(-200%)' : `translateY(0%)`;
+        deleteBtn.style.transform =
+            direction === 'open' ? 'translateX(200%)' : `translateX(0%)`;
+        if (direction === 'close') this.#animateBtns();
     };
 
-    #rowToggleDelete = async (
+    #animateRowDelete = async (
         row: HTMLElement,
         nextRow: Element | null = null,
     ) => {
         row.classList.remove('ring-neutral-300');
         row.classList.add('ring-transparent');
+        // MAGIC 800
         await wait(800);
         // Deleted row was only row -> add a blank template row
         row.remove();
-        this.#checkAllRowsClosed();
+        this.#animateBtns();
         if (nextRow) {
             // For any next rows
             const index = this.#getRowIndex(nextRow);
-            [...this.#getViewEls().rows]
+            [...this.#rows]
                 .filter((_, i) => i >= index)
                 .map(remainingRow => {
                     this.#returnRowObject(remainingRow); // Update summary number
-                    this.#setRowBgColor(remainingRow); // Update background color
+                    this.#styleRow(remainingRow); // Update background color
                 });
         }
     };
 
-    #checkAllRowsClosed(open: 'open' | null = null) {
-        const addRowBtnEl = this.shadowRoot
-            ?.querySelector('#add-row')
-            ?.closest('div');
-        const expenseCategoryBtnEl =
-            this.shadowRoot?.querySelector<HTMLElement>('#expense-category');
-        const generateExpensesBtnEl = this.shadowRoot
-            ?.querySelector('#generate-expenses')
-            ?.closest('div');
-        if (!(addRowBtnEl && expenseCategoryBtnEl && generateExpensesBtnEl))
-            throw new Error('Failed to render view buttons.');
-        const btns = [addRowBtnEl, expenseCategoryBtnEl, generateExpensesBtnEl];
-        const rowsOpen = [...this.#getViewEls().rows].some(
-            // MAGIC 96
-            row => row.offsetHeight !== 96,
+    async #animateBtns(open: 'open' | null = null) {
+        const btns = [
+            this.#viewBtns.addRow,
+            this.#viewBtns.expenseCategory,
+            this.#viewBtns.generateExpenses,
+        ];
+        const rowsOpen =
+            !!open ||
+            [...this.#rows].some(
+                // MAGIC 96
+                row => row.offsetHeight !== 96,
+            );
+        btns.forEach(btn =>
+            btn.classList.remove(rowsOpen ? 'rows-closed' : 'rows-open'),
         );
-        if (!!open || rowsOpen) this.#animateBtnsRowsOpen(btns);
-        else this.#animateBtnsRowsClosed(btns);
-    }
-
-    async #animateBtnsRowsOpen(btns: HTMLElement[]) {
-        btns.forEach(btn => btn.classList.remove('rows-closed'));
-        btns.forEach(btn => btn.classList.add('rows-open'));
-        const addRowBtnEl = btns[0];
-        const expenseCategoryBtnEl = btns[1];
-        const generateExpensesBtnEl = btns[2];
+        btns.forEach(btn =>
+            btn.classList.add(rowsOpen ? 'rows-open' : 'rows-closed'),
+        );
         // MAGIC 450
         await wait(450);
-        btns.forEach(btn => (btn.style.zIndex = '0'));
-        addRowBtnEl.style.transform = `translateY(-100%)`;
-        expenseCategoryBtnEl.style.transform = `translateY(400%)`;
-        generateExpensesBtnEl.style.transform = `translateY(200%)`;
-    }
-
-    async #animateBtnsRowsClosed(btns: HTMLElement[]) {
-        btns.forEach(btn => btn.classList.remove('rows-open'));
-        btns.forEach(btn => btn.classList.add('rows-closed'));
-        // MAGIC 450
-        await wait(450);
-        btns.forEach(btn => {
-            btn.style.zIndex = '50';
-            btn.style.transform = `translateY(0%)`;
-        });
+        btns.forEach(btn => (btn.style.zIndex = rowsOpen ? '0' : '50'));
+        if (rowsOpen) {
+            this.#viewBtns.addRow.style.transform = `translateY(-100%)`;
+            this.#viewBtns.expenseCategory.style.transform = `translateY(400%)`;
+            this.#viewBtns.generateExpenses.style.transform = `translateY(200%)`;
+        } else {
+            btns.forEach(btn => (btn.style.transform = `translateY(0%)`));
+        }
     }
 
     #windowResize = () => {
-        [...this.#getViewEls().rows].forEach(row => {
+        [...this.#rows].forEach(row => {
             if (row.offsetHeight === 96) return;
             row.style.height =
-                this.#getRowAnimatedEls(row).rowDetailsAnimateEl.scrollHeight +
-                'px';
+                this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
         });
     };
 
-    #setRowBgColor = (row: HTMLElement) => {
+    #styleRow = (row: HTMLElement) => {
         const index = this.#getRowIndex(row);
         const color = index % 2 === 0 ? 'neutral-50' : 'white';
         const oppColor = color === 'neutral-50' ? 'white' : 'neutral-50';
         row.classList.remove('bg-white', 'bg-neutral-50');
         row.classList.add(`bg-${color}`);
         row.style.zIndex = index.toString();
-        [...this.#getRowAnimatedEls(row).rowDetailsAnimateEl.children].forEach(
-            (el, i) => {
-                el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
-            },
-        );
+        [...this.#getRowAnimatedEls(row).details.children].forEach((el, i) => {
+            el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
+        });
     };
 
     showLoadingSpinner(
@@ -482,7 +486,7 @@ export class PdcLocationView extends HTMLElement {
         locationCategory: Extract<LocationKeys, 'country' | 'city'>,
     ) {
         if (!this.#styled) return;
-        const row = this.#getRowElFromIndex(rowIndex);
+        const row = this.#getRowFromIndex(rowIndex);
         row
             .querySelector<PdcLocationSelect>(`[pdc='${locationCategory}']`)
             ?.showLoadingSpinner(enabled);
@@ -490,51 +494,60 @@ export class PdcLocationView extends HTMLElement {
 
     /* Validation
      */
-
     #getValidators = (): (
         | PdcLocationDate
         | PdcLocationCategory
         | PdcLocationSelect
     )[] => {
         const dates =
-            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationDate>(
+            this.#rowsContainer.querySelectorAll<PdcLocationDate>(
                 'pdc-location-date',
             );
         const categories =
-            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationCategory>(
+            this.#rowsContainer.querySelectorAll<PdcLocationCategory>(
                 'pdc-location-category',
             );
-        const selects =
-            this.#getViewEls().rowsContainer.querySelectorAll<PdcLocationSelect>(
-                'pdc-location-select',
-            );
+        const selects = this.#rowsContainer.querySelectorAll<PdcLocationSelect>(
+            'pdc-location-select',
+        );
         return [...dates, ...categories, ...selects];
     };
 
     #validatePdcEl = (
-        el: PdcLocationDate | PdcLocationCategory | PdcLocationSelect,
+        pdcEl: PdcLocationDate | PdcLocationCategory | PdcLocationSelect,
     ): boolean => {
-        if (!el.validate()) {
-            const row = el.closest<HTMLElement>('[data-pdc="location-row"]');
+        if (!pdcEl.validate()) {
+            const row = pdcEl.closest<HTMLElement>('[data-pdc="location-row"]');
             if (row?.classList.contains('pdc-row-close'))
                 this.#rowToggle(row, 'open');
         }
-        return el.validate();
+        return pdcEl.validate();
     };
 
     #validateRows = (generate: 'generate' | null = null): boolean => {
         const validators = this.#getValidators();
         this.#valid = validators.every(el => this.#validatePdcEl(el));
         if (generate === 'generate')
-            this.#getViewEls().rowsContainer.setAttribute(
-                'validate',
-                `${this.#valid}`,
-            );
+            this.#rowsContainer.setAttribute('validate', `${this.#valid}`);
         return this.#valid;
     };
 
     /* Controller / View interaction
      */
+    controllerHandler(
+        controlUpdateFunction: Function,
+        controlDeleteFunction: Function,
+        controlValidateFunction: Function,
+    ) {
+        this.#observer(
+            controlUpdateFunction,
+            controlDeleteFunction,
+            controlValidateFunction,
+            this.#returnRowObject,
+            this.#returnAllRowsOjbect,
+            this.#returnValidation,
+        );
+    }
 
     #observer(
         controlUpdateFunction: Function,
@@ -578,21 +591,6 @@ export class PdcLocationView extends HTMLElement {
             });
     }
 
-    controllerHandler(
-        controlUpdateFunction: Function,
-        controlDeleteFunction: Function,
-        controlValidateFunction: Function,
-    ) {
-        this.#observer(
-            controlUpdateFunction,
-            controlDeleteFunction,
-            controlValidateFunction,
-            this.#returnRowObject,
-            this.#returnAllRowsOjbect,
-            this.#returnValidation,
-        );
-    }
-
     #returnRowObject = (target: Element): StateLocationItem => {
         const row = target.closest('[data-pdc="location-row"]');
         if (!row) throw new Error('Failed to get row.');
@@ -625,7 +623,7 @@ export class PdcLocationView extends HTMLElement {
     };
 
     #returnAllRowsOjbect = (): StateLocationItem[] => {
-        const result = [...this.#getViewEls().rows].map(row => {
+        const result = [...this.#rows].map(row => {
             return this.#returnRowObject(row);
         });
         this.removeAttribute('update-state');
@@ -634,7 +632,7 @@ export class PdcLocationView extends HTMLElement {
 
     #returnValidation = (): AllViewLocationsValid => {
         this.removeAttribute('validate');
-        this.#getViewEls().rows.forEach(row => this.#rowToggle(row, 'close'));
+        this.#rows.forEach(row => this.#rowToggle(row, 'close'));
         const inputValue = this.shadowRoot?.querySelector<HTMLInputElement>(
             'input[name="expenses-category"]:checked',
         )?.value;
@@ -648,11 +646,8 @@ export class PdcLocationView extends HTMLElement {
         };
     };
 
-    async transitionRow(index: number, updatedAttr: LocationKeys) {
-        if (!this.#styled) return; // No transitions in unstyled config
-        // Switch between input pages/row opening based on current row values
-        const row = this.#getRowElFromIndex(index);
-        const { cityEl } = this.#getRowPdcEls(row);
+    async restrictRow(index: number, updatedAttr: LocationKeys) {
+        const row = this.#getRowFromIndex(index);
         // MAGIC 250
         switch (updatedAttr) {
             case 'city':
@@ -660,49 +655,41 @@ export class PdcLocationView extends HTMLElement {
                 this.#rowToggle(row, 'close');
                 return;
             case 'country':
-                cityEl.enable(true);
+                this.#getRowPdcEls(row).city.enable(true);
                 return;
             case 'category':
-                this.#transitionCategory(row);
+                this.#restrictCategory(row);
                 return;
             case 'end':
-                this.#transitionEnd(row);
+                this.#restrictEnd(row);
                 return;
             case 'start':
-                this.#transitionStart(row);
+                this.#restrictStart(row);
                 return;
         }
     }
 
-    #transitionStart(row: Element): void {
-        const { startEl, endEl, categoryEl, countryEl, cityEl } =
-            this.#getRowPdcEls(row);
-        categoryEl.enable(false);
-        countryEl.enable(false);
-        cityEl.enable(false);
-
-        startEl.restrictStartInput();
-        endEl.restrictEndInput();
+    #restrictStart(row: Element): void {
+        const { start, end, category, country, city } = this.#getRowPdcEls(row);
+        category.enable(false);
+        country.enable(false);
+        city.enable(false);
+        start.restrictStartInput();
+        end.restrictEndInput();
     }
 
-    #transitionEnd(row: Element): void {
-        const { startEl, endEl, categoryEl, countryEl, cityEl } =
-            this.#getRowPdcEls(row);
-
-        countryEl.enable(false);
-        cityEl.enable(false);
-
-        startEl.restrictStartInput();
-        endEl.restrictEndInput();
-
-        categoryEl.enable(true);
+    #restrictEnd(row: Element): void {
+        const { start, end, category, country, city } = this.#getRowPdcEls(row);
+        country.enable(false);
+        city.enable(false);
+        start.restrictStartInput();
+        end.restrictEndInput();
+        category.enable(true);
     }
 
-    #transitionCategory(row: Element) {
-        const { countryEl, cityEl } = this.#getRowPdcEls(row);
-
-        cityEl.enable(false);
-
-        countryEl.enable(true);
+    #restrictCategory(row: Element) {
+        const { country, city } = this.#getRowPdcEls(row);
+        city.enable(false);
+        country.enable(true);
     }
 }

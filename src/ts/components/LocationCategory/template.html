@@ -1,5 +1,5 @@
 <fieldset
-    class="group flex items-center justify-between border-b border-b-neutral-100
+    class="flex items-center justify-between border-b border-b-neutral-100
         bg-white px-3"
 >
     <pdc-label styled="true" text="Area"></pdc-label>
@@ -14,13 +14,12 @@
                 hover:[&_.state]:stroke-primary-100
                 focus-visible:[&_.state]:fill-primary-800
                 focus-visible:[&_.state]:stroke-primary-100
-                focus-visible:border-r-primary-300 hover:border-r-primary-300
-                [.error]:border-r-error-400 has-checked:border-r-success-400
-                my-3 grid cursor-pointer grid-cols-2 items-center
-                justify-items-center border-r-3 border-r-transparent
-                bg-transparent py-3 pr-3 transition-colors select-none *:pr-4
-                **:transition-colors focus-visible:outline-none
-                has-disabled:hover:cursor-not-allowed
+                focus-visible:border-r-primary-300 [.error]:border-r-error-400
+                has-checked:border-r-success-400 my-3 grid cursor-pointer
+                grid-cols-2 items-center justify-items-center border-r-3
+                border-r-transparent bg-transparent py-3 pr-3 transition-colors
+                select-none *:pr-4 **:transition-colors
+                focus-visible:outline-none has-disabled:hover:cursor-not-allowed
                 [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
             for="domestic"
         >
@@ -377,11 +376,11 @@
             </svg>
             <ul
                 class="text-center transition-colors *:hidden
-                    *:border-b-transparent group-focus:*:border-b-neutral-300
-                    *:first:list-item *:first:border-b-2 *:first:pb-2
-                    md:text-left md:*:list-item md:*:list-disc md:*:first:hidden
-                    md:*:first:border-none md:*:first:pb-0 md:*:last:border-b-2
-                    md:*:last:pb-2"
+                    *:border-b-transparent group-hover:*:border-b-neutral-300
+                    group-focus:*:border-b-neutral-300 *:first:list-item
+                    *:first:border-b-2 *:first:pb-2 md:text-left md:*:list-item
+                    md:*:list-disc md:*:first:hidden md:*:first:border-none
+                    md:*:first:pb-0 md:*:last:border-b-2 md:*:last:pb-2"
             >
                 <li>48 States</li>
                 <li class="hidden md:list-item">Washington D.C.</li>
@@ -403,14 +402,13 @@
                 hover:[&_.water]:fill-primary-100
                 focus-visible:[&_.land]:fill-primary-800
                 focus-visible:[&_.water]:fill-primary-100
-                focus-visible:border-r-primary-300 hover:border-r-primary-300
-                [.error]:border-r-error-400 has-checked:border-r-success-400
-                my-3 grid cursor-pointer grid-cols-2 items-center
-                justify-items-center border-r-3 border-r-transparent
-                bg-transparent py-3 pr-3 transition-colors select-none *:pr-4
-                **:transition-colors focus-visible:outline-none
-                has-disabled:hover:cursor-not-allowed [&_.land]:fill-neutral-800
-                [&_.water]:fill-neutral-100"
+                focus-visible:border-r-primary-300 [.error]:border-r-error-400
+                has-checked:border-r-success-400 my-3 grid cursor-pointer
+                grid-cols-2 items-center justify-items-center border-r-3
+                border-r-transparent bg-transparent py-3 pr-3 transition-colors
+                select-none *:pr-4 **:transition-colors
+                focus-visible:outline-none has-disabled:hover:cursor-not-allowed
+                [&_.land]:fill-neutral-800 [&_.water]:fill-neutral-100"
             for="intl"
         >
             <svg
@@ -490,11 +488,11 @@
             </svg>
             <ul
                 class="text-center transition-colors *:hidden
-                    *:border-b-transparent group-focus:*:border-b-neutral-300
-                    *:first:list-item *:first:border-b-2 *:first:pb-2
-                    md:text-left md:*:list-item md:*:list-disc md:*:first:hidden
-                    md:*:first:border-none md:*:first:pb-0 md:*:last:border-b-2
-                    md:*:last:pb-2"
+                    *:border-b-transparent group-hover:*:border-b-neutral-300
+                    group-focus:*:border-b-neutral-300 *:first:list-item
+                    *:first:border-b-2 *:first:pb-2 md:text-left md:*:list-item
+                    md:*:list-disc md:*:first:hidden md:*:first:border-none
+                    md:*:first:pb-0 md:*:last:border-b-2 md:*:last:pb-2"
             >
                 <li>All Other Locations</li>
                 <li>Alaska, Hawaii</li>

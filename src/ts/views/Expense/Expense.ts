@@ -1,12 +1,10 @@
-// TODO3 Language like "for each day, indicate if you  were provided meals, update your lodging amount"
-
 // Types
 import type { DateRaw } from '../../types/dates';
 import {
     StateExpenseItemValid,
     StateExpenseItemUpdate,
-    ExpenseRateTableRow,
 } from '../../types/expenses';
+import type { ConfigSectionText } from '../../types/config';
 
 // Utils
 import {
@@ -23,7 +21,7 @@ import { isDateRawType } from '../../utils/dates';
 import templateHTML from './template.html?raw';
 
 // Custom Elements
-import { PdcExpenseRow, PdcButtonText, PdcLabel } from '../../components';
+import { PdcExpenseRow, PdcButtonText } from '../../components';
 customElements.define('pdc-expense-row', PdcExpenseRow);
 
 // Template for this Custom Element
@@ -31,6 +29,8 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcExpenseView extends HTMLElement {
+    /* Initial setup
+     */
     #styled: boolean = false;
     #observer: MutationObserver | null = null;
     #mieSubtotal = 0;
@@ -41,45 +41,70 @@ export class PdcExpenseView extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    /* View render methods
-     */
-
-    render(styled: boolean) {
-        if (!this.shadowRoot)
-            throw new Error(`Failed to render ShadowRoot for location View.`);
-        if (this.shadowRoot !== null) this.shadowRoot.innerHTML = '';
-
-        const handleResize = () => {
-            const rows =
-                this.#getViewEls().viewContainer?.querySelectorAll<PdcExpenseRow>(
-                    'pdc-expense-row',
-                );
-            rows?.forEach(row => row.windowResize());
-        };
-        const debouncedHandleResize = debounce(handleResize, 300);
-        window.removeEventListener('resize', debouncedHandleResize);
-
+    render(styled: boolean, config: ConfigSectionText) {
+        this.#shadowRoot.innerHTML = '';
+        window.removeEventListener('resize', this.#debouncedResizeHandler());
         this.#styled = styled;
         if (this.#styled) {
             template.innerHTML = templateHTML;
-            applyStyles(this.shadowRoot);
+            applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#applyConfig(config);
+        this.#addEventListeners();
+    }
 
-        /* Event listeners
-         */
+    renderLoadingSpinner(enabled: boolean) {
+        if (!this.#styled) return;
+        const spinner = this.#shadowRoot.querySelector(
+            '[data-pdc="loading-spinner"]',
+        );
+        enabled ?
+            spinner?.classList.add('active')
+        :   spinner?.classList.remove('active');
+    }
 
+    #applyConfig = (config: ConfigSectionText) => {
+        const heading = this.#shadowRoot.querySelector('#heading');
+        const headingPrint = this.#shadowRoot.querySelector('#heading-print');
+        const body = this.#shadowRoot.querySelector('#body');
+        const bodyPrint = this.#shadowRoot.querySelector('#body-print');
+
+        if (heading && config.heading) {
+            heading.innerHTML = '';
+            heading.insertAdjacentHTML('beforeend', config.heading);
+        } else heading?.remove();
+
+        if (headingPrint && config.headingPrint) {
+            headingPrint.innerHTML = '';
+            headingPrint.insertAdjacentHTML('beforeend', config.headingPrint);
+        } else headingPrint?.remove();
+
+        if (body && config.body) {
+            body.innerHTML = '';
+            body.insertAdjacentHTML('beforeend', config.body);
+        } else body?.remove();
+
+        if (bodyPrint && config.bodyPrint) {
+            bodyPrint.innerHTML = '';
+            bodyPrint.insertAdjacentHTML('beforeend', config.bodyPrint);
+        } else bodyPrint?.remove();
+    };
+
+    /* Events
+     */
+    #addEventListeners() {
         // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-        this.#getViewEls().viewContainer.addEventListener('pointerdown', e => {
+        this.#viewContainer.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
 
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
-        this.#getViewEls().viewContainer.addEventListener('pointerup', e => {
+        this.#viewContainer.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -93,27 +118,22 @@ export class PdcExpenseView extends HTMLElement {
         });
 
         // Keyboard events
-        this.#getViewEls().viewContainer.addEventListener('keydown', e => {
+        this.#viewContainer.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
 
         // Resize events
-        window.addEventListener('resize', debouncedHandleResize);
+        window.addEventListener('resize', this.#debouncedResizeHandler());
     }
 
-    renderLoadingSpinner(enabled: boolean) {
-        if (!this.#styled) return;
-        const spinner = this.shadowRoot?.querySelector(
-            '[data-pdc="loading-spinner"]',
-        );
-        enabled ?
-            spinner?.classList.add('active')
-        :   spinner?.classList.remove('active');
+    #debouncedResizeHandler() {
+        const resizeHandler = () => {
+            this.#rows.forEach(row => row.windowResize());
+        };
+        return debounce(resizeHandler, 300);
     }
 
-    /* Event handlers
-     */
     #handleClicks(e: Event) {
         const target = e.target;
         if (!(target instanceof Element || target instanceof SVGElement))
@@ -126,39 +146,87 @@ export class PdcExpenseView extends HTMLElement {
                 this.#expandAllRows(btn);
                 return;
             case btnPdcEl?.getAttribute('id') === 'print-expenses':
-                this.#getViewEls().viewContainer.setAttribute('table', 'true');
+                this.#viewContainer.setAttribute('table', 'true');
                 return;
             default:
                 return;
         }
     }
 
-    /* Getters for elements needed in multiple methods
+    /* Get view elements
      */
-    #getViewEls = () => {
-        const viewContainer =
-            this.shadowRoot?.querySelector<HTMLElement>('#expense-container');
-        const expensesTable = this.shadowRoot?.querySelector('#expenses-table');
+    get #rowsContainer() {
+        const rowsContainer =
+            this.#shadowRoot.querySelector<HTMLDivElement>('#rows');
+        if (!rowsContainer)
+            throw new Error(
+                'Failed to render row container/rates table in Expense view.',
+            );
+        return rowsContainer;
+    }
+
+    get #rows() {
         const rows =
-            this.shadowRoot?.querySelectorAll<PdcExpenseRow>('pdc-expense-row');
-        if (!(viewContainer && expensesTable && rows))
-            throw new Error('Failed to render elements for location View.');
+            this.#shadowRoot.querySelectorAll<PdcExpenseRow>('pdc-expense-row');
+        if (!rows)
+            throw new Error('Failed to render row elements for expense View.');
+        return rows;
+    }
 
-        return {
-            viewContainer,
-            expensesTable,
-            rows,
-        };
-    };
+    get #viewContainer() {
+        const container =
+            this.#shadowRoot.querySelector<HTMLElement>('#expense-container');
+        if (!container)
+            throw new Error(
+                'Failed to render container element for expense View.',
+            );
+        return container;
+    }
 
-    /* Row update methods
+    get #expensesTable() {
+        const expensesTable = this.#shadowRoot.querySelector('#expenses-table');
+        if (!expensesTable)
+            throw new Error(
+                'Failed to render expenses table for expense View.',
+            );
+        return expensesTable;
+    }
+
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(`Failed to render ShadowRoot for expense View.`);
+        return this.shadowRoot;
+    }
+
+    /* Visual methods
      */
+    #expandAllRows(btn: HTMLButtonElement) {
+        if (!this.#styled) return;
+        btn.classList.toggle('active');
+        const toggle = btn.classList.contains('active') ? 'open' : 'close';
+        this.#rows.forEach(row => row.rowToggle(toggle));
+    }
 
-    #updateTotals() {
-        const mieSubtotalEl = this.shadowRoot?.querySelector('#mie-subtotal');
+    renderEmtpy() {
+        this.#shadowRoot.innerHTML = '';
+    }
+
+    /* Update methods
+     */
+    async #updateTotals() {
+        this.#mieSubtotal = 0;
+        this.#lodgingSubtotal = 0;
+        this.#rows.forEach(row => {
+            this.#mieSubtotal += row.amount.mie;
+            this.#lodgingSubtotal += row.amount.lodging;
+        });
+    }
+
+    #updateTotalsText() {
+        const mieSubtotalEl = this.#shadowRoot.querySelector('#mie-subtotal');
         const lodgingSubtotalEl =
-            this.shadowRoot?.querySelector('#lodging-subtotal');
-        const totalEl = this.shadowRoot?.querySelector('#total');
+            this.#shadowRoot.querySelector('#lodging-subtotal');
+        const totalEl = this.#shadowRoot.querySelector('#total');
         if (!(mieSubtotalEl && lodgingSubtotalEl && totalEl))
             throw new Error(
                 'Failed to render subtotal/total elements in Expense view.',
@@ -174,167 +242,160 @@ export class PdcExpenseView extends HTMLElement {
         totalMie: number,
         totalLodging: number,
     ) {
-        this.shadowRoot
-            ?.querySelector<PdcExpenseRow>(`[date="${date}"]`)
+        this.#shadowRoot
+            .querySelector<PdcExpenseRow>(`[date="${date}"]`)
             ?.updateMieAmount(newMieTotal);
         this.#mieSubtotal = totalMie;
         this.#lodgingSubtotal = totalLodging;
-        this.#updateTotals();
-    }
-
-    #createSourceList() {
-        const sources = new Set<string>();
-        this.#getViewEls().rows?.forEach(row => {
-            sources.add(row.getSource());
-        });
-        const sourcesEl = this.shadowRoot?.querySelector('#sources');
-        sourcesEl &&
-            sources.forEach(source => {
-                sourcesEl.insertAdjacentHTML(
-                    'beforeend',
-                    `<a href="${source}" target="_blank">${source}</a>`,
-                );
-            });
-    }
-
-    #createRateTableMarkup(item: string) {
-        const rate: ExpenseRateTableRow = JSON.parse(item);
-        const { monthYear, country, city } = rate;
-        const {
-            maxLodging,
-            maxMie,
-            maxMieFirstLast,
-            maxIncidental,
-            deductionBreakfast,
-            deductionLunch,
-            deductionDinner,
-        } = rate.rates;
-
-        return /*HTML*/ `
-            <tr class="border-b-2">
-                <td class="border-r-2 p-3">${monthYear}</td>
-                <td class="border-r-2 p-3">${city}, ${country}</td>
-                <td>${maxLodging.toFixed(2)}</td>
-                <td>${maxMie.toFixed(2)}</td>
-                <td>${maxMieFirstLast.toFixed(2)}</td>
-                <td class="border-r-2">${maxIncidental.toFixed(2)}</td>
-                <td>${deductionBreakfast.toFixed(2)}</td>
-                <td>${deductionLunch.toFixed(2)}</td>
-                <td>${deductionDinner.toFixed(2)}</td>
-            </tr>
-        `;
-    }
-
-    #createRatesTable() {
-        const ratesTable = this.shadowRoot?.querySelector('#rates-table');
-        const rateSet = new Set<string>();
-        const createRateData = (
-            city: string,
-            country: string,
-            rates: object,
-        ) => {
-            return JSON.stringify({ city, country, rates });
-        };
-        this.#getViewEls().rows.forEach((row, i, arr) => {
-            const { date, country, city, rates } = row.getRateTableDate();
-            const rateData = createRateData(city, country, rates);
-            const monthYear = `${date.slice(5, 7)}/${date.slice(0, 4)}`;
-            if (i === 0) rateSet.add(JSON.stringify({ monthYear, rateData }));
-            if (i > 0) {
-                const {
-                    country: prevCountry,
-                    city: prevCity,
-                    rates: prevRates,
-                } = arr[i - 1].getRateTableDate();
-                const prevRateData = createRateData(
-                    prevCity,
-                    prevCountry,
-                    prevRates,
-                );
-                if (rateData === prevRateData) return;
-                rateSet.add(JSON.stringify({ monthYear, rateData }));
-            }
-        });
-        rateSet.forEach(item => {
-            ratesTable?.insertAdjacentHTML(
-                'beforeend',
-                this.#createRateTableMarkup(item),
-            );
-        });
-    }
-
-    async #updateSubtotals() {
-        this.#mieSubtotal = 0;
-        this.#lodgingSubtotal = 0;
-        this.#getViewEls().rows.forEach(row => {
-            this.#mieSubtotal += row.getAmounts().mieAmount;
-            this.#lodgingSubtotal += row.getAmounts().lodgingAmount;
-        });
+        this.#updateTotalsText();
     }
 
     async addRows(
         expenses: StateExpenseItemValid[],
         expensesCategory: 'mie' | 'lodging' | 'both',
     ) {
-        const rowsContainer =
-            this.shadowRoot?.querySelector<HTMLDivElement>('#rows');
-        if (!rowsContainer)
-            throw new Error(
-                'Failed to render row container/rates table in Expense view.',
-            );
-        rowsContainer.innerHTML = '';
-
+        this.#rowsContainer.innerHTML = '';
         expenses.forEach(expense => {
             const row = new PdcExpenseRow(
                 expense,
                 this.#styled,
                 expensesCategory,
             );
-            rowsContainer.appendChild(row);
-            row.setRowBgColor();
+            this.#rowsContainer.appendChild(row);
+            row.styleRow();
         });
         const position = this.getBoundingClientRect().top + window.pageYOffset;
         window.scrollTo({ top: position, behavior: 'smooth' });
-
-        await this.#updateSubtotals();
-        this.#updateTotals();
+        await this.#updateTotals();
+        this.#updateTotalsText();
+        this.#createSourceList();
+        this.#createRatesTable();
     }
 
-    /* Row visual methods
+    /* Create prinout
      */
-
-    #expandAllRows(btn: HTMLButtonElement) {
-        if (!this.#styled) return;
-        btn.classList.toggle('active');
-        const toggle = btn.classList.contains('active') ? 'open' : 'close';
-        const rows =
-            this.shadowRoot?.querySelectorAll<PdcExpenseRow>('pdc-expense-row');
-        rows?.forEach(row => row.rowToggle(toggle));
+    #createSourceList() {
+        const sources = new Set<string>();
+        this.#rows?.forEach(row => {
+            sources.add(row.rateSource);
+        });
+        const sourcesEl = this.#shadowRoot.querySelector('#sources');
+        if (!sourcesEl)
+            throw new Error(
+                'Failed to render sources element in Expense view.',
+            );
+        sources.forEach(source => {
+            sourcesEl.insertAdjacentHTML(
+                'beforeend',
+                `<a href="${source}" target="_blank">${source}</a>`,
+            );
+        });
     }
 
-    renderEmtpy() {
-        if (!this.shadowRoot)
-            throw new Error(`Failed to render ShadowRoot for location View.`);
-        this.shadowRoot.innerHTML = '';
+    #createRatesTable() {
+        const ratesTable = this.#shadowRoot.querySelector('#rates-table');
+        if (!ratesTable)
+            throw new Error('Failed to render rates table in Expense view.');
+
+        const rateSet = new Set<string>();
+        this.#rows.forEach((row, i, arr) => {
+            if (i === 0 || row.rateString !== arr[i - 1].rateString)
+                rateSet.add(row.rateStringForTable);
+        });
+
+        let markup = '';
+        rateSet.forEach(item => {
+            markup += this.#createRateTableMarkup(item);
+        });
+
+        ratesTable.innerHTML = markup;
     }
 
+    #createRateTableMarkup(item: string) {
+        const rateObject = JSON.parse(item);
+        const { rates } = rateObject;
+        return /*HTML*/ `
+            <tr class="border-b-2">
+                <td class="border-r-2 p-3">${rateObject.monthYear}</td>
+                <td class="border-r-2 p-3">${rateObject.city}, ${rateObject.country}</td>
+                <td>${rates.maxLodging.toFixed(2)}</td>
+                <td>${rates.maxMie.toFixed(2)}</td>
+                <td>${rates.maxMieFirstLast.toFixed(2)}</td>
+                <td class="border-r-2">${rates.maxIncidental.toFixed(2)}</td>
+                <td>${rates.deductionBreakfast.toFixed(2)}</td>
+                <td>${rates.deductionLunch.toFixed(2)}</td>
+                <td>${rates.deductionDinner.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+
+    async createExpenseTable(expenses: StateExpenseItemValid[]) {
+        let mieTotal = 0;
+        let lodgingTotal = 0;
+        let total = 0;
+        let markup = '';
+
+        expenses.forEach((expense, i, arr) => {
+            mieTotal += expense.mieAmount;
+            lodgingTotal += expense.lodgingAmount;
+            total += expense.totalAmount;
+
+            let locationString = `<span class="font-semibold">${expense.city}, ${expense.country}</span>`;
+
+            const { breakfastProvided, lunchProvided, dinnerProvided } =
+                expense.deductions;
+            const deductionsArr: string[] = [];
+            if (i === 0) deductionsArr.push('First Day');
+            if (i === arr.length - 1) deductionsArr.push('Last Day');
+            if (breakfastProvided) deductionsArr.push('Breakfast');
+            if (lunchProvided) deductionsArr.push('Lunch');
+            if (dinnerProvided) deductionsArr.push('Dinner');
+            if (deductionsArr.length > 0) {
+                const deductionsString = deductionsArr.reduce(
+                    (result, deduction) => {
+                        return result === '' ? deduction : (
+                                `${result}, ${deduction}`
+                            );
+                    },
+                    '',
+                );
+                locationString += `<br>${deductionsString}`;
+            }
+
+            markup += /*HTML*/ `
+                <tr>
+                    <td class="text-center">${expense.date.slice(5).replaceAll('-', '/')}/${expense.date.slice(2, 4)}</td> <!-- // 2024-10-01 to 10/01/24 -->
+                    <td class="text-left">${locationString}</td>
+                    <td class="text-right">${USD.format(expense.mieAmount)}</td>
+                    <td class="text-right">${USD.format(expense.lodgingAmount)}</td>
+                    <td class="text-right font-semibold">${USD.format(expense.totalAmount)}</td>
+                </tr>
+            `;
+        });
+
+        markup += /* HTML */ `
+            <tr class="border-t-3 *:text-lg *:font-semibold">
+                <td colspan="2" class="text-left">Total</td>
+                <td class="text-right">${USD.format(mieTotal)}</td>
+                <td class="text-right">${USD.format(lodgingTotal)}</td>
+                <td class="text-right">${USD.format(total)}</td>
+            </tr>
+        `;
+        this.#expensesTable.innerHTML = markup;
+        await wait(0);
+        window.print();
+    }
+
+    emptyExpenseTable() {
+        this.#expensesTable.innerHTML = '';
+    }
+
+    /* Controller / View interaction
+     */
     controllerHandler(
         controlUpdateFunction: Function,
         controlTableFunction: Function,
     ) {
-        this.#observer?.disconnect();
-        const { viewContainer } = this.#getViewEls();
-        const observerOptions = {
-            subtree: true,
-            attributes: true,
-            attributeFilter: [
-                'lodging',
-                'breakfastprovided',
-                'lunchprovided',
-                'dinnerprovided',
-                'table',
-            ],
-        };
         const callback = (mutations: MutationRecord[]) => {
             mutations.forEach(mutation => {
                 const changedAttr = mutation.attributeName;
@@ -344,7 +405,7 @@ export class PdcExpenseView extends HTMLElement {
                 const newValue = target.getAttribute(changedAttr);
                 if (changedAttr === 'table') {
                     if (!!newValue) {
-                        viewContainer.removeAttribute('table');
+                        this.#viewContainer.removeAttribute('table');
                         controlTableFunction();
                     }
                     return;
@@ -356,7 +417,18 @@ export class PdcExpenseView extends HTMLElement {
         };
         if (this.#observer === null)
             this.#observer = new MutationObserver(callback);
-        this.#observer.observe(viewContainer, observerOptions);
+        this.#observer.disconnect();
+        this.#observer.observe(this.#viewContainer, {
+            subtree: true,
+            attributes: true,
+            attributeFilter: [
+                'lodging',
+                'breakfastprovided',
+                'lunchprovided',
+                'dinnerprovided',
+                'table',
+            ],
+        });
     }
 
     #returnRowUpdate(target: Element): StateExpenseItemUpdate {
@@ -380,78 +452,5 @@ export class PdcExpenseView extends HTMLElement {
             lunchProvided,
             dinnerProvided,
         };
-    }
-
-    createExpenseTable(expenses: StateExpenseItemValid[]) {
-        const { expensesTable } = this.#getViewEls();
-
-        let mieTotal = 0;
-        let lodgingTotal = 0;
-        let total = 0;
-
-        expenses.forEach((expense, i, arr) => {
-            const {
-                date,
-                city,
-                country,
-                mieAmount,
-                lodgingAmount,
-                totalAmount,
-            } = expense;
-            mieTotal += mieAmount;
-            lodgingTotal += lodgingAmount;
-            total += totalAmount;
-
-            const { breakfastProvided, lunchProvided, dinnerProvided } =
-                expense.deductions;
-            const deductions: string[] = [];
-            if (i === 0) deductions.push('First Day');
-            if (i === arr.length - 1) deductions.push('Last Day');
-            if (breakfastProvided) deductions.push('Breakfast');
-            if (lunchProvided) deductions.push('Lunch');
-            if (dinnerProvided) deductions.push('Dinner');
-
-            const dateText = `${date.slice(5).replaceAll('-', '/')}/${date.slice(2, 4)}`; // 2024-10-01 to 10/01/24
-            const deductionsText = deductions.reduce((result, deduction) => {
-                return result === '' ? deduction : `${result}, ${deduction}`;
-            }, '');
-            const locationText =
-                deductionsText !== '' ?
-                    `<span class="font-semibold">${city}, ${country}</span><br>${deductionsText}`
-                :   `<span class="font-semibold">${city}, ${country}</span>`;
-
-            expensesTable.insertAdjacentHTML(
-                'beforeend',
-                /*HTML*/ `
-                <tr>
-                    <td class=" text-center">${dateText}</td>
-                    <td class=" text-left">${locationText}</td>
-                    <td class="text-right">${USD.format(mieAmount)}</td>
-                    <td class="text-right">${USD.format(lodgingAmount)}</td>
-                    <td class="text-right font-semibold">${USD.format(totalAmount)}</td>
-                </tr>
-            `,
-            );
-        });
-
-        setTimeout(() => {
-            expensesTable.insertAdjacentHTML(
-                'beforeend',
-                /* HTML */ `
-                    <tr class="border-t-3 *:text-lg *:font-semibold">
-                        <td colspan="2" class="text-left">Total</td>
-                        <td class="text-right">${USD.format(mieTotal)}</td>
-                        <td class="text-right">${USD.format(lodgingTotal)}</td>
-                        <td class="text-right">${USD.format(total)}</td>
-                    </tr>
-                `,
-            );
-            window.print();
-        }, 0);
-    }
-
-    emptyExpenseTable() {
-        const { expensesTable } = this.#getViewEls();
-        expensesTable.innerHTML = '';
     }
 }
