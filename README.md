@@ -6,6 +6,7 @@ Open source per diem calculator for both domestic and international trips. Built
 
 - No existing combined calculator
 - No API for OCONUS rates from Dept. of State and Dept. of Defense
+- Full keyboard-only navigation support
 
 ## Who this is for
 
