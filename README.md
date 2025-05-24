@@ -2,11 +2,19 @@
 
 Open source per diem calculator for both domestic and international trips. Built in TypeScript with Tailwind. Rates sourced directly from General Services Administration (GSA), Dept. of State, and Dept. of Defense (DOD).
 
+## Features
+
+- Lookup both domestic and international rates in one place and get accurate deductions for first/last day and meals provided
+- print expense report PDF that includes daily breakdown, rates used, and links to the original federal source
+- Full keyboard-only navigation support
+- TK accessibility compliance
+- Developers: calculator outputs expenses as object that can be easily incorporated into other tools
+
 ## Issues resolved
 
-- No existing combined calculator
+- No existing calculator for end users that lets them lookup both domestic and international rates, and also lets them deduct meals provided
+- No existing calculator for developers to integrate into their expense management system
 - No API for OCONUS rates from Dept. of State and Dept. of Defense
-- Full keyboard-only navigation support
 
 ## Who this is for
 
