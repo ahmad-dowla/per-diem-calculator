@@ -28,6 +28,7 @@
         "dompurify": "^3.2.5",
         "eslint-config-prettier": "^10.1.5",
         "jszip": "^3.10.1",
-        "tom-select": "^2.4.3"
+        "tom-select": "^2.4.3",
+        "wrangler": "^4.16.1"
     }
 }
