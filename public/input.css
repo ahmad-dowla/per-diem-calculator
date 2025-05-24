@@ -48,3 +48,7 @@
     --color-error-100: hsl(360, 100%, 87%);
     --color-error-50: hsl(360, 100%, 95%);
 }
+
+html {
+    scroll-behavior: smooth;
+}

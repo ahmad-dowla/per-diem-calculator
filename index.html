@@ -4,7 +4,6 @@
 <!-- TODO3 Update main landing page with metadata -->
 
 <!-- TEST by adding file to NNSC landing page -->
-<!-- TEST Do fonts work when npm installed -->
 <!-- TEST Page speeds -->
 <!-- TEST ZAP -->
 
@@ -37,18 +36,8 @@
         <link rel="stylesheet" href="output.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Per Diem Calculator</title>
-        <style type="text/css" media="print">
-            @media print {
-                body {
-                    background-color: #fff !important;
-                }
-            }
-            html {
-                scroll-behavior: smooth;
-            }
-        </style>
     </head>
-    <body class="bg-[hsl(210,25%,98%)]">
+    <body class="bg-[hsl(210,25%,98%)] print:bg-white">
         <header
             class="bg-primary-900 mb-8 px-6 pt-6 pb-14 *:mx-auto *:max-w-xl
                 print:hidden"
