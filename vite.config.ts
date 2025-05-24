@@ -7,6 +7,7 @@ export default defineConfig({
         lib: {
             entry: ['src/index.ts'],
             name: '@per-diem-calculator/vanilla',
+            cssFileName: 'styles.css',
         },
         rollupOptions: {
             external: ['TomSelect', 'JSZip', 'DOMPurify'],
