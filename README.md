@@ -32,6 +32,11 @@ Open source per diem calculator for both domestic and international trips. Built
 - VITE_PROXY_KEY, VITE_PROXY_URL, GSA_API_KEY
 -
 
+## Config
+
+- Expense object printed to console - https://perdiemcalc.org/object/
+- Unstyled - https://perdiemcalc.org/unstyled/
+
 ## Behind scenes
 
 GSA API
