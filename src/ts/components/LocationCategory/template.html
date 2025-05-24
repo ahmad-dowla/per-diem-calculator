@@ -4,28 +4,29 @@
 >
     <pdc-label styled="true" text="Area"></pdc-label>
     <div
-        class="w-[68%] opacity-15 transition-opacity **:text-sm
-            has-enabled:opacity-100"
+        class="w-[72%] opacity-15 transition-opacity duration-700 **:text-sm
+            has-enabled:opacity-100 sm:w-[75%]"
     >
         <label
-            tabindex="0"
+            tabindex="-1"
             class="group border-r-2-transparent
                 hover:[&_.state]:fill-primary-800
                 hover:[&_.state]:stroke-primary-100
                 focus-visible:[&_.state]:fill-primary-800
                 focus-visible:[&_.state]:stroke-primary-100
-                focus-visible:border-r-primary-300 [.error]:border-r-error-400
+                focus-visible:border-r-primary-800 [.error]:border-r-error-400
                 has-checked:border-r-success-400 my-3 grid cursor-pointer
                 grid-cols-2 items-center justify-items-center border-r-3
-                border-r-transparent bg-transparent py-3 pr-3 transition-colors
-                select-none *:pr-4 **:transition-colors
+                border-r-transparent bg-transparent py-2.5 pr-3
+                transition-colors select-none *:pr-4 **:transition-colors
                 focus-visible:outline-none has-disabled:hover:cursor-not-allowed
-                [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
+                sm:justify-items-start [&_.state]:fill-neutral-800
+                [&_.state]:stroke-neutral-100"
             for="domestic"
         >
             <svg
                 inert
-                class="max-h-[35px]"
+                class="max-h-[45px] sm:max-h-[60px]"
                 viewBox="0 0 959 593"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -375,15 +376,17 @@
                 </g>
             </svg>
             <ul
-                class="text-center transition-colors *:hidden
-                    *:border-b-transparent group-hover:*:border-b-neutral-300
-                    group-focus:*:border-b-neutral-300 *:first:list-item
-                    *:first:border-b-2 *:first:pb-2 md:text-left md:*:list-item
-                    md:*:list-disc md:*:first:hidden md:*:first:border-none
-                    md:*:first:pb-0 md:*:last:border-b-2 md:*:last:pb-2"
+                class="text-center transition-colors
+                    group-hover:*:border-b-neutral-300
+                    group-focus:*:border-b-neutral-300 [&_li]:hidden
+                    [&_li]:border-b-transparent [&_li]:first:inline-block
+                    [&_li]:first:border-b-2 [&_li]:first:pb-2 sm:[&_li]:mb-2
+                    sm:[&_li]:inline-block sm:[&_li]:first:border-none
+                    sm:[&_li]:first:pb-0 sm:[&_li]:last:border-b-2
+                    sm:[&_li]:last:pb-2"
             >
-                <li>48 States</li>
-                <li class="hidden md:list-item">Washington D.C.</li>
+                <li>48 <br class="sm:hidden" />States</li>
+                <li class="hidden">Washington DC</li>
             </ul>
             <input
                 type="radio"
@@ -397,23 +400,24 @@
             />
         </label>
         <label
-            tabindex="0"
+            tabindex="-1"
             class="group border-r-2-transparent hover:[&_.land]:fill-primary-800
                 hover:[&_.water]:fill-primary-100
                 focus-visible:[&_.land]:fill-primary-800
                 focus-visible:[&_.water]:fill-primary-100
-                focus-visible:border-r-primary-300 [.error]:border-r-error-400
-                has-checked:border-r-success-400 my-3 grid cursor-pointer
+                focus-visible:border-r-primary-800 [.error]:border-r-error-400
+                has-checked:border-r-success-400 my-4 grid cursor-pointer
                 grid-cols-2 items-center justify-items-center border-r-3
-                border-r-transparent bg-transparent py-3 pr-3 transition-colors
-                select-none *:pr-4 **:transition-colors
+                border-r-transparent bg-transparent py-2.5 pr-3
+                transition-colors select-none *:pr-4 **:transition-colors
                 focus-visible:outline-none has-disabled:hover:cursor-not-allowed
-                [&_.land]:fill-neutral-800 [&_.water]:fill-neutral-100"
+                sm:ml-3 sm:justify-items-normal [&_.land]:fill-neutral-800
+                [&_.water]:fill-neutral-100"
             for="intl"
         >
             <svg
                 inert
-                class="mr-5 max-h-[40px]"
+                class="mr-5 max-h-[50px] sm:max-h-[60px]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="1.52 1.58 3.77 3.77"
             >
@@ -487,16 +491,18 @@
                 ></path>
             </svg>
             <ul
-                class="text-center transition-colors *:hidden
-                    *:border-b-transparent group-hover:*:border-b-neutral-300
-                    group-focus:*:border-b-neutral-300 *:first:list-item
-                    *:first:border-b-2 *:first:pb-2 md:text-left md:*:list-item
-                    md:*:list-disc md:*:first:hidden md:*:first:border-none
-                    md:*:first:pb-0 md:*:last:border-b-2 md:*:last:pb-2"
+                class="text-center transition-colors
+                    group-hover:*:border-b-neutral-300
+                    group-focus:*:border-b-neutral-300 [&_li]:hidden
+                    [&_li]:border-b-transparent [&_li]:first:inline-block
+                    [&_li]:first:border-b-2 [&_li]:first:pb-2 sm:[&_li]:mb-2
+                    sm:[&_li]:inline-block sm:[&_li]:first:hidden
+                    sm:[&_li]:first:border-none sm:[&_li]:first:pb-0
+                    sm:[&_li]:last:border-b-2 sm:[&_li]:last:pb-2"
             >
                 <li>All Other Locations</li>
                 <li>Alaska, Hawaii</li>
-                <li>U.S. Territories</li>
+                <li>US Territories</li>
                 <li>Other Countries</li>
             </ul>
             <input

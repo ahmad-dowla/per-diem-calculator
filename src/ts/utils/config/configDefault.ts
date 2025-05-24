@@ -1,3 +1,4 @@
+// Types
 import type { Config } from '../../types/config';
 
 export const configDefault: Config = {
@@ -7,6 +8,6 @@ export const configDefault: Config = {
     },
     expense: {
         heading: 'Expenses',
-        body: 'Confirm meals provided/lodging amount for each day.',
+        body: 'Confirm lodging amount and meals provided for each day',
     },
 };

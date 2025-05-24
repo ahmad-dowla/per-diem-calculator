@@ -8,7 +8,7 @@ import type {
 import type { ConfigSectionText } from '../../types/config';
 
 // Utils
-import { isDateRawType, getShortDate } from '../../utils/dates';
+import { isDateRawType, getYY, getMM, getDD } from '../../utils/dates';
 import { locationKeys } from '../../utils/locations';
 import {
     inPrimitiveType,
@@ -18,6 +18,13 @@ import {
     wait,
 } from '../../utils/misc';
 import { removeStyles, applyStyles } from '../../utils/styles';
+import {
+    APPROX_DAYS_IN_6_MONTHS,
+    BTN_ANIMATE_MS,
+    MILLISECONDS_IN_DAY,
+    ROW_ANIMATE_MS,
+    ROW_CLOSED_HEIGHT,
+} from '../../utils/config';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
@@ -28,13 +35,13 @@ import {
     PdcLocationCategory,
     PdcLocationSelect,
     PdcLocationDate,
-    PdcButtonText,
+    PdcButton,
     PdcLabel,
 } from '../../components';
 customElements.define('pdc-location-date', PdcLocationDate);
 customElements.define('pdc-location-category', PdcLocationCategory);
 customElements.define('pdc-location-select', PdcLocationSelect);
-customElements.define('pdc-button-text', PdcButtonText);
+customElements.define('pdc-button', PdcButton);
 customElements.define('pdc-label', PdcLabel);
 
 // Template for this Custom Element
@@ -43,11 +50,10 @@ const templateRow = document.createElement('template');
 
 // Custom Element
 export class PdcLocationView extends HTMLElement {
-    /* Initial setup
+    /* INITIAL SETUP
      */
     #styled: boolean;
     #valid = false;
-
     constructor(styled: boolean, config: ConfigSectionText) {
         super();
         this.attachShadow({ mode: 'open' });
@@ -79,7 +85,7 @@ export class PdcLocationView extends HTMLElement {
         } else body?.remove();
     };
 
-    /* Events
+    /* EVENTS
      */
     #createEventListeners() {
         const viewContainer =
@@ -114,11 +120,7 @@ export class PdcLocationView extends HTMLElement {
         });
 
         // Resize events
-        const debouncedHandleResize = debounce(
-            this.#windowResize.bind(this),
-            300,
-            // MAGIC 300
-        );
+        const debouncedHandleResize = debounce(this.#windowResize.bind(this));
         window.addEventListener('resize', debouncedHandleResize);
     }
 
@@ -128,21 +130,25 @@ export class PdcLocationView extends HTMLElement {
             return;
 
         const btnEl = target.closest('button');
-        const btnPdcEl = target.closest<PdcButtonText>('pdc-button-text');
+        const btnPdcEl = target.closest<PdcButton>('pdc-button');
         const row = target.closest<HTMLElement>('[data-pdc="location-row"]');
-
         switch (true) {
             case btnEl?.getAttribute('id') === 'add-row':
                 this.#addRow();
                 return;
             case btnEl?.dataset.pdc === 'delete-row':
-                row && this.#deleteRow(row);
+                this.#deleteRow(row);
                 return;
-            case btnPdcEl?.getAttribute('id') === 'generate-expenses':
-                this.#validateRows('generate');
+            case btnPdcEl?.getAttribute('id') === 'calculate-expenses':
+                this.#validateRows('calculate');
                 return;
             case !!target.closest('[data-pdc="location-row-toggle"]'):
-                row && this.#rowToggle(row);
+                this.#rowToggle(row);
+                return;
+            case !!target.closest('#expense-category') &&
+                e instanceof KeyboardEvent &&
+                target instanceof HTMLLabelElement:
+                target.click();
                 return;
             case !!target.closest('#error'):
                 target.closest('#error')?.classList.remove('active');
@@ -152,7 +158,7 @@ export class PdcLocationView extends HTMLElement {
         }
     }
 
-    /* Get view elements
+    /* GET ELS
      */
 
     get #rowsContainer() {
@@ -226,15 +232,15 @@ export class PdcLocationView extends HTMLElement {
             ?.closest('div');
         const expenseCategory =
             this.shadowRoot?.querySelector<HTMLElement>('#expense-category');
-        const generateExpenses = this.shadowRoot
-            ?.querySelector('#generate-expenses')
+        const calculateExpenses = this.shadowRoot
+            ?.querySelector('#calculate-expenses')
             ?.closest('div');
-        if (!(addRow && expenseCategory && generateExpenses))
+        if (!(addRow && expenseCategory && calculateExpenses))
             throw new Error('Failed to render buttons for location View.');
         return {
             addRow,
             expenseCategory,
-            generateExpenses,
+            calculateExpenses,
         };
     }
 
@@ -258,7 +264,7 @@ export class PdcLocationView extends HTMLElement {
         ).indexOf(row);
     }
 
-    /* Update methods
+    /* UPDATE METHODS
      */
 
     #addRow(initial: 'initial' | null = null) {
@@ -272,7 +278,8 @@ export class PdcLocationView extends HTMLElement {
         this.#rowToggle(newRow, initial ? initial : 'add');
     }
 
-    async #deleteRow(row: HTMLElement) {
+    async #deleteRow(row: HTMLElement | null) {
+        if (!row) return;
         if (this.#rowsContainer.childElementCount === 1) {
             this.#errorEl.classList.add('active');
             this.#errorEl.textContent = '1 row required.';
@@ -283,10 +290,14 @@ export class PdcLocationView extends HTMLElement {
         await this.#rowToggle(row, 'delete', nextRow);
 
         // Update date input restrictions for existing rows
-        prevRow && this.#getRowPdcEls(prevRow).start.restrictStartInput();
-        prevRow && this.#getRowPdcEls(prevRow).end.restrictStartInput();
-        nextRow && this.#getRowPdcEls(nextRow).start.restrictStartInput();
-        nextRow && this.#getRowPdcEls(nextRow).end.restrictStartInput();
+        if (prevRow) {
+            this.#getRowPdcEls(prevRow).start.restrictStartInput();
+            this.#getRowPdcEls(prevRow).end.restrictStartInput();
+        }
+        if (nextRow) {
+            this.#getRowPdcEls(nextRow).start.restrictStartInput();
+            this.#getRowPdcEls(nextRow).end.restrictStartInput();
+        }
 
         // Trigger #observer to update state
         this.#rowsContainer.setAttribute('update-state', `true`);
@@ -309,8 +320,12 @@ export class PdcLocationView extends HTMLElement {
             throw new Error('Failed to render row summary elements.');
 
         const rowCount = (index + 1).toString().padStart(2, '0');
-        const startDate = start ? getShortDate(start) : '\u00A0';
-        const endDate = end ? ` to ${getShortDate(end)}` : '\u00A0';
+        const startDate =
+            start ?
+                `${getMM(start)}/${getDD(start)}/${getYY(start)}`
+            :   '\u00A0';
+        const endDate =
+            end ? ` to ${getMM(end)}/${getDD(end)}/${getYY(end)}` : '\u00A0';
         const countryCity = city && country ? `${city} (${country})` : '\u00A0';
 
         rowNumberEl.textContent = rowCount;
@@ -332,32 +347,59 @@ export class PdcLocationView extends HTMLElement {
 
     #enableRowTabIndex(row: Element, enable: boolean) {
         // Disable tab index for row's PdcEls
-        Object.values(this.#getRowPdcEls(row)).forEach(el =>
-            el.enableTabIndex(enable),
+        Object.values(this.#getRowPdcEls(row)).forEach(
+            el => el.isEnabled && el.enableTabIndex(enable),
         );
+        this.#viewBtns.calculateExpenses
+            .querySelector<PdcButton>('pdc-button')
+            ?.enableTabIndex(!enable);
         // Activate tabindex for delete icon which is hidden while row open
-        this.#getRowAnimatedEls(row).deleteBtn.setAttribute(
-            'tabindex',
-            enable ? '-1' : '0',
-        );
+        [
+            this.#getRowAnimatedEls(row).deleteBtn,
+            this.#viewBtns.addRow.querySelector('button'),
+            ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
+        ].forEach(el => el && el.setAttribute('tabindex', enable ? '-1' : '0'));
     }
 
-    /* Visual methods
+    #disableAllTabIndexes() {
+        this.#rows.forEach(row => {
+            Object.values(this.#getRowPdcEls(row)).forEach(
+                el => el.isEnabled && el.enableTabIndex(false),
+                this.#getRowAnimatedEls(row).deleteBtn.setAttribute(
+                    'tabindex',
+                    '-1',
+                ),
+            );
+        });
+        this.#viewBtns.calculateExpenses
+            .querySelector<PdcButton>('pdc-button')
+            ?.enableTabIndex(false);
+
+        [
+            this.#viewBtns.addRow.querySelector('button'),
+            ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
+        ].forEach(el => el && el.setAttribute('tabindex', '-1'));
+    }
+
+    /* VISUAL METHODS
      */
 
     #clearErrorEl() {
         this.#errorEl.classList.remove('active');
     }
 
-    #rowToggle = async (
-        row: HTMLElement,
+    async #rowToggle(
+        row: HTMLElement | null,
         toggle: 'open' | 'close' | 'add' | 'initial' | 'delete' | null = null,
         nextRow: Element | null = null,
-    ) => {
+    ) {
+        if (!row) return;
         if (!this.#styled || row.classList.contains('toggling')) return;
-        // MAGIC 96
         if (!toggle) {
-            this.#rowToggle(row, row.offsetHeight === 96 ? 'open' : 'close');
+            this.#rowToggle(
+                row,
+                row.offsetHeight === ROW_CLOSED_HEIGHT ? 'open' : 'close',
+            );
             return;
         }
         row.classList.remove(
@@ -385,15 +427,19 @@ export class PdcLocationView extends HTMLElement {
             row.classList.remove('ring-transparent');
             row.classList.add('ring-neutral-200');
         }
+        await wait(BTN_ANIMATE_MS);
         row.classList.remove('toggling');
-    };
+    }
 
-    #animateRow = async (row: HTMLElement, direction: 'open' | 'close') => {
-        // MAGIC 750
-        await wait(750);
+    async #animateRow(row: HTMLElement, direction: 'open' | 'close') {
+        await wait(0);
+        this.#disableAllTabIndexes();
+        await wait(ROW_ANIMATE_MS);
         this.#enableRowTabIndex(row, direction === 'open' ? true : false);
         row.style.height = `${direction === 'open' ? row.scrollHeight : row.clientHeight}px`;
         const { details, summary, deleteBtn } = this.#getRowAnimatedEls(row);
+        if (direction === 'open') details.removeAttribute('inert');
+        else details.setAttribute('inert', '');
         [summary, deleteBtn].forEach(
             el => (el.style.opacity = direction === 'open' ? '0' : '100'),
         );
@@ -405,16 +451,12 @@ export class PdcLocationView extends HTMLElement {
         deleteBtn.style.transform =
             direction === 'open' ? 'translateX(200%)' : `translateX(0%)`;
         if (direction === 'close') this.#animateBtns();
-    };
+    }
 
-    #animateRowDelete = async (
-        row: HTMLElement,
-        nextRow: Element | null = null,
-    ) => {
+    async #animateRowDelete(row: HTMLElement, nextRow: Element | null = null) {
         row.classList.remove('ring-neutral-300');
         row.classList.add('ring-transparent');
-        // MAGIC 800
-        await wait(800);
+        await wait(ROW_ANIMATE_MS);
         // Deleted row was only row -> add a blank template row
         row.remove();
         this.#animateBtns();
@@ -428,33 +470,29 @@ export class PdcLocationView extends HTMLElement {
                     this.#styleRow(remainingRow); // Update background color
                 });
         }
-    };
+    }
 
     async #animateBtns(open: 'open' | null = null) {
         const btns = [
             this.#viewBtns.addRow,
             this.#viewBtns.expenseCategory,
-            this.#viewBtns.generateExpenses,
+            this.#viewBtns.calculateExpenses,
         ];
         const rowsOpen =
             !!open ||
-            [...this.#rows].some(
-                // MAGIC 96
-                row => row.offsetHeight !== 96,
-            );
+            [...this.#rows].some(row => row.offsetHeight !== ROW_CLOSED_HEIGHT);
         btns.forEach(btn =>
             btn.classList.remove(rowsOpen ? 'rows-closed' : 'rows-open'),
         );
         btns.forEach(btn =>
             btn.classList.add(rowsOpen ? 'rows-open' : 'rows-closed'),
         );
-        // MAGIC 450
-        await wait(450);
+        await wait(BTN_ANIMATE_MS);
         btns.forEach(btn => (btn.style.zIndex = rowsOpen ? '0' : '50'));
         if (rowsOpen) {
             this.#viewBtns.addRow.style.transform = `translateY(-100%)`;
             this.#viewBtns.expenseCategory.style.transform = `translateY(400%)`;
-            this.#viewBtns.generateExpenses.style.transform = `translateY(200%)`;
+            this.#viewBtns.calculateExpenses.style.transform = `translateY(200%)`;
         } else {
             btns.forEach(btn => (btn.style.transform = `translateY(0%)`));
         }
@@ -462,7 +500,7 @@ export class PdcLocationView extends HTMLElement {
 
     #windowResize = () => {
         [...this.#rows].forEach(row => {
-            if (row.offsetHeight === 96) return;
+            if (row.offsetHeight === ROW_CLOSED_HEIGHT) return;
             row.style.height =
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
         });
@@ -492,7 +530,7 @@ export class PdcLocationView extends HTMLElement {
             ?.showLoadingSpinner(enabled);
     }
 
-    /* Validation
+    /* VALIDATION
      */
     #getValidators = (): (
         | PdcLocationDate
@@ -524,20 +562,46 @@ export class PdcLocationView extends HTMLElement {
         return pdcEl.validate();
     };
 
-    #validateRows = (generate: 'generate' | null = null): boolean => {
+    #validateRows = (calculate: 'calculate' | null = null): boolean => {
         const validators = this.#getValidators();
         this.#valid = validators.every(el => this.#validatePdcEl(el));
-        if (generate === 'generate')
+        if (this.#valid && calculate) {
+            if (!this.#tripIsLessThanSixMos()) {
+                this.#errorEl.textContent = 'Trip length must be < 6 months';
+                this.#errorEl.classList.add('active');
+                this.#valid = false;
+                return this.#valid;
+            }
             this.#rowsContainer.setAttribute('validate', `${this.#valid}`);
+        }
         return this.#valid;
     };
 
-    /* Controller / View interaction
+    #tripIsLessThanSixMos() {
+        const start = this.#getRowPdcEls(this.#rows[0]).start.pdcValue;
+        const end = this.#getRowPdcEls(this.#rows[this.#rows.length - 1]).end
+            .pdcValue;
+        if (start && end) {
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            const diffInMs = Math.abs(endDate.getTime() - startDate.getTime());
+            const days = Math.ceil(diffInMs / MILLISECONDS_IN_DAY);
+            if (days > APPROX_DAYS_IN_6_MONTHS) return false;
+            else return true;
+        }
+        return false;
+    }
+
+    /* CONTROLLER/VIEW METHODS
      */
     controllerHandler(
-        controlUpdateFunction: Function,
-        controlDeleteFunction: Function,
-        controlValidateFunction: Function,
+        controlUpdateFunction: (
+            row: StateLocationItem,
+            changedAttr: LocationKeys,
+            newValue: string | null,
+        ) => void,
+        controlDeleteFunction: (updatedRows: StateLocationItem[]) => void,
+        controlValidateFunction: (viewValidator: AllViewLocationsValid) => void,
     ) {
         this.#observer(
             controlUpdateFunction,
@@ -550,12 +614,16 @@ export class PdcLocationView extends HTMLElement {
     }
 
     #observer(
-        controlUpdateFunction: Function,
-        controlDeleteFunction: Function,
-        controlValidateFunction: Function,
-        viewUpdateFunction: Function,
-        viewDeleteFunction: Function,
-        viewValidateFunction: Function,
+        controlUpdateFunction: (
+            row: StateLocationItem,
+            changedAttr: LocationKeys,
+            newValue: string | null,
+        ) => void,
+        controlDeleteFunction: (updatedRows: StateLocationItem[]) => void,
+        controlValidateFunction: (viewValidator: AllViewLocationsValid) => void,
+        viewUpdateFunction: (target: Element) => StateLocationItem,
+        viewDeleteFunction: () => StateLocationItem[],
+        viewValidateFunction: () => AllViewLocationsValid,
     ) {
         const callback = (mutations: MutationRecord[]) => {
             mutations.forEach(mutation => {
@@ -582,7 +650,7 @@ export class PdcLocationView extends HTMLElement {
                 return;
             });
         };
-        const debouncedCallback = debounce(callback, 300);
+        const debouncedCallback = debounce(callback);
         const observer = new MutationObserver(debouncedCallback);
         if (this.shadowRoot)
             observer.observe(this.shadowRoot, {
@@ -648,10 +716,8 @@ export class PdcLocationView extends HTMLElement {
 
     async restrictRow(index: number, updatedAttr: LocationKeys) {
         const row = this.#getRowFromIndex(index);
-        // MAGIC 250
         switch (updatedAttr) {
             case 'city':
-                await wait(250);
                 this.#rowToggle(row, 'close');
                 return;
             case 'country':
@@ -671,11 +737,13 @@ export class PdcLocationView extends HTMLElement {
 
     #restrictStart(row: Element): void {
         const { start, end, category, country, city } = this.#getRowPdcEls(row);
-        category.enable(false);
-        country.enable(false);
-        city.enable(false);
         start.restrictStartInput();
         end.restrictEndInput();
+        if (!end.pdcValue) {
+            category.enable(false);
+            country.enable(false);
+            city.enable(false);
+        }
     }
 
     #restrictEnd(row: Element): void {

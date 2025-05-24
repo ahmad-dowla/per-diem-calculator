@@ -1,10 +1,17 @@
+// Types
 import { DateRaw } from '../../types/dates';
-import { isDateRawType } from './isDateRaw';
 
-export const offsetDateString = (dateVal: DateRaw, dayOffset: number | null = null): DateRaw => {
-  const date = new Date(dateVal);
-  if (dayOffset) date.setUTCDate(date.getUTCDate() + dayOffset);
-  const result = date.toISOString().slice(0, 10);
-  if (!isDateRawType(result)) throw new Error('Failed to create valid date');
-  return result;
+// Utils
+import { isDateRawType } from './isDateRaw';
+import { getDateRaw } from './getDateSlice';
+
+export const offsetDateString = (
+    dateRaw: DateRaw,
+    offset: number | null = null,
+): DateRaw => {
+    const date = new Date(dateRaw);
+    if (offset) date.setUTCDate(date.getUTCDate() + offset);
+    const result = getDateRaw(date.toISOString());
+    if (!isDateRawType(result)) throw new Error('Failed to create valid date');
+    return result;
 };

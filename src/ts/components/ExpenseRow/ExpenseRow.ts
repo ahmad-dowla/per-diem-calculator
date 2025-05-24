@@ -13,6 +13,8 @@ import {
     removeStyles,
     highlightSuccess,
 } from '../../utils/styles';
+import { ROW_CLOSED_HEIGHT, ROW_ANIMATE_MS } from '../../utils/config';
+import { getShortMonth, getDD, getYYYY, getMM } from '../../utils/dates';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
@@ -22,7 +24,7 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcExpenseRow extends HTMLElement {
-    /* Initial setup
+    /* SETUP
      */
     #expense: StateExpenseItemValid;
     #expensesCategory;
@@ -83,9 +85,9 @@ export class PdcExpenseRow extends HTMLElement {
         const date = new Date(this.#expense.date);
         if (!(monthEl && dayEl && yearEl))
             throw new Error(`Failed to render row's date elements.`);
-        monthEl.textContent = date.toUTCString().slice(7, 11);
-        dayEl.textContent = date.getUTCDate().toString().padStart(2, '0');
-        yearEl.textContent = date.getUTCFullYear().toString();
+        monthEl.textContent = getShortMonth(date.toUTCString());
+        dayEl.textContent = getDD(this.#expense.date);
+        yearEl.textContent = getYYYY(this.#expense.date);
     }
 
     #setRowDetailsText() {
@@ -99,18 +101,17 @@ export class PdcExpenseRow extends HTMLElement {
         lodgingRateEl.setAttribute(
             'text',
             `<p class="font-semibold">Lodging</p>
-            <p class="text-sm">Max ${USD.format(this.#maxLodging)}</p>`,
+            <p class="text-sm sm:text-base">Max ${USD.format(this.#maxLodging)}</p>`,
         );
         mieRateEl.setAttribute(
             'text',
             `<p class="font-semibold">M&IE</p>
-            <p class="text-sm">Max ${USD.format(this.#maxMie)}</p>`,
+            <p class="text-sm sm:text-base">Max ${USD.format(this.#maxMie)}</p>`,
         );
     }
 
     #disableUnusedRowEls() {
         const lodgingEl = this.#shadowRoot.querySelector('#lodging');
-        const mieEl = this.#shadowRoot.querySelector('#mie');
         const deductionsEl = this.#shadowRoot.querySelector('#deductions');
         if (this.#expensesCategory === 'mie') {
             lodgingEl?.classList.add('disabled');
@@ -119,7 +120,6 @@ export class PdcExpenseRow extends HTMLElement {
                 ?.setAttribute('disabled', '');
         }
         if (this.#expensesCategory === 'lodging') {
-            mieEl?.classList.add('disabled');
             deductionsEl?.classList.add('disabled');
             deductionsEl
                 ?.querySelectorAll('input')
@@ -127,7 +127,7 @@ export class PdcExpenseRow extends HTMLElement {
         }
     }
 
-    /* Events
+    /* EVENTS
      */
     #addEventListeners() {
         // Input change events
@@ -171,7 +171,7 @@ export class PdcExpenseRow extends HTMLElement {
             this.#updateLodgingAmount(target.value);
             return;
         }
-        const attrName = target.getAttribute.name;
+        const attrName = target.getAttribute('name');
         if (
             !(
                 attrName === 'breakfast' ||
@@ -188,16 +188,22 @@ export class PdcExpenseRow extends HTMLElement {
         const target = e.target;
         if (!(target instanceof SVGElement || target instanceof HTMLElement))
             return;
-        if (!!target.closest('[data-pdc="expense-row-toggle"]'))
-            this.rowToggle();
+        if (target.closest('[data-pdc="expense-row-toggle"]')) this.rowToggle();
+        if (
+            !!target.closest('#deductions') &&
+            e instanceof KeyboardEvent &&
+            target instanceof HTMLLabelElement
+        ) {
+            target.click();
+        }
     }
 
-    /* Get row elements
+    /* GET ELS
      */
     get #row() {
-        const row = this.#shadowRoot.querySelector<HTMLElement>('#expense-row');
-        if (!row) throw new Error('Failed to render row elements.');
-        return row;
+        const el = this.#shadowRoot.querySelector<HTMLElement>('#expense-row');
+        if (!el) throw new Error('Failed to render row elements.');
+        return el;
     }
 
     get #rowAnimatedEls() {
@@ -223,14 +229,15 @@ export class PdcExpenseRow extends HTMLElement {
         return this.shadowRoot;
     }
 
-    /* Visual methods
+    /* VISUAL METHODS
      */
     rowToggle = async (toggle: 'open' | 'close' | null = null) => {
         if (!this.#styled || this.#row.classList.contains('toggling')) return;
 
-        // MAGIC 96
         if (!toggle) {
-            this.rowToggle(this.#row.offsetHeight === 96 ? 'open' : 'close');
+            this.rowToggle(
+                this.#row.offsetHeight === ROW_CLOSED_HEIGHT ? 'open' : 'close',
+            );
             return;
         }
 
@@ -242,9 +249,8 @@ export class PdcExpenseRow extends HTMLElement {
     };
 
     #animateRow = async (direction: 'open' | 'close') => {
-        // MAGIC 750
-        await wait(750);
-        // this.#enableRowTabIndex(row, false);
+        await wait(ROW_ANIMATE_MS);
+        this.#enableRowTabIndex(direction === 'open' ? true : false);
         this.#row.style.height = `${direction === 'open' ? this.#row.scrollHeight : this.#row.clientHeight}px`;
         this.#rowAnimatedEls.summary.style.opacity =
             direction === 'open' ? '0' : '100';
@@ -257,7 +263,7 @@ export class PdcExpenseRow extends HTMLElement {
     };
 
     windowResize = () => {
-        if (this.#row.offsetHeight === 96) return;
+        if (this.#row.offsetHeight === ROW_CLOSED_HEIGHT) return;
         this.#row.style.height =
             this.#rowAnimatedEls.details.scrollHeight + 'px';
     };
@@ -281,8 +287,18 @@ export class PdcExpenseRow extends HTMLElement {
         this.style.zIndex = index.toString();
     };
 
-    /* Update methods
+    /* UPDATE METHODS
      */
+
+    #enableRowTabIndex(enable: boolean) {
+        this.#shadowRoot
+            .querySelector('[data-pdc="expense-row-details"]')
+            ?.querySelectorAll('[tabindex]')
+            .forEach(el => {
+                el.setAttribute('tabindex', enable ? '0' : '-1');
+            });
+    }
+
     updateMieAmount(amount: number) {
         const mieTotalAmountInp =
             this.#shadowRoot.querySelector<HTMLInputElement>(
@@ -317,19 +333,25 @@ export class PdcExpenseRow extends HTMLElement {
 
         // Check if input was a valid amount. If yes, adopt it for the row. If no, reset the row's lodging amount to match the max lodging rate.
 
-        const valid =
-            !isNaN(parseFloat(value)) &&
-            +value >= 0 &&
-            +value <= this.#maxLodging;
+        const isValidLodgingAmount = (value: string) => {
+            return (
+                !isNaN(parseFloat(value)) &&
+                +value >= 0 &&
+                +value <= this.#maxLodging
+            );
+        };
 
-        valid ?
-            this.setAttribute('lodging', value)
-        :   this.setAttribute('lodging', this.#maxLodging.toString());
-        lodgingInput.value =
-            valid ?
-                (+value).toFixed(2).toString()
-            :   this.#maxLodging.toFixed(2).toString();
-        this.#lodgingAmount = valid ? +value : this.#maxLodging;
+        if (isValidLodgingAmount(value)) {
+            this.setAttribute('lodging', value);
+            lodgingInput.value = (+value).toFixed(2).toString();
+            this.#lodgingAmount = +value;
+            lodgingSummary.textContent = USD.format(+value);
+        } else {
+            this.setAttribute('lodging', this.#maxLodging.toString());
+            lodgingInput.value = this.#maxLodging.toFixed(2).toString();
+            this.#lodgingAmount = this.#maxLodging;
+            lodgingSummary.textContent = USD.format(this.#maxLodging);
+        }
 
         if (this.#styled) highlightSuccess(lodgingInput);
         this.#updateTotalAmount();
@@ -350,20 +372,21 @@ export class PdcExpenseRow extends HTMLElement {
         });
     }
 
-    /* Get row data
+    /* GET DATA METHODS
      */
     get rateSource() {
         return this.#expense.source;
     }
 
     get rateString() {
-        const { country, city, rates } = this.#expense;
+        const { effDate, ...rates } = this.#expense.rates;
+        const { country, city } = this.#expense;
         return JSON.stringify({ city, country, rates });
     }
 
     get rateStringForTable() {
         const { date, country, city, rates } = this.#expense;
-        const monthYear = `${date.slice(5, 7)}/${date.slice(0, 4)}`;
+        const monthYear = `${getMM(date)}/${getYYYY(date)}`;
         return JSON.stringify({ monthYear, country, city, rates });
     }
 

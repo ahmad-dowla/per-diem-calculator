@@ -1,4 +1,8 @@
+// Types
 import type { DateRaw } from '../../types/dates';
+
+// Utils
+import { getYYYY } from '../dates';
 
 const getRecordValues = (record: Element) => {
     const countryText = record.querySelector('country_name')?.textContent;
@@ -61,7 +65,7 @@ export const parseIntlLodgingRates = (
     records: Element[],
 ) => {
     return records.find(record => {
-        const year = dateRaw.slice(0, 4);
+        const year = getYYYY(dateRaw);
 
         // Get record elements
         const {

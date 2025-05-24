@@ -1,16 +1,16 @@
 import { DateRaw } from './dates';
 
-export type Location = {
+export interface Location {
     city?: string;
     country?: string;
     label?: string;
     category?: 'domestic' | 'intl';
-};
+}
 
-export type AllViewLocationsValid = {
+export interface AllViewLocationsValid {
     valid: boolean;
     expensesCategory: 'mie' | 'lodging' | 'both';
-};
+}
 
 export type StateLocationItem = Omit<Location, 'label'> & {
     index: number;

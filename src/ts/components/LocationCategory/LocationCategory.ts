@@ -12,37 +12,11 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationCategory extends HTMLElement {
+    /* SETUP
+     */
     static observedAttributes = ['bg'];
 
-    attributeChangedCallback(
-        _name: string,
-        _oldValue: string,
-        newValue: string,
-    ) {
-        if (
-            !(
-                this.#styled &&
-                (newValue === 'white' || newValue === 'neutral-50')
-            )
-        )
-            return;
-        this.#setBg(`bg-${newValue}`);
-    }
-
-    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
-        if (!this.#styled) return;
-        this.shadowRoot
-            ?.querySelector('fieldset')
-            ?.classList.remove(`bg-white`, `bg-neutral-50`);
-        this.shadowRoot
-            ?.querySelector('fieldset')
-            ?.classList.add(
-                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
-            );
-    }
-
-    #valid: boolean = false;
-    #errorEl: Element;
+    #valid = false;
     #styled = false;
     #enabled = false;
 
@@ -51,42 +25,43 @@ export class PdcLocationCategory extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.#styled = this.getAttribute('styled') === 'true';
         this.#render();
-        const { errorEl } = this.#getEls();
-        this.#errorEl = errorEl;
     }
 
     #render() {
-        this.removeAttribute('category');
-        if (!this.shadowRoot)
-            throw new Error(
-                'Failed to render ShadowRoot for category in location View.',
-            );
-        this.shadowRoot.innerHTML = '';
-
         if (this.#styled) {
             template.innerHTML = templateHTML;
-            applyStyles(this.shadowRoot);
+            applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
-
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
-
-        const { fieldset, errorEl } = this.#getEls();
-        this.#errorEl = errorEl;
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
         this.enableTabIndex(false);
-        this.#setBg();
+        this.#styleEl();
+        this.#addEventListeners();
+    }
 
-        // Event listener for clicks
+    /* EVENTS
+     */
+    attributeChangedCallback(
+        _name: string,
+        _oldValue: string,
+        newValue: string,
+    ) {
+        if (!this.#styled) return;
+        this.#styleEl(`bg-${newValue === 'white' ? 'white' : 'neutral-50'}`);
+    }
+
+    #addEventListeners() {
+        // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
 
-        fieldset.addEventListener('pointerdown', e => {
+        this.#fieldset.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
 
-        fieldset.addEventListener('pointerup', e => {
+        this.#fieldset.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -100,107 +75,144 @@ export class PdcLocationCategory extends HTMLElement {
         });
 
         // Keyboard events
-        fieldset.addEventListener('keydown', e => {
+        this.#fieldset.addEventListener('keydown', e => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
     }
-
-    #getEls = () => {
-        const fieldset = this.shadowRoot?.querySelector('fieldset');
-        const errorEl = this.closest('#locations-container')?.querySelector(
-            '#error',
-        );
-        const inputs = this.shadowRoot?.querySelectorAll('input');
-        const labels = this.shadowRoot?.querySelectorAll('label');
-        if (!(errorEl && fieldset && inputs && labels))
-            throw new Error(
-                `Failed to render category's elements in Location view.`,
-            );
-        return { fieldset, errorEl, inputs, labels };
-    };
 
     #handleClicks(e: Event) {
         if (!this.#enabled) return;
         const target = e.composedPath()[0];
         if (!(target instanceof HTMLElement || target instanceof SVGElement))
             return;
-        const { fieldset } = this.#getEls();
         const label = target.closest('label');
         const labelVal = label?.getAttribute('for');
         // In case the selection was made with keyboard presses, ensure the input fields are properly checked/unchecked so that the CSS can reflect that
-        const checkedInput = fieldset.querySelector<HTMLInputElement>(
+        const checkedInput = this.#fieldset.querySelector<HTMLInputElement>(
             `#${labelVal}`,
         );
-        const uncheckedInput = fieldset.querySelector<HTMLInputElement>(
+        const uncheckedInput = this.#fieldset.querySelector<HTMLInputElement>(
             `#${labelVal === 'domestic' ? 'intl' : 'domestic'}`,
         );
         if (!(checkedInput && uncheckedInput)) return;
         uncheckedInput.checked = false;
         checkedInput.checked = true;
-        labelVal && this.setAttribute('category', labelVal);
+        if (labelVal) this.setAttribute('category', labelVal);
         if (this.#styled) {
             label?.classList.add('success');
             this.#renderError(false);
         }
     }
 
+    /* GET ELS
+     */
+    get #fieldset() {
+        const el = this.#shadowRoot.querySelector('fieldset');
+        if (!el)
+            throw new Error(
+                `Failed to render fieldset in Category custom element`,
+            );
+        return el;
+    }
+
+    get #inputs() {
+        const els = this.#shadowRoot.querySelectorAll('input');
+        if (!els)
+            throw new Error(
+                `Failed to render inputs in Category custom element`,
+            );
+        return els;
+    }
+
+    get #labels() {
+        const els = this.#shadowRoot.querySelectorAll('label');
+        if (!els)
+            throw new Error(
+                `Failed to render labels in Category custom element`,
+            );
+        return els;
+    }
+
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(
+                `Failed to render shadowRoot in Category custom element`,
+            );
+        return this.shadowRoot;
+    }
+
+    get #errorEl() {
+        const el = this.closest('#locations-container')?.querySelector(
+            '#error',
+        );
+        if (!el)
+            throw new Error(
+                `Failed to get View's error element from Category custom element`,
+            );
+        return el;
+    }
+
+    /* VISUAL METHODS
+     */
+    #styleEl(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        this.#fieldset.classList.remove(`bg-white`, `bg-neutral-50`);
+        this.#fieldset.classList.add(
+            bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
+        );
+    }
+
+    focusEl() {
+        [...this.#labels][0].focus();
+    }
+
+    /* UPDATE METHODS
+     */
     enable(enable: boolean) {
-        this.#render();
-        const { inputs } = this.#getEls();
-        setTimeout(() => {
-            // To allow for transitions to happen after immmediate rerender
-            inputs.forEach(input => {
-                enable ?
-                    input.removeAttribute('disabled')
-                :   input.setAttribute('disabled', 'true');
-            });
-        }, 50);
+        this.removeAttribute('category');
+        this.#inputs.forEach(input => {
+            input.checked = false;
+            if (enable) input.removeAttribute('disabled');
+            else input.setAttribute('disabled', 'true');
+        });
         this.enableTabIndex(enable);
         this.#enabled = enable;
     }
 
     enableTabIndex(enable: boolean) {
-        const { fieldset } = this.#getEls();
-        const els = fieldset.querySelectorAll('[tabindex]');
-        enable ?
-            els.forEach(el => el.setAttribute('tabindex', '0'))
-        :   els.forEach(el => el.setAttribute('tabindex', '-1'));
+        const els = this.#fieldset.querySelectorAll('[tabindex]');
+        els.forEach(el => el.setAttribute('tabindex', enable ? '0' : '-1'));
     }
 
-    #renderError(enable: boolean, msg: string = `Select a category.`) {
+    /* VALIDATION
+     */
+    #renderError(enable: boolean, msg = `Select a category.`) {
         if (enable) {
-            if (this.#styled)
-                this.#getEls().labels.forEach(label =>
-                    label.classList.add('error'),
-                );
+            if (this.#styled) {
+                this.#labels.forEach(label => label.classList.add('error'));
+                this.#errorEl.classList.add('active');
+            }
             this.#errorEl.textContent = msg;
-            this.#errorEl.classList.add('active');
             return;
         }
-        if (this.#styled) {
-            this.#getEls().labels.forEach(label =>
-                label.classList.remove('error'),
-            );
-            this.#errorEl.classList.remove('active');
-        }
+        if (!this.#styled) return;
+        this.#labels.forEach(label => label.classList.remove('error'));
+        this.#errorEl.classList.remove('active');
     }
 
     validate() {
         this.#valid = false;
         if (!this.hasAttribute('category')) {
-            if (this.#styled) this.#renderError(true);
+            this.#renderError(true);
             return this.#valid;
         }
         this.#valid = true;
         return this.#valid;
     }
 
-    focusEl() {
-        const { labels } = this.#getEls();
-        [...labels][0].focus();
-    }
-
+    /* GET DATA METHODS
+     */
     get isEnabled() {
         return this.#enabled;
     }

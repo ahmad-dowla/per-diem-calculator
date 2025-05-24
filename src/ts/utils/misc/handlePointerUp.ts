@@ -2,7 +2,7 @@ const tolerance = 5;
 
 export const handlePointerUp = (
     event: PointerEvent,
-    clickFunction: Function,
+    clickFunction: (e: Event) => void,
     pointerStartX: number,
     pointerStartY: number,
 ) => {

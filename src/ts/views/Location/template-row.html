@@ -1,31 +1,43 @@
 <li
     data-pdc="location-row"
     class="group [.pdc-row-open]:animate-row-location-open
+        sm:[.pdc-row-open]:animate-row-location-open-sm
         [.pdc-row-close]:animate-row-location-close
+        sm:[.pdc-row-close]:animate-row-location-close-sm
         [.pdc-row-delete]:animate-row-delete [.pdc-row-add]:animate-row-add
-        relative flex h-0 items-start overflow-hidden bg-white ring-2
-        ring-transparent transition-shadow duration-500
-        [.pdc-row-initial]:h-[var(--row-location-open)]"
+        sm:[.pdc-row-add]:animate-row-add-sm relative flex h-0 items-start
+        overflow-hidden bg-white ring-2 ring-transparent transition-shadow
+        duration-500 [.pdc-row-initial]:h-[var(--row-location-open)]
+        sm:[.pdc-row-initial]:h-[var(--row-location-open-sm)]"
 >
     <!-- Row sidebar: number, toggle -->
     <div
         data-pdc="location-row-sidebar"
-        class="relative z-10 h-[var(--row-location-open)] overflow-hidden px-2"
+        class="relative z-10 mr-4 ml-2 h-[var(--row-location-open)] sm:mr-6
+            sm:ml-4 sm:h-[var(--row-location-open-sm)]"
     >
         <div
             data-pdc="location-row-toggle"
-            class="flex h-22 w-full items-center justify-between
-                text-neutral-800 *:hover:cursor-pointer
-                hover:*:[svg:first-of-type]:rotate-0"
+            class="my-6 flex h-12 w-full items-center text-neutral-800
+                transition-colors hover:cursor-pointer *:hover:cursor-pointer
+                group-not-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-0
+                group-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-180"
         >
-            <button title="Toggle row" tabindex="0" type="button">
+            <button
+                title="Toggle row"
+                tabindex="0"
+                type="button"
+                class="focus-visible:border-primary-800 rounded-full border-3
+                    border-transparent transition-colors focus:outline-none"
+            >
                 <svg
+                    inert
                     class="size-5 shrink-0 fill-none stroke-current
                         transition-transform duration-500
                         group-[.pdc-row-add]:-rotate-180
+                        group-[.pdc-row-close]:rotate-0
                         group-[.pdc-row-initial]:-rotate-180
-                        group-[.pdc-row-open]:-rotate-180
-                        focus-visible:rotate-0"
+                        group-[.pdc-row-open]:-rotate-180 sm:size-6"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                 >
@@ -39,8 +51,7 @@
             </button>
             <h3
                 data-pdc="location-row-number"
-                class="mr-6 ml-1 text-2xl leading-6 font-semibold md:leading-5
-                    lg:mr-6 lg:leading-4"
+                class="ml-2 text-2xl font-semibold select-none"
             ></h3>
         </div>
     </div>
@@ -48,12 +59,13 @@
     <!-- Row contents: summary, details -->
     <div
         class="relative z-10 flex h-[var(--row-location-open)] w-full
-            items-start overflow-hidden"
+            items-start overflow-hidden sm:h-[var(--row-location-open-sm)]"
     >
         <!-- Summary -->
         <div
             data-pdc="location-row-toggle"
-            class="ml-1 flex h-22 w-full items-center justify-between"
+            class="ml-1 flex h-24 w-full items-center justify-between
+                hover:cursor-pointer"
         >
             <div
                 data-pdc="location-row-summary"
@@ -64,7 +76,7 @@
                     overflow-hidden text-sm
                     group-[.pdc-row-add]:translate-y-[-200%]
                     group-[.pdc-row-add]:opacity-0
-                    group-[.pdc-row-initial]:translate-y-[-200%]"
+                    group-[.pdc-row-initial]:translate-y-[-200%] sm:text-base"
             >
                 <p data-pdc="location-row-summary-dates" class="truncate">
                     &nbsp;
@@ -76,21 +88,23 @@
 
             <!-- Delete row button -->
             <button
+                tabindex="-1"
                 type="button"
                 data-pdc="delete-row"
                 title="Delete location"
                 class="hover:text-error-600 focus-visible:text-error-600
+                    focus-visible:border-b-primary-800
                     group-[.pdc-row-open]:animate-row-open-deletebtn
-                    group-[.pdc-row-close]:animate-row-close-deletebtn w-[22.5%]
-                    px-3 py-3 text-neutral-200 **:transition-colors
-                    **:duration-300 **:ease-out
+                    group-[.pdc-row-close]:animate-row-close-deletebtn mr-3
+                    border-b-4 border-b-transparent px-4 py-3 text-neutral-200
+                    **:transition-colors **:duration-300 **:ease-out
                     group-[.pdc-row-add]:translate-x-[200%]
                     group-[.pdc-row-initial]:translate-x-[200%]
-                    hover:cursor-pointer"
+                    hover:cursor-pointer focus:outline-none"
             >
                 <svg
                     inert
-                    class="size-7 fill-current"
+                    class="size-7 fill-current sm:size-8"
                     data-pdc-unstyled="Delete Location"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 16 16"

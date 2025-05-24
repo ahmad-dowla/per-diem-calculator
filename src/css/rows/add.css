@@ -1,0 +1,18 @@
+@theme {
+    @keyframes row-add {
+        0% {
+            height: 0;
+        }
+        100% {
+            height: var(--row-location-open);
+        }
+    }
+    @keyframes row-add-sm {
+        0% {
+            height: 0;
+        }
+        100% {
+            height: var(--row-location-open-sm);
+        }
+    }
+}

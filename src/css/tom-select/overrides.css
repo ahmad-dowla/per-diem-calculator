@@ -1,0 +1,55 @@
+.ts-wrapper {
+    @apply [.has-items]:[&_.ts-control]:!border-r-success-400 !static min-h-[72px] w-[68%] hover:cursor-pointer sm:w-[75%] [.has-items]:[&_.ts-control]:after:!content-none;
+}
+
+.ts-control,
+.ts-wrapper.single .ts-control,
+.plugin-dropdown_input.focus.dropdown-active .ts-control,
+.ts-wrapper.single.input-active .ts-control {
+    @apply [.error]:border-r-error-400 [.success]:border-r-success-400 my-3 content-center rounded-none border-t-0 border-r-3 border-b-0 border-l-0 border-r-transparent bg-transparent bg-none !p-0 !py-3 !pr-3 text-base shadow-none transition-[border-color] select-none after:content-[none] focus:outline-none;
+}
+
+.ts-control .item {
+    @apply truncate;
+}
+
+.ts-wrapper.disabled * {
+    @apply !cursor-not-allowed hover:!cursor-not-allowed;
+}
+
+.ts-dropdown,
+.ts-dropdown.single {
+    @apply ring-primary-300 top-1 left-[5px] z-100 m-0 mt-[5px] max-w-[96%] overflow-hidden rounded-lg border-none text-base leading-normal shadow-lg ring-2;
+}
+
+.ts-dropdown [data-selectable].option {
+    @apply truncate px-5 py-2.5;
+}
+.plugin-dropdown_input .dropdown-input {
+    @apply px-5;
+}
+
+.ts-dropdown .create:hover,
+.ts-dropdown .option:hover {
+    @apply bg-primary-50 text-primary-900;
+}
+
+.ts-dropdown .active {
+    @apply bg-primary-50 text-primary-900;
+}
+
+.ts-dropdown-content {
+    @apply !h-lvh max-h-[375px];
+}
+
+.plugin-dropdown_input .dropdown-input {
+    @apply border-none focus:outline-none;
+}
+
+.items-placeholder {
+    @apply py-2.5 !text-base text-neutral-700;
+}
+
+.no-results {
+    @apply absolute h-full w-full !p-6 sm:!p-8 md:!p-10;
+}

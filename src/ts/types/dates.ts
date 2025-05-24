@@ -67,7 +67,6 @@ type DD =
     | '31';
 
 export type DateRaw = `${YYYY}-${MM}-${DD}`;
-
 export type ShortMonth =
     | 'Jan'
     | 'Feb'

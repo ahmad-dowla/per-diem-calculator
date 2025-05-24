@@ -1,6 +1,7 @@
+// Types
 import type { RateMeals } from '../../types/expenses';
 
-export const intlMieRates: RateMeals[] = [
+export const INTL_MIE_RATES: RateMeals[] = [
     {
         total: 1,
         breakfast: 0,

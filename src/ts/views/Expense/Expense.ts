@@ -15,13 +15,13 @@ import {
     wait,
 } from '../../utils/misc';
 import { applyStyles, removeStyles } from '../../utils/styles';
-import { isDateRawType } from '../../utils/dates';
+import { getDD, getMM, getYY, isDateRawType } from '../../utils/dates';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
 
 // Custom Elements
-import { PdcExpenseRow, PdcButtonText } from '../../components';
+import { PdcExpenseRow, PdcButton } from '../../components';
 customElements.define('pdc-expense-row', PdcExpenseRow);
 
 // Template for this Custom Element
@@ -31,7 +31,7 @@ const template = document.createElement('template');
 export class PdcExpenseView extends HTMLElement {
     /* Initial setup
      */
-    #styled: boolean = false;
+    #styled = false;
     #observer: MutationObserver | null = null;
     #mieSubtotal = 0;
     #lodgingSubtotal = 0;
@@ -51,6 +51,9 @@ export class PdcExpenseView extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
         this.#shadowRoot.appendChild(template.content.cloneNode(true));
         this.#applyConfig(config);
+        this.#shadowRoot
+            .querySelector<PdcButton>('pdc-button')
+            ?.enableTabIndex(true);
         this.#addEventListeners();
     }
 
@@ -59,9 +62,8 @@ export class PdcExpenseView extends HTMLElement {
         const spinner = this.#shadowRoot.querySelector(
             '[data-pdc="loading-spinner"]',
         );
-        enabled ?
-            spinner?.classList.add('active')
-        :   spinner?.classList.remove('active');
+        if (enabled) spinner?.classList.add('active');
+        else spinner?.classList.remove('active');
     }
 
     #applyConfig = (config: ConfigSectionText) => {
@@ -131,7 +133,7 @@ export class PdcExpenseView extends HTMLElement {
         const resizeHandler = () => {
             this.#rows.forEach(row => row.windowResize());
         };
-        return debounce(resizeHandler, 300);
+        return debounce(resizeHandler);
     }
 
     #handleClicks(e: Event) {
@@ -139,7 +141,7 @@ export class PdcExpenseView extends HTMLElement {
         if (!(target instanceof Element || target instanceof SVGElement))
             return;
         const btn = target.closest('button');
-        const btnPdcEl = target.closest<PdcButtonText>('pdc-button-text');
+        const btnPdcEl = target.closest<PdcButton>('pdc-button');
         if (!(btn || btnPdcEl)) return;
         switch (true) {
             case btn?.getAttribute('id') === 'toggle-expand':
@@ -339,38 +341,11 @@ export class PdcExpenseView extends HTMLElement {
             mieTotal += expense.mieAmount;
             lodgingTotal += expense.lodgingAmount;
             total += expense.totalAmount;
+            const locationString =
+                `<span class="font-semibold">${expense.city}, ${expense.country}</span>` +
+                this.#createDeductionsString(expense, i, arr.length);
 
-            let locationString = `<span class="font-semibold">${expense.city}, ${expense.country}</span>`;
-
-            const { breakfastProvided, lunchProvided, dinnerProvided } =
-                expense.deductions;
-            const deductionsArr: string[] = [];
-            if (i === 0) deductionsArr.push('First Day');
-            if (i === arr.length - 1) deductionsArr.push('Last Day');
-            if (breakfastProvided) deductionsArr.push('Breakfast');
-            if (lunchProvided) deductionsArr.push('Lunch');
-            if (dinnerProvided) deductionsArr.push('Dinner');
-            if (deductionsArr.length > 0) {
-                const deductionsString = deductionsArr.reduce(
-                    (result, deduction) => {
-                        return result === '' ? deduction : (
-                                `${result}, ${deduction}`
-                            );
-                    },
-                    '',
-                );
-                locationString += `<br>${deductionsString}`;
-            }
-
-            markup += /*HTML*/ `
-                <tr>
-                    <td class="text-center">${expense.date.slice(5).replaceAll('-', '/')}/${expense.date.slice(2, 4)}</td> <!-- // 2024-10-01 to 10/01/24 -->
-                    <td class="text-left">${locationString}</td>
-                    <td class="text-right">${USD.format(expense.mieAmount)}</td>
-                    <td class="text-right">${USD.format(expense.lodgingAmount)}</td>
-                    <td class="text-right font-semibold">${USD.format(expense.totalAmount)}</td>
-                </tr>
-            `;
+            markup += this.#createExpenseTableRow(expense, locationString);
         });
 
         markup += /* HTML */ `
@@ -386,6 +361,40 @@ export class PdcExpenseView extends HTMLElement {
         window.print();
     }
 
+    #createDeductionsString(
+        expense: StateExpenseItemValid,
+        i: number,
+        arrLength: number,
+    ) {
+        const { breakfastProvided, lunchProvided, dinnerProvided } =
+            expense.deductions;
+        const deductionsArr: string[] = [];
+        if (i === 0) deductionsArr.push('First Day');
+        if (i === arrLength - 1) deductionsArr.push('Last Day');
+        if (breakfastProvided) deductionsArr.push('Breakfast');
+        if (lunchProvided) deductionsArr.push('Lunch');
+        if (dinnerProvided) deductionsArr.push('Dinner');
+        return deductionsArr.length === 0 ?
+                ''
+            :   deductionsArr.reduce((result, deduction) => {
+                    return result === '' ?
+                            `<br>${deduction}`
+                        :   `${result}, ${deduction}`;
+                }, '');
+    }
+
+    #createExpenseTableRow(expense: StateExpenseItemValid, location: string) {
+        return /*HTML*/ `
+            <tr>
+                <td class="text-center">${getMM(expense.date)}/${getDD(expense.date)}/${getYY(expense.date)}</td> <!-- // 2024-10-01 to 10/01/24 -->
+                <td class="text-left">${location}</td>
+                <td class="text-right">${USD.format(expense.mieAmount)}</td>
+                <td class="text-right">${USD.format(expense.lodgingAmount)}</td>
+                <td class="text-right font-semibold">${USD.format(expense.totalAmount)}</td>
+            </tr>
+        `;
+    }
+
     emptyExpenseTable() {
         this.#expensesTable.innerHTML = '';
     }
@@ -393,8 +402,8 @@ export class PdcExpenseView extends HTMLElement {
     /* Controller / View interaction
      */
     controllerHandler(
-        controlUpdateFunction: Function,
-        controlTableFunction: Function,
+        controlUpdateFunction: (row: StateExpenseItemUpdate) => void,
+        controlTableFunction: () => void,
     ) {
         const callback = (mutations: MutationRecord[]) => {
             mutations.forEach(mutation => {
@@ -404,7 +413,7 @@ export class PdcExpenseView extends HTMLElement {
                 const target = mutation.target;
                 const newValue = target.getAttribute(changedAttr);
                 if (changedAttr === 'table') {
-                    if (!!newValue) {
+                    if (newValue) {
                         this.#viewContainer.removeAttribute('table');
                         controlTableFunction();
                     }

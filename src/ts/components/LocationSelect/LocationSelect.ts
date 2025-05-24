@@ -3,193 +3,85 @@ import type { Location } from '../../types/locations';
 
 // Utils
 import { applyStyles, removeStyles } from '../../utils/styles';
-import {
-    debounce,
-    handlePointerDown,
-    handlePointerUp,
-    wait,
-} from '../../utils/misc';
+import { debounce, handlePointerDown, handlePointerUp } from '../../utils/misc';
 import TomSelect from 'tom-select';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
-import stylesTomSelect from 'tom-select/dist/css/tom-select.default.css?inline';
 
 // Template for this Custom Element
 const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationSelect extends HTMLElement {
+    /* SETUP
+     */
     static observedAttributes = ['bg'];
+    #attrName: 'country' | 'city';
+    #valid = false;
+    #styled = false;
+    #enabled = false;
+    #tomSelect: TomSelect;
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.#attrName =
+            this.getAttribute('pdc') === 'country' ? 'country' : 'city';
+        this.#styled = this.getAttribute('styled') === 'true';
+        this.#tomSelect = this.#render();
+    }
 
+    #render() {
+        this.removeAttribute(this.#attrName);
+        this.#shadowRoot.innerHTML = '';
+        if (this.#styled) {
+            template.innerHTML = templateHTML;
+            applyStyles(this.#shadowRoot);
+        } else template.innerHTML = removeStyles(templateHTML);
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#label.setAttribute(
+            'text',
+            this.#attrName === 'country' ? 'State' : 'City',
+        );
+        return this.#createTomSelect();
+    }
+
+    /* EVENTS
+     */
     attributeChangedCallback(
         _name: string,
         _oldValue: string,
         newValue: string,
     ) {
-        if (
-            !(
-                this.#styled &&
-                (newValue === 'white' || newValue === 'neutral-50')
-            )
-        )
-            return;
-        this.#setBg(`bg-${newValue}`);
-    }
-
-    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
         if (!this.#styled) return;
-        this.shadowRoot
-            ?.querySelector('div')
-            ?.classList.remove(`bg-white`, `bg-neutral-50`);
-        this.shadowRoot
-            ?.querySelector('div')
-            ?.classList.add(
-                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
-            );
+        this.#styleEl(`bg-${newValue === 'white' ? 'white' : 'neutral-50'}`);
     }
 
-    #attrName: 'country' | 'city';
-    #valid = false;
-    #select: HTMLSelectElement;
-    #tomSelect: TomSelect;
-    #styled = false;
-    #errorEl: Element;
-    #loadingSpinner: Element;
-    #enabled = false;
-
-    constructor() {
-        super();
-        this.#attrName =
-            this.getAttribute('pdc') === 'country' ? 'country' : 'city';
-        this.#styled = this.getAttribute('styled') === 'true';
-        this.attachShadow({ mode: 'open' });
-        const render = this.#render();
-        const { select, errorEl, loadingSpinner } = this.#getEls();
-        this.#select = select;
-        this.#errorEl = errorEl;
-        this.#loadingSpinner = loadingSpinner;
-        this.#tomSelect = render.tomSelect;
-        this.enableTabIndex(false);
-    }
-
-    #render() {
-        // Reset by removing previously assigned attributes, emptying contents, and rerendering
-        this.removeAttribute(this.#attrName);
-        if (!this.shadowRoot)
-            throw new Error(
-                `Failed to render ShadowRoot for pdc-location-${this.#attrName} in location View.`,
-            );
-        this.shadowRoot.innerHTML = '';
-
-        if (this.#styled) {
-            template.innerHTML = `<style>${stylesTomSelect}</style>${templateHTML}`;
-            applyStyles(this.shadowRoot);
-        } else template.innerHTML = removeStyles(templateHTML);
-
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
-        this.#setBg();
-
-        const { select, label, errorEl, loadingSpinner } = this.#getEls();
-
-        label.setAttribute(
-            'text',
-            this.#attrName === 'country' ? 'State' : 'City',
-        );
-        const noResultsText =
-            this.#attrName === 'city' ?
-                `No results
-        found.<br><br>Choose the first available option.<br><br>E.g. Standard Rate, [OTHER], etc.`
-            :   `No results found.`;
-        const tomSelect = new TomSelect(select, {
-            placeholder: `Select ${this.#attrName === 'country' ? 'state' : 'city'}`,
-            maxItems: 1,
-            plugins: ['dropdown_input'],
-            selectOnTab: true,
-            openOnFocus: false,
-            render: {
-                no_results: () => {
-                    return /* HTML */ ` <div class="no-results">
-                        ${noResultsText}
-                    </div>`;
-                },
-            },
-        });
-
-        tomSelect.disable();
-
-        this.#select = select;
-        this.#errorEl = errorEl;
-        this.#loadingSpinner = loadingSpinner;
-        this.#tomSelect = tomSelect;
-        this.enableTabIndex(false);
-        return { tomSelect }; // Returning only for constructor
-    }
-
-    #getEls = () => {
-        const select =
-            this.shadowRoot?.querySelector<HTMLSelectElement>('select');
-        const label = this.shadowRoot?.querySelector('pdc-label');
-        const errorEl = this.closest('#locations-container')?.querySelector(
-            '#error',
-        );
-        const loadingSpinner =
-            this.shadowRoot?.querySelector('#loading-spinner');
-        if (!(select && label && errorEl && loadingSpinner))
-            throw new Error(
-                `Failed to render elements for pdc-location-${this.#attrName} in location View.`,
-            );
-
-        return { select, label, errorEl, loadingSpinner };
-    };
-
-    enable(enable: boolean) {
-        this.#render();
-        enable ? this.#tomSelect.enable() : this.#tomSelect.disable();
-        this.enableTabIndex(enable);
-        this.#enabled = enable;
-    }
-
-    setOptions(locations: Location[]) {
-        locations.forEach(location => {
-            const { label } = location;
-            const value =
-                this.#attrName === 'country' ? location.country : location.city;
-            if (!label || !value)
-                throw new Error(
-                    `Failed to get label when creating the country options for ${location}.`,
-                );
-            const option = document.createElement('option');
-            option.setAttribute('value', value);
-            option.textContent = label;
-            this.#select.appendChild(option);
-            this.#tomSelect.sync();
-        });
-
+    #addEventListeners() {
         // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-        this.#tomSelect.control.addEventListener('pointerdown', e => {
-            if (!(e instanceof PointerEvent)) return;
-            const result = handlePointerDown(e);
+        this.#tomSelect.control.addEventListener(
+            'pointerdown',
+            (e: PointerEvent) => {
+                const result = handlePointerDown(e);
+                pointerStartX = result.pointerStartX;
+                pointerStartY = result.pointerStartY;
+            },
+        );
+        this.#container.addEventListener('pointerup', (e: PointerEvent) => {
+            const result = handlePointerUp(
+                e,
+                this.#handleClicks.bind(this),
+                pointerStartX,
+                pointerStartY,
+            );
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
-        this.#tomSelect.control.addEventListener('pointerup', e => {
-            if (e instanceof PointerEvent) {
-                const result = handlePointerUp(
-                    e,
-                    this.#handleClicks.bind(this),
-                    pointerStartX,
-                    pointerStartY,
-                );
-                pointerStartX = result.pointerStartX;
-                pointerStartY = result.pointerStartY;
-            }
-        });
 
         // Keyboard events
-        this.#tomSelect.control.addEventListener('keydown', e => {
+        this.#container.addEventListener('keydown', (e: KeyboardEvent) => {
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
@@ -204,52 +96,184 @@ export class PdcLocationSelect extends HTMLElement {
                 this.#tomSelect.control.classList.remove('error');
                 this.#tomSelect.control.classList.add('success');
             }
-
-            this.#tomSelect.focus();
+            this.#tomSelect.control.setAttribute('tabindex', '-1');
         });
     }
 
     #handleClicks = (e: Event) => {
         const target = e.target;
-        if (!(target instanceof HTMLElement && target.closest('.ts-control')))
+        if (
+            !(
+                target instanceof HTMLElement &&
+                (target.closest('.ts-control') || target.closest('button'))
+            )
+        )
             return;
         const handler = debounce(() => {
             this.#tomSelect.open();
-        }, 50);
+        });
         handler();
     };
 
-    async #renderError(enable: boolean) {
-        if (enable) {
-            this.#styled && this.#tomSelect.control.classList.add('error');
-            const msg =
-                this.#attrName === 'country' ? `Select state.` : `Select city.`;
-            this.#errorEl.textContent = msg;
-            this.#errorEl.classList.add('active');
-            return;
-        }
-        this.#tomSelect.control.classList.remove('error');
-        this.#errorEl.classList.remove('active');
-        // MAGIC 300
-        await wait(300);
-        this.#errorEl.innerHTML = '&nbsp;';
+    /* Get Els
+     */
+
+    get #container() {
+        const el = this.#shadowRoot.querySelector('div');
+        if (!el)
+            throw new Error(
+                `Failed to get container for Select custom element`,
+            );
+        return el;
     }
 
-    enableTabIndex(enable: boolean) {
-        enable ?
-            this.#tomSelect.control.setAttribute('tabindex', '0')
-        :   this.#tomSelect.control.setAttribute('tabindex', '-1');
+    get #select() {
+        const el = this.#shadowRoot.querySelector('select');
+        if (!el)
+            throw new Error(`Failed to get select for Select custom element`);
+        return el;
+    }
+
+    get #button() {
+        const el = this.#shadowRoot.querySelector('button');
+        if (!el)
+            throw new Error(`Failed to get button for Select custom element`);
+        return el;
+    }
+
+    get #label() {
+        const el = this.#shadowRoot.querySelector('pdc-label');
+        if (!el)
+            throw new Error(`Failed to get label for Select custom element`);
+        return el;
+    }
+
+    get #loadingSpinner() {
+        const el = this.#shadowRoot.querySelector('#loading-spinner');
+        if (!el)
+            throw new Error(
+                `Failed to get loading spinner element for Select custom element`,
+            );
+        return el;
+    }
+
+    get #errorEl() {
+        const el = this.closest('#locations-container')?.querySelector(
+            '#error',
+        );
+        if (!el)
+            throw new Error(
+                `Failed to get View's error element from Category custom element`,
+            );
+        return el;
+    }
+
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(
+                `Failed to render shadowRoot in Select custom element`,
+            );
+        return this.shadowRoot;
+    }
+
+    /* VISUAL METHODS
+     */
+    #styleEl(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        const div = this.#shadowRoot.querySelector('div');
+        div?.classList.remove(`bg-white`, `bg-neutral-50`);
+        div?.classList.add(bgColor ? bgColor : `bg-${this.getAttribute('bg')}`);
+    }
+
+    showLoadingSpinner(enabled: boolean) {
+        if (!this.#styled) return;
+        if (enabled) this.#loadingSpinner.classList.add('active');
+        else this.#loadingSpinner.classList.remove('active');
     }
 
     focusEl() {
         this.#tomSelect.control.focus();
     }
 
-    showLoadingSpinner(enabled: boolean) {
+    /* UPDATE METHODS
+     */
+    enableTabIndex(enable: boolean) {
+        this.#button.setAttribute('tabindex', enable ? '0' : '-1');
+    }
+
+    enable(enable: boolean) {
+        this.#render();
+        if (enable) {
+            this.#tomSelect.enable();
+            this.#container.classList.add('active');
+        } else {
+            this.#tomSelect.disable();
+            this.#container.classList.remove('active');
+        }
+        this.enableTabIndex(enable);
+        this.#enabled = enable;
+    }
+
+    setOptions(locations: Location[]) {
+        locations.forEach(location => {
+            const value =
+                this.#attrName === 'country' ? location.country : location.city;
+            if (!location.label || !value)
+                throw new Error(
+                    `Failed to get label when creating the options for ${location}.`,
+                );
+            const option = document.createElement('option');
+            option.setAttribute('value', value);
+            option.textContent = location.label;
+            this.#select.appendChild(option);
+            this.#tomSelect.sync();
+        });
+    }
+
+    #createTomSelect() {
+        const noResultsText =
+            this.#attrName === 'city' ?
+                `No results
+        found.<br><br>Choose the first available option.<br><br>E.g. Standard Rate, [OTHER], etc.`
+            :   `No results found.`;
+        const tomSelect = new TomSelect(this.#select, {
+            placeholder: `Select ${this.#attrName === 'country' ? 'state' : 'city'}`,
+            maxItems: 1,
+            plugins: ['dropdown_input'],
+            selectOnTab: true,
+            openOnFocus: false,
+            render: {
+                no_results: () => {
+                    return /* HTML */ ` <div class="no-results">
+                        ${noResultsText}
+                    </div>`;
+                },
+            },
+        });
+        this.#tomSelect = tomSelect;
+        this.#tomSelect.disable();
+        this.#tomSelect.tabIndex = -1;
+        this.enableTabIndex(false);
+        this.#addEventListeners();
+        this.#styleEl();
+        return tomSelect;
+    }
+
+    /* VALIDATION
+     */
+    #renderError(enable: boolean) {
+        if (enable) {
+            if (this.#styled) {
+                this.#tomSelect.control.classList.add('error');
+                this.#errorEl.classList.add('active');
+            }
+            this.#errorEl.textContent =
+                this.#attrName === 'country' ? `Select state.` : `Select city.`;
+            return;
+        }
         if (!this.#styled) return;
-        enabled ?
-            this.#loadingSpinner.classList.add('active')
-        :   this.#loadingSpinner.classList.remove('active');
+        this.#tomSelect.control.classList.remove('error');
+        this.#errorEl.classList.remove('active');
     }
 
     validate() {
@@ -261,9 +285,13 @@ export class PdcLocationSelect extends HTMLElement {
         this.#valid = true;
         return this.#valid;
     }
+
+    /* GET DATA METHODS
+     */
     get isEnabled() {
         return this.#enabled;
     }
+
     get pdcValue() {
         const value = this.getAttribute(this.#attrName);
         return value ? value : null;

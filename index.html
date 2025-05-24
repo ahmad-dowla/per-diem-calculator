@@ -1,23 +1,30 @@
-<!-- TODO3 Update main landing page with text (e.g. title Per Diem Calc) -->
-<!-- TODO3 Update main landing page with Google Adwords -->
-<!-- TODO3 Update main landing page with metadata -->
 <!-- TODO3 REPLACE SVG ICON -->
-<!-- TEST Do fonts work when npm installed -->
-<!-- FUTURE Browerstack -->
-<!-- TEST by adding file to NNSC landing page -->
-<!-- LAST README -->
-<!-- LAST Publish to npm -->
-<!-- LAST Publish to cdn? -->
-<!-- FUTURE Demo pages showing options -->
-<!-- LAST Publish to app stores -->
-<!-- TODO2 Test responsiveness -->
-<!-- TODO2 Nix magic numbers -->
-<!-- FUTURE Add CSS paths so shadow dom elements can be styled -->
 <!-- TODO3 Research aria tags and other accessibility needs -->
 <!-- TODO3 Test accessibility -->
-<!-- FUTURE Custom styling via paths -->
-<!-- TEST ZAP -->
+<!-- TODO3 Update main landing page with Google Adwords -->
+<!-- TODO3 Update main landing page with metadata -->
+<!-- TODO3 Update main landing page with text (e.g. title Per Diem Calc) -->
+
+<!-- TEST by adding file to NNSC landing page -->
+<!-- TEST Do fonts work when npm installed -->
 <!-- TEST Page speeds -->
+<!-- TEST ZAP -->
+
+<!--  LAST Testing -->
+<!--  LAST Search to see if API key in build files -->
+<!--  LAST Restrict access control allow origin on proxy -->
+
+<!-- LAST Publish to app stores -->
+<!-- LAST Publish to cdn? -->
+<!-- LAST Publish to npm -->
+<!-- LAST README -->
+
+<!-- FUTURE dark mode -->
+<!-- FUTURE Add CSS paths so shadow dom elements can be styled -->
+<!-- FUTURE Browerstack -->
+<!-- FUTURE Calculate rates only -->
+<!-- FUTURE Custom styling via paths -->
+<!-- FUTURE Demo pages showing options -->
 
 <!doctype html>
 <html lang="en">
@@ -29,7 +36,7 @@
             href="https://fonts.bunny.net/css?family=ibm-plex-mono:400,500,600"
             rel="stylesheet"
         />
-        <!-- <link rel="stylesheet" href="/src/css/styles.css" /> -->
+        <link rel="stylesheet" href="/src/css/_styles.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Per Diem Calculator</title>
         <style type="text/css" media="print">
@@ -43,8 +50,51 @@
             }
         </style>
     </head>
-    <body style="background-color: hsl(210, 25%, 98%)" ;>
-        <div id="perDiemCalc"></div>
+    <body class="my-3 bg-[hsl(210,25%,98%)]">
+        <header class="mx-auto mb-8 max-w-lg px-8">
+            <h1 class="mb-4 text-3xl leading-10 font-semibold">
+                Per Diem Calculator
+            </h1>
+            <p>
+                Automatically calculate lodging and meals/incidentals per diem
+                for both domestic and international travel.
+            </p>
+        </header>
+
+        <main>
+            <div id="perDiemCalc"></div>
+        </main>
+
+        <footer class="mx-auto mb-8 max-w-lg px-8">
+            <p>Rates are sourced from:</p>
+            <ul>
+                <li>
+                    <a
+                        target="_blank"
+                        href="https://www.gsa.gov/travel/plan-book/per-diem-rates"
+                        >U.S. General Services Administration</a
+                    >
+                    (48 states)
+                </li>
+                <li>
+                    <a
+                        href="https://www.travel.dod.mil/Travel-Transportation-Rates/Per-Diem/Per-Diem-Rate-Lookup/"
+                        target="_blank"
+                        >U.S. Department of Defense</a
+                    >
+                    (Alaska, Hawaii, U.S. territories)
+                </li>
+                <li>
+                    <a
+                        href="https://allowances.state.gov/Web920/location.asp?menu_id=95"
+                        target="_blank"
+                        >U.S. Department of State</a
+                    >
+                    (all other locations)
+                </li>
+            </ul>
+        </footer>
+
         <script type="module" src="/src/index.ts"></script>
     </body>
 </html>

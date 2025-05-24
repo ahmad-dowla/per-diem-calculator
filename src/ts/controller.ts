@@ -1,9 +1,3 @@
-// TODO3 Refine controller class method for getting data
-// TODO2 Double-check errors, trace to root function and eliminate try/catch in child functions
-// LAST Testing
-// LAST Search to see if API key in build files
-// LAST Restrict access control allow origin on proxy
-
 // Types
 import type {
     LocationKeys,
@@ -11,10 +5,10 @@ import type {
     AllViewLocationsValid,
 } from './types/locations';
 import { StateExpenseItemUpdate } from './types/expenses';
-import type { Config, State } from './types/config';
+import type { Config } from './types/config';
 
 // Utils
-import { sanitizeConfig } from './utils/misc';
+import { sanitizeConfig } from './utils/config';
 
 // Model
 import * as model from './model';
@@ -26,6 +20,8 @@ customElements.define('pdc-expense-view', PdcExpenseView);
 customElements.define('pdc-location-view', PdcLocationView);
 
 export class Pdc {
+    /* SETUP
+     */
     #container: Element;
     #config: Config;
     #viewLocation;
@@ -55,20 +51,53 @@ export class Pdc {
         this.#container.insertAdjacentElement('beforeend', this.#viewExpense);
     }
 
-    #locationDeleted = (updatedRows: StateLocationItem[]) => {
+    #dispatchEvent() {
+        const event = new CustomEvent('expenseUpdate', {
+            detail: {
+                data: model.returnExpenses(),
+            },
+        });
+        this.#eventTarget.dispatchEvent(event);
+    }
+
+    addEventListener(eventName: 'expenseUpdate', callback: EventListener) {
+        this.#eventTarget.addEventListener(eventName, callback);
+    }
+
+    removeEventListener(eventName: 'expenseUpdate', callback: EventListener) {
+        this.#eventTarget.removeEventListener(eventName, callback);
+    }
+
+    /* LOCATION
+     */
+    #locationDeleted = async (
+        updatedRows: StateLocationItem[],
+    ): Promise<void> => {
         this.#viewExpense.renderEmtpy();
         model.updateAllStateLocations(updatedRows);
+        const row = updatedRows[updatedRows.length - 1];
+        const { index, start, end, category, country, city } = row;
+        if (!city && country) {
+            this.#viewLocation.restrictRow(index, 'country');
+            await this.#createSelectOptions(row);
+        }
+        if (!country && category) {
+            this.#viewLocation.restrictRow(index, 'category');
+            await this.#createSelectOptions(row);
+        }
+        if (!end && start) this.#viewLocation.restrictRow(index, 'end');
+        if (start && !end) this.#viewLocation.restrictRow(index, 'start');
     };
 
     #locationUpdated = async (
         row: StateLocationItem,
         changedAttr: LocationKeys,
         newValue: string | null,
-    ) => {
+    ): Promise<void> => {
         const { index, start, end, category, country, city } = row;
         this.#viewExpense.renderEmtpy();
         model.updateStateLocation(row);
-
+        let startDate, endDate;
         switch (true) {
             case !newValue && !!country && !!category && !!end && !!start:
                 this.#viewLocation.restrictRow(index, 'country');
@@ -90,8 +119,8 @@ export class Pdc {
                 !!category &&
                 !!country &&
                 !!city:
-                const startDate = new Date(start);
-                const endDate = new Date(end);
+                startDate = new Date(start);
+                endDate = new Date(end);
                 if (startDate <= endDate) {
                     return;
                 } else {
@@ -109,21 +138,24 @@ export class Pdc {
 
     #createSelectOptions = async (row: StateLocationItem) => {
         const { index } = row;
-        const locationCategory = !!row.country ? 'city' : 'country';
+        const locationCategory = row.country ? 'city' : 'country';
         this.#viewLocation.showLoadingSpinner(index, true, locationCategory);
         const list = await model.returnOptions(row);
         this.#viewLocation.createOptions(index, list, locationCategory);
         this.#viewLocation.showLoadingSpinner(index, false, locationCategory);
     };
 
-    #locationsValidate = async (viewValidator: AllViewLocationsValid) => {
-        try {
-            this.#viewExpense.renderEmtpy();
-            const { valid, expensesCategory } = viewValidator;
-            if (!valid || !expensesCategory) return;
-            const modelValidate = model.validateStateLocations();
-            if (!modelValidate) return;
+    #locationsValidate = (viewValidator: AllViewLocationsValid): void => {
+        this.#viewExpense.renderEmtpy();
+        if (!viewValidator.valid) return;
+        if (!model.validateStateLocations()) return;
+        this.#createExpenses(viewValidator);
+    };
 
+    /* EXPENSE
+     */
+    async #createExpenses(viewValidator: AllViewLocationsValid) {
+        try {
             this.#viewExpense.render(this.#styled, this.#config.expense);
             this.#viewExpense.renderLoadingSpinner(true);
             this.#viewExpense.controllerHandler(
@@ -131,17 +163,18 @@ export class Pdc {
                 this.#expenseTable,
             );
             const expenses = await model.generateExpenses(viewValidator);
-            this.#viewExpense.addRows(expenses, expensesCategory);
-            setTimeout(() => {
-                this.#viewExpense.renderLoadingSpinner(false);
-            }, 1000);
+            await this.#viewExpense.addRows(
+                expenses,
+                viewValidator.expensesCategory,
+            );
+            this.#viewExpense.renderLoadingSpinner(false);
             this.#dispatchEvent();
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
-    #expenseUpdated = (row: StateExpenseItemUpdate) => {
+    #expenseUpdated = (row: StateExpenseItemUpdate): void => {
         const { date, newRowMieTotal, totalMie, totalLodging } =
             model.updateStateExpenseItem(row);
         this.#viewExpense.updateRowMie(
@@ -154,24 +187,7 @@ export class Pdc {
         this.#dispatchEvent();
     };
 
-    #expenseTable = () => {
+    #expenseTable = (): void => {
         this.#viewExpense.createExpenseTable(model.returnExpenses());
     };
-
-    #dispatchEvent() {
-        const event = new CustomEvent('expenseUpdate', {
-            detail: {
-                data: model.returnExpenses(),
-            },
-        });
-        this.#eventTarget.dispatchEvent(event);
-    }
-
-    addEventListener(eventName: 'expenseUpdate', callback: EventListener) {
-        this.#eventTarget.addEventListener(eventName, callback);
-    }
-
-    removeEventListener(eventName: 'expenseUpdate', callback: EventListener) {
-        this.#eventTarget.removeEventListener(eventName, callback);
-    }
 }

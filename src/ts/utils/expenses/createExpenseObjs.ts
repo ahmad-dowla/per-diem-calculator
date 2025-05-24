@@ -3,7 +3,7 @@ import type { StateLocationItemValid } from '../../types/locations';
 import type { StateExpenseItem } from '../../types/expenses';
 
 // Utils
-import { isDateRawType } from '../dates';
+import { isDateRawType, getDateRaw } from '../dates';
 
 export const createExpenseObjs = (
     location: StateLocationItemValid,
@@ -13,7 +13,7 @@ export const createExpenseObjs = (
     const currentDate = new Date(start);
     const lastDate = new Date(end);
     while (currentDate <= lastDate) {
-        const currentDateRaw = currentDate.toISOString().slice(0, 10);
+        const currentDateRaw = getDateRaw(currentDate.toISOString());
         if (!isDateRawType(currentDateRaw))
             throw new Error('Failed to create valid date.');
         expenses.push({

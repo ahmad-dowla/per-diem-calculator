@@ -1,8 +1,6 @@
-<!-- TODO2 dark mode -->
-
 <div
     id="view-container"
-    class="group relative mx-auto max-w-3xl overflow-hidden p-3
+    class="group relative mx-auto max-w-xl overflow-hidden p-3
         [transition:height_0.7s_ease] print:hidden"
 >
     <!-- Heading, rows, error container -->
@@ -26,8 +24,8 @@
         <div
             id="error"
             class="bg-error-50 text-error-700 border-b-error-400 absolute
-                -top-14 z-20 flex h-14 w-full translate-y-0 border-b-3 p-4
-                font-medium transition-transform [.active]:translate-y-14"
+                -top-16 z-20 flex h-16 w-full translate-y-0 border-b-3 p-4
+                font-medium transition-transform [.active]:translate-y-16"
         ></div>
     </div>
 
@@ -38,6 +36,7 @@
             w-full [transform:translateY(-100%)] text-center opacity-0"
     >
         <button
+            tabindex="-1"
             type="button"
             id="add-row"
             title="Add additional location"
@@ -72,7 +71,7 @@
             class="*:hover:bg-primary-900 *:hover:text-primary-50
                 *:has-checked:bg-primary-900 *:has-checked:text-primary-50
                 bg-primary-50 text-primary-800 *:focus-visible:ring-primary-800
-                divide-primary-800 *:ring- *:focus-visible:!bg-primary-50
+                divide-primary-800 *:focus-visible:!bg-primary-50
                 *:focus-visible:!text-primary-800 border-primary-200 mx-auto
                 grid max-w-3xs grid-cols-3 divide-x overflow-hidden rounded-lg
                 border-2 text-center text-sm font-medium *:cursor-pointer
@@ -81,7 +80,7 @@
                 *:select-none *:ring-inset *:focus:outline-none
                 *:focus-visible:ring-6 sm:max-w-2xs md:max-w-xs"
         >
-            <label tabindex="0" class="" for="mie">
+            <label tabindex="-1" class="" for="mie">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -91,7 +90,7 @@
                 />
                 M&IE
             </label>
-            <label tabindex="0" class="" for="lodging">
+            <label tabindex="-1" class="" for="lodging">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -101,7 +100,7 @@
                 />
                 Lodging
             </label>
-            <label tabindex="0" class="" for="both">
+            <label tabindex="-1" class="" for="both">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -115,17 +114,17 @@
         </div>
     </fieldset>
 
-    <!-- Button to generate Expense view -->
+    <!-- Button to trigger Expense view -->
     <div
-        class="[.rows-open]:animate-rows-open-expensesGenerateBtn
-            [.rows-closed]:animate-rows-closed-expensesGenerateBtn mt-6 mb-8
+        class="[.rows-open]:animate-rows-open-expensesCalculateBtn
+            [.rows-closed]:animate-rows-closed-expensesCalculateBtn mt-6 mb-8
             w-full [transform:translateY(200%)] text-center print:hidden"
     >
-        <pdc-button-text
+        <pdc-button
             styled="true"
-            id="generate-expenses"
-            text="Generate Expenses"
-            title="Generate expenses"
-        ></pdc-button-text>
+            id="calculate-expenses"
+            text="Calculate Expenses"
+            title="Calculate expenses"
+        ></pdc-button>
     </div>
 </div>

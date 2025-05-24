@@ -1,40 +1,46 @@
-import {
+// Types
+import type {
     StateExpenseItemInclRates,
     StateExpenseItemValid,
 } from '../../types/expenses';
+import type { DateRaw } from '../../types/dates';
+
+// Utils
+import { getYYYY, getYY, getMM } from '../dates';
+import { OCTOBER } from '../config';
+
+const getGSAFiscalYear = (date: DateRaw) => {
+    return +getMM(date) < OCTOBER ? +getYYYY(date) : +getYYYY(date) + 1;
+};
+
+const getDODSourceDate = (date: DateRaw) => {
+    const todayDate = new Date();
+    const todayMonth = getMM(todayDate.toISOString());
+    const todayYear = getYYYY(todayDate.toISOString());
+
+    const tripMonth = getMM(date);
+    const tripYear = getYYYY(date);
+
+    const sourceYear =
+        +tripYear > +todayYear ? getYY(todayDate.toISOString()) : getYY(date);
+    const sourceMonth =
+        +tripYear > +todayYear ? todayMonth
+        : +tripMonth > +todayMonth ? todayMonth
+        : tripMonth;
+
+    return `${sourceMonth}-01-${sourceYear}`;
+};
 
 export const returnValidStateExpense = (
     expense: StateExpenseItemInclRates,
 ): StateExpenseItemValid => {
-    let source = '';
     const { date, country, city } = expense;
-
-    // Domestic URL
-    if (expense.country.length === 2) {
-        const sourceMonth = +date.slice(5, 7);
-        const sourceFiscalYear =
-            sourceMonth < 10 ? +date.slice(0, 4) : +date.slice(0, 4) + 1;
-        source = `https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&fiscal_year=${sourceFiscalYear}&state=${country}&city=${city}`;
-
-        // Intl URL
-    } else {
-        const todayDate = new Date();
-        const todayMonth = todayDate.toISOString().slice(5, 7);
-        const todayYear = todayDate.toISOString().slice(0, 4);
-        const tripMonth = date.slice(5, 7);
-        const tripYear = date.slice(0, 4);
-
-        const sourceYear =
-            +tripYear > +todayYear ?
-                todayYear.slice(2, 4)
-            :   tripYear.slice(2, 4);
-        const sourceMonth =
-            +tripYear > +todayYear ? todayMonth
-            : +tripMonth > +todayMonth ? todayMonth
-            : tripMonth;
-        const sourceDate = `${sourceMonth}-01-${sourceYear}`;
-        source = `https://www.defensetravel.dod.mil/neorates/report/index.php?report=oconus&country=${country}&date=${sourceDate}&military=YES`;
-    }
+    let source = '';
+    if (expense.country.length === 2)
+        // Domestic rates are state abbr like 'NY' with length 2
+        source = `https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&fiscal_year=${getGSAFiscalYear(date)}&state=${country}&city=${city}`;
+    else
+        source = `https://www.defensetravel.dod.mil/neorates/report/index.php?report=oconus&country=${country}&date=${getDODSourceDate(date)}&military=YES`;
 
     return { ...expense, source };
 };

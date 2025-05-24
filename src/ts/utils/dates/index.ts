@@ -1,4 +1,3 @@
-export { returnValidYear } from './returnValidYear';
 export { isDateRawType } from './isDateRaw';
 export { offsetDateString } from './offsetDateString';
 export { isYYYY } from './isYYYY';
@@ -8,4 +7,13 @@ export {
     YEAR_MAX_REGEX,
     YEAR_INCOMPLETE_REGEX,
 } from './YEAR_REGEX';
-export { getShortDate } from './getShortDate';
+export { getValidAPIYear } from './getValidAPIYear';
+export {
+    getYYYY,
+    getYY,
+    getMM,
+    getDD,
+    getShortMonth,
+    getDateRaw,
+} from './getDateSlice';
+export { isShortMonth } from './isShortMonth';

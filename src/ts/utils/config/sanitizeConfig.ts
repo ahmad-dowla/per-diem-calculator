@@ -2,7 +2,7 @@
 import { Config } from '../../types/config';
 
 // Utils
-import { configDefault } from './config';
+import { configDefault } from './configDefault';
 import DOMPurify from 'dompurify';
 
 export const sanitizeConfig = (configUser: Partial<Config> | null): Config => {

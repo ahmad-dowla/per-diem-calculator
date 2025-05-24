@@ -1,0 +1,22 @@
+@theme {
+    @keyframes row-open-summary {
+        0% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+        100% {
+            transform: translateY(-200%);
+            opacity: 0;
+        }
+    }
+    @keyframes row-close-summary {
+        0% {
+            transform: translateY(-200%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0%);
+            opacity: 100;
+        }
+    }
+}

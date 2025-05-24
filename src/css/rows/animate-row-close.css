@@ -1,0 +1,18 @@
+@theme {
+    /* First stage */
+    /* Details */
+    --animate-row-close-details: row-close-details 0.35s ease-in forwards;
+
+    /* Second Stage */
+    /* Row */
+    --animate-row-location-close: row-location-close 0.35s 0.35s ease-in
+        forwards;
+    --animate-row-location-close-sm: row-location-close-sm 0.35s 0.35s ease-in
+        forwards;
+    --animate-row-expense-close: row-expense-close 0.35s 0.35s ease-in forwards;
+
+    /* Summary, delete btn */
+    --animate-row-close-summary: row-close-summary 0.35s 0.35s ease-out forwards;
+    --animate-row-close-deletebtn: row-close-deletebtn 0.35s 0.35s ease-out
+        forwards;
+}

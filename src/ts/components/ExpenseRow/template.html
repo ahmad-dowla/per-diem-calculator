@@ -8,21 +8,28 @@
     <!-- Row sidebar: date, toggle -->
     <div
         data-pdc="expense-row-sidebar"
-        class="relative z-10 h-[var(--row-expense-open)] overflow-hidden px-2"
+        class="relative z-10 mr-4 ml-2 h-[var(--row-expense-open)] sm:mr-6
+            sm:ml-4"
     >
         <div
             data-pdc="expense-row-toggle"
-            class="flex h-22 w-full items-center justify-between
-                text-neutral-800 *:hover:cursor-pointer
-                hover:*:[svg:first-of-type]:rotate-0"
+            class="flex h-24 w-full items-center text-neutral-800
+                hover:cursor-pointer *:hover:cursor-pointer
+                group-not-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-0
+                group-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-180"
         >
-            <button title="Toggle row" tabindex="0" type="button">
+            <button
+                title="Toggle row"
+                tabindex="0"
+                type="button"
+                class="focus-visible:border-primary-800 rounded-full border-3
+                    border-transparent transition-colors focus:outline-none"
+            >
                 <svg
                     class="size-5 shrink-0 fill-none stroke-current
                         transition-transform duration-500
-                        group-[.pdc-row-add]:-rotate-180
-                        group-[.pdc-row-open]:-rotate-180
-                        focus-visible:rotate-0"
+                        group-[.pdc-row-close]:rotate-0
+                        group-[.pdc-row-open]:-rotate-180 sm:size-6"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                 >
@@ -35,8 +42,8 @@
                 </svg>
             </button>
             <div
-                class="mr-6 ml-2 flex flex-col text-center text-xs font-semibold
-                    uppercase"
+                class="ml-2 flex flex-col text-center text-xs font-semibold
+                    uppercase sm:text-sm"
             >
                 <span id="month"></span>
                 <span id="day" class="text-xl"></span>
@@ -59,22 +66,43 @@
                 data-pdc="expense-row-summary"
                 inert
                 class="group-[.pdc-row-open]:animate-row-open-summary
-                    group-[.pdc-row-close]:animate-row-close-summary grid w-full
-                    justify-end gap-y-0.5 overflow-hidden pr-4 text-sm
+                    group-[.pdc-row-close]:animate-row-close-summary m ml-[30%]
+                    flex w-full max-w-[50lvh] flex-col justify-between gap-y-0.5
+                    overflow-hidden pr-4 text-sm
                     group-[.pdc-row-add]:translate-y-[-200%]
-                    group-[.pdc-row-add]:opacity-0"
+                    group-[.pdc-row-add]:opacity-0 sm:ml-[10%] sm:flex
+                    sm:max-w-full sm:flex-row sm:justify-between sm:pr-12
+                    sm:text-base"
             >
-                <div class="grid grid-cols-2 gap-x-8" id="summary-mie">
+                <div
+                    class="grid grid-cols-2 sm:flex sm:flex-col"
+                    id="summary-mie"
+                >
                     <p>M&IE</p>
-                    <p class="text-right" id="summary-mie-amount">&nbsp;</p>
+                    <p class="text-right sm:text-left" id="summary-mie-amount">
+                        &nbsp;
+                    </p>
                 </div>
-                <div class="grid grid-cols-2 gap-x-8" id="summary-lodging">
+                <div
+                    class="grid grid-cols-2 sm:flex sm:flex-col"
+                    id="summary-lodging"
+                >
                     <p>Lodging</p>
-                    <p class="text-right" id="summary-lodging-amount">&nbsp;</p>
+                    <p
+                        class="text-right sm:text-left"
+                        id="summary-lodging-amount"
+                    >
+                        &nbsp;
+                    </p>
                 </div>
-                <div class="grid grid-cols-2 gap-x-8" id="summary-total">
+                <div
+                    class="grid grid-cols-2 sm:flex sm:flex-col"
+                    id="summary-total"
+                >
                     <p>Total</p>
-                    <p class="text-right" data-pdc="expense-total">&nbsp;</p>
+                    <p class="text-right sm:text-left" data-pdc="expense-total">
+                        &nbsp;
+                    </p>
                 </div>
             </div>
         </div>
@@ -95,7 +123,7 @@
             >
                 <p
                     id="location"
-                    class="relative my-3 truncate py-2 pr-3 text-neutral-800"
+                    class="relative my-3 truncate text-neutral-800"
                 ></p>
             </div>
 
@@ -103,21 +131,27 @@
             <div
                 id="deductions"
                 class="items-center justify-between border-b
-                    border-b-neutral-100 p-3 [.disabled]:cursor-not-allowed
-                    [.disabled]:**:opacity-30"
+                    border-b-neutral-100 px-3 py-4
+                    [.disabled]:cursor-not-allowed [.disabled]:**:opacity-30"
             >
                 <pdc-label styled="true" text="I was provided"></pdc-label>
                 <fieldset class="my-3 space-y-3">
                     <div
                         class="*:has-checked:bg-primary-50 *:hover:bg-primary-50
                             *:has-checked:text-primary-800
-                            *:hover:text-primary-800 grid grid-cols-3 divide-x
-                            overflow-hidden rounded-lg border bg-neutral-50
-                            text-center text-neutral-700 *:px-4 *:py-2 *:text-sm
-                            *:font-medium *:hover:cursor-pointer *:sm:px-6
-                            *:sm:text-base"
+                            *:hover:text-primary-800
+                            *:focus-visible:!bg-primary-50
+                            *:focus-visible:!text-primary-800
+                            *:focus-visible:ring-primary-800 grid grid-cols-3
+                            divide-x overflow-hidden rounded-lg border
+                            bg-transparent text-center text-neutral-700
+                            *:cursor-pointer *:px-4 *:py-2.5 *:text-sm
+                            *:font-medium *:ring-2 *:ring-transparent
+                            *:transition-[box-shadow_background-color_color]
+                            *:duration-500 *:select-none *:ring-inset
+                            *:focus:outline-none *:focus-visible:ring-6"
                     >
-                        <label for="breakfast"
+                        <label tabindex="-1" ="breakfast"
                             >Break<span class="sm:hidden" aria-hidden="true"
                                 >.</span
                             ><span class="hidden sm:inline-block">fast</span
@@ -127,14 +161,14 @@
                                 id="breakfast"
                                 class="hidden"
                         /></label>
-                        <label for="lunch" class="peer"
+                        <label tabindex="-1" for="lunch" class="peer"
                             >Lunch<input
                                 type="checkbox"
                                 name="lunch"
                                 id="lunch"
                                 class="hidden"
                         /></label>
-                        <label for="dinner" class="peer"
+                        <label tabindex="-1" for="dinner" class="peer"
                             >Dinner<input
                                 type="checkbox"
                                 name="dinner"
@@ -143,31 +177,27 @@
                         /></label>
                     </div>
                 </fieldset>
-            </div>
+                <!-- M&IE -->
+                <div id="mie" class="flex items-center justify-between">
+                    <pdc-label styled="true" id="mie-rate"></pdc-label>
 
-            <!-- M&IE -->
-            <div
-                id="mie"
-                class="flex items-center justify-between border-b
-                    border-b-neutral-100 bg-white px-3 py-2
-                    [.disabled]:cursor-not-allowed [.disabled]:**:opacity-30"
-            >
-                <pdc-label styled="true" id="mie-rate"></pdc-label>
-
-                <input
-                    id="mie-total-amount"
-                    type="number"
-                    inputmode="decimal"
-                    step="0.01"
-                    min="0"
-                    disabled
-                    class="[.success]:border-r-success-400 relative my-3 w-[50%]
-                        [appearance:textfield] border-r-3 border-r-transparent
-                        bg-transparent py-2 pr-3 text-right text-neutral-800
-                        transition-[border-color] disabled:cursor-not-allowed
-                        [&::-webkit-inner-spin-button]:appearance-none
-                        [&::-webkit-outer-spin-button]:appearance-none"
-                />
+                    <input
+                        id="mie-total-amount"
+                        type="number"
+                        inputmode="decimal"
+                        step="0.01"
+                        min="0"
+                        disabled
+                        class="[.success]:border-r-success-400 relative my-3
+                            w-[50%] [appearance:textfield] border-r-3
+                            border-r-transparent bg-transparent py-2 pr-3
+                            text-right text-neutral-800
+                            transition-[border-color]
+                            disabled:cursor-not-allowed
+                            [&::-webkit-inner-spin-button]:appearance-none
+                            [&::-webkit-outer-spin-button]:appearance-none"
+                    />
+                </div>
             </div>
 
             <!-- Lodging -->
@@ -180,16 +210,19 @@
                 <pdc-label styled="true" id="lodging-rate"></pdc-label>
 
                 <input
+                    tabindex="-1"
                     id="lodging-amount"
                     type="number"
                     inputmode="decimal"
                     step="0.01"
                     min="0"
-                    class="[.success]:border-r-success-400 relative my-3 w-[50%]
+                    class="[.success]:border-r-success-400
+                        selection:bg-primary-800 relative my-3 w-[50%]
                         [appearance:textfield] border-r-3 border-b-2
                         border-r-transparent border-b-neutral-200 bg-transparent
                         py-2 pr-3 text-right text-neutral-800
-                        transition-[border-color] disabled:cursor-not-allowed
+                        transition-[border-color] selection:text-neutral-50
+                        focus:outline-none disabled:cursor-not-allowed
                         disabled:border-b-transparent
                         [&::-webkit-inner-spin-button]:appearance-none
                         [&::-webkit-outer-spin-button]:appearance-none"
@@ -200,7 +233,7 @@
             <div
                 id="total"
                 class="group flex items-center justify-between border-b
-                    border-b-neutral-100 bg-white px-3 py-2"
+                    border-b-neutral-100 bg-white px-3"
             >
                 <pdc-label
                     styled="true"

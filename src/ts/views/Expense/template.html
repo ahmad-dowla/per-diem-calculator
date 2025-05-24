@@ -1,11 +1,6 @@
-<!-- TODO Cleanup ts (components, types, utils, controller, model) -->
-<!-- TODO Cleanup html-->
-<!-- TODO Cleanup CSS -->
-<!-- TODO Test keyboard inputs in Expense View -->
-
 <div
     id="expense-container"
-    class="group relative mx-auto max-w-3xl overflow-hidden p-3
+    class="group relative mx-auto max-w-xl overflow-hidden p-3
         [transition:height_0.7s_ease] print:hidden"
 >
     <!-- Indicator that results are still loading -->
@@ -38,11 +33,14 @@
             </div>
             <button
                 type="button"
+                title="Toggle all rows"
                 id="toggle-expand"
-                class="hover:text-primary-900 relative ml-3 pl-3
-                    text-neutral-600 duration-500 *:size-5 *:overflow-visible
-                    *:fill-current **:origin-center **:transition-all
-                    hover:cursor-pointer [&_.down]:[transform:translateY(15%)]
+                class="hover:text-primary-900 focus-visible:border-b-primary-800
+                    relative ml-3 border-b-4 border-b-transparent px-2
+                    text-neutral-600 transition-colors duration-500 *:size-5
+                    *:overflow-visible *:fill-current **:origin-center
+                    **:transition-all hover:cursor-pointer focus:outline-none
+                    [&_.down]:[transform:translateY(15%)]
                     [&_.up]:[transform:translateY(-15%)]
                     [&.active_.down]:[transform:scaleY(-1)_translateY(-70%)]
                     [&.active_.up]:[transform:scaleY(-1)_translateY(70%)]"
@@ -50,7 +48,7 @@
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     data-pdc-delete="Toggle Expenses"
-                    class="size-18 fill-current"
+                    class="fill-current"
                     viewBox="0 0 16 16"
                 >
                     <path
@@ -96,12 +94,12 @@
 
     <!-- Button print expenses -->
     <div class="w-full text-center">
-        <pdc-button-text
+        <pdc-button
             styled="true"
             id="print-expenses"
             text="Print Expenses"
             title="Print expenses"
-        ></pdc-button-text>
+        ></pdc-button>
     </div>
 </div>
 

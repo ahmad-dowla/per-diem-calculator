@@ -1,0 +1,6 @@
+@theme {
+    --row-expense-open: 400px;
+    --row-close: 96px;
+    --row-location-open: 477px;
+    --row-location-open-sm: 537px;
+}

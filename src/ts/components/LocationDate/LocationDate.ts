@@ -21,201 +21,195 @@ const template = document.createElement('template');
 
 // Custom Element
 export class PdcLocationDate extends HTMLElement {
+    /* SETUP
+     */
     static observedAttributes = ['bg'];
-
     #attrName: 'start' | 'end';
     #valid = false;
-    #input: HTMLInputElement;
-    #errorEl: Element;
     #styled = false;
-    #startEl: PdcLocationDate;
-    #endEl: PdcLocationDate;
     #enabled = false;
-
     constructor() {
         super();
-        this.#attrName = this.getAttribute('pdc') === 'start' ? 'start' : 'end';
         this.attachShadow({ mode: 'open' });
-        if (!this.shadowRoot)
-            throw new Error(
-                `Failed to create shadowRoot for start date in Location view.`,
-            );
-
+        this.#attrName = this.getAttribute('pdc') === 'start' ? 'start' : 'end';
         this.#styled = this.getAttribute('styled') === 'true';
 
         if (this.#styled) {
             template.innerHTML = templateHTML;
-            applyStyles(this.shadowRoot);
+            applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
+        this.#shadowRoot.appendChild(template.content.cloneNode(true));
 
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
-
-        const { input, label, errorEl, startEl, endEl } = this.#getEls();
-
-        this.#input = input;
-        this.#errorEl = errorEl;
-        this.#startEl = startEl;
-        this.#endEl = endEl;
-
-        label.setAttribute(
+        this.#label.setAttribute(
             'text',
             this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1),
         );
-
-        this.#attrName === 'start' ?
-            this.restrictStartInput()
-        :   this.restrictEndInput();
+        if (this.#attrName === 'start') this.restrictStartInput();
+        else this.restrictEndInput();
 
         this.enableTabIndex(false);
-        this.#setBg();
-
-        // Apply listeners for inputs only after initial restrictInput(), and potentially any changes to input/attr by it, are done
-        this.#input.addEventListener('change', e => {
-            const target = e.target;
-            if (!(target instanceof HTMLInputElement)) return;
-            if (YEAR_INCOMPLETE_REGEX.test(target.value)) return;
-            this.#handleChange(target);
-        });
+        this.#styleEl();
+        this.#addEventListeners();
     }
 
+    /* EVENTS
+     */
     attributeChangedCallback(
         _name: string,
         _oldValue: string,
         newValue: string,
     ) {
-        if (
-            !(
-                this.#styled &&
-                (newValue === 'white' || newValue === 'neutral-50')
-            )
-        )
-            return;
-        this.#setBg(`bg-${newValue}`);
-    }
-
-    #setBg(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
         if (!this.#styled) return;
-        this.shadowRoot
-            ?.querySelector('div')
-            ?.classList.remove(`bg-white`, `bg-neutral-50`);
-        this.shadowRoot
-            ?.querySelector('div')
-            ?.classList.add(
-                bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
+        this.#styleEl(`bg-${newValue === 'white' ? 'white' : 'neutral-50'}`);
+    }
+
+    #addEventListeners() {
+        this.#input.addEventListener('change', e => {
+            const target = e.target;
+            if (!(target instanceof HTMLInputElement)) return;
+            if (YEAR_INCOMPLETE_REGEX.test(target.value)) return;
+            this.handleInputChange(target.value);
+        });
+    }
+
+    /* GET ELS
+     */
+    get #label() {
+        const el = this.#shadowRoot.querySelector('pdc-label');
+        if (!el)
+            throw new Error(`Failed to render label in Date custom element`);
+        return el;
+    }
+
+    get #input() {
+        const el = this.#shadowRoot.querySelector('input');
+        if (!el)
+            throw new Error(`Failed to render input in Date custom element`);
+        return el;
+    }
+
+    get #shadowRoot() {
+        if (!this.shadowRoot)
+            throw new Error(
+                `Failed to render shadowRoot in Category custom element`,
             );
+        return this.shadowRoot;
     }
 
-    enableTabIndex(enable: boolean) {
-        enable ?
-            this.#input.setAttribute('tabindex', '0')
-        :   this.#input.setAttribute('tabindex', '-1');
+    get #row() {
+        const el = this.closest<HTMLElement>('[data-pdc="location-row"]');
+        if (!el) throw new Error(`Failed to get row from Date custom element`);
+        return el;
     }
 
-    #getEls = () => {
-        const row = this.closest<HTMLUListElement>('[data-pdc="location-row"]');
-        const input = this.shadowRoot?.querySelector('input');
-        const label = this.shadowRoot?.querySelector('pdc-label');
-        const errorEl = this.closest('#locations-container')?.querySelector(
+    get #prevRow() {
+        const el = this.#row.previousElementSibling;
+        const startDate =
+            el?.querySelector<PdcLocationDate>('[pdc="start"]')?.pdcValue;
+        const endEl = el?.querySelector<PdcLocationDate>('[pdc="end"]');
+        const endDate = endEl?.pdcValue;
+        return { el, startDate, endEl, endDate };
+    }
+
+    get #nextRow() {
+        const el = this.#row.nextElementSibling;
+        const startEl = el?.querySelector<PdcLocationDate>('[pdc="start"]');
+        const startDate = startEl?.pdcValue;
+        const endDate =
+            el?.querySelector<PdcLocationDate>('[pdc="end"]')?.pdcValue;
+        return { el, startEl, startDate, endDate };
+    }
+
+    get #startEl() {
+        const el = this.#row.querySelector<PdcLocationDate>('[pdc="start"]');
+        if (!el)
+            throw new Error(
+                `Failed to get row startDateEl from Date custom element`,
+            );
+        return el;
+    }
+
+    get #endEl() {
+        const el = this.#row.querySelector<PdcLocationDate>('[pdc="end"]');
+        if (!el)
+            throw new Error(
+                `Failed to get row endDateEl from Date custom element`,
+            );
+        return el;
+    }
+
+    get #errorEl() {
+        const el = this.closest('#locations-container')?.querySelector(
             '#error',
         );
-        const startEl = row?.querySelector<PdcLocationDate>(
-            'pdc-location-date[pdc="start"]',
-        );
-        const endEl = row?.querySelector<PdcLocationDate>(
-            'pdc-location-date[pdc="end"]',
-        );
-
-        if (!(row && input && label && errorEl && startEl && endEl))
+        if (!el)
             throw new Error(
-                `Failed to render ${this.#attrName} date elements in Location view.`,
+                `Failed to get View's error element from Category custom element`,
             );
+        return el;
+    }
 
-        return {
-            row,
-            input,
-            label,
-            errorEl,
-            startEl,
-            endEl,
-        };
-    };
+    /* VISUAL METHODS
+     */
+    #styleEl(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
+        if (!this.#styled) return;
+        const div = this.#shadowRoot.querySelector('div');
+        div?.classList.remove(`bg-white`, `bg-neutral-50`);
+        div?.classList.add(bgColor ? bgColor : `bg-${this.getAttribute('bg')}`);
+    }
 
-    #handleChange(target: HTMLInputElement) {
-        this.updateInput(target.value);
+    focusEl() {
+        this.#input.focus();
+    }
+
+    /* UPDATE METHODS
+     */
+    enableTabIndex(enable: boolean) {
+        this.#input.setAttribute('tabindex', enable ? '0' : '-1');
+    }
+
+    enable(enable: boolean) {
+        if (enable) this.#input.removeAttribute('disabled');
+        else this.#input.setAttribute('disabled', 'true');
+        this.enableTabIndex(enable);
+        this.#enabled = enable;
+    }
+
+    #setMin(value: DateRaw | null = null) {
+        this.#input.setAttribute('min', value ? value : INPUT_DATE_MIN);
+    }
+
+    #setMax(value: DateRaw | null = null) {
+        this.#input.setAttribute('max', value ? value : INPUT_DATE_MAX);
+    }
+
+    #setAttr(value: DateRaw | null = null) {
+        if (value) this.setAttribute(this.#attrName, value);
+        else this.removeAttribute(this.#attrName);
+    }
+
+    #setInputValue(value: DateRaw | null = null) {
+        this.#input.value = value ? value : '';
     }
 
     #reset() {
-        this.setInputValue();
-        this.setAttr();
+        this.#setInputValue();
+        this.#setAttr();
         this.focusEl();
     }
 
     #resetEnd() {
-        this.#endEl.setInputValue();
-        this.#endEl.setAttr();
+        this.#endEl.#setInputValue();
+        this.#endEl.#setAttr();
         this.#endEl.restrictEndInput();
     }
 
-    async updateInput(date: string | null = null) {
+    async handleInputChange(date: string | null = null) {
         if (this.#styled) this.#input.classList.remove('success');
-
-        // If no input value, reset element's values and return
-        if (!date) {
-            this.#reset();
-            if (this.#attrName === 'start') this.#resetEnd();
-            return;
-        }
-
-        if (YEAR_MIN_REGEX.test(date)) {
-            if (this.#styled) this.renderError(true, `Date must be after 2020`);
-            this.#reset();
-            if (this.#attrName === 'start') this.#resetEnd();
-            return;
-        }
-
-        if (YEAR_MAX_REGEX.test(date)) {
-            if (this.#styled)
-                this.renderError(true, `Date must be before 2041`);
-            this.#reset();
-            if (this.#attrName === 'start') this.#resetEnd();
-            return;
-        }
-
-        if (YEAR_INCOMPLETE_REGEX.test(date)) {
-            if (this.#styled) this.renderError(true, `Enter a valid date.`);
-            this.#reset();
-            if (this.#attrName === 'start') this.#resetEnd();
-            return;
-        }
-
-        const startDate = this.#startEl.inputValue;
-        const endDate = this.#endEl.inputValue;
-
-        // If start is older than end, reset end and show error
-        if (
-            startDate &&
-            endDate &&
-            isDateRawType(startDate) &&
-            Date.parse(startDate) > Date.parse(endDate)
-        ) {
-            this.#startEl.setInputValue(startDate);
-            this.#startEl.setAttr(startDate);
-            await this.#startEl.restrictStartInput();
-            this.#endEl.updateInput();
-            this.#endEl.restrictEndInput();
-            this.#endEl.focusEl();
-            if (this.#styled)
-                this.#endEl.renderError(
-                    true,
-                    'End date must be after start date.',
-                );
-            return;
-        }
-
-        if (this.#input.value !== date && isDateRawType(date))
-            this.setInputValue(date);
-        if (this.getAttribute(this.#attrName) !== date && isDateRawType(date))
-            this.setAttr(date);
+        if (!this.#isValidInput(date) || !date) return;
+        if (!(await this.#isStartBeforeEnd()) || !isDateRawType(date)) return;
+        this.#setInputValue(date);
+        this.#setAttr(date);
         await this.#startEl.restrictStartInput();
         this.#endEl.restrictEndInput();
         if (this.#styled) {
@@ -225,128 +219,140 @@ export class PdcLocationDate extends HTMLElement {
         }
     }
 
-    async restrictStartInput() {
-        // Get elements for current row end date and previouss row end date
-        const endDate = this.#endEl.pdcValue;
-        const prevRow = this.closest(
-            '[data-pdc="location-row"]',
-        )?.previousElementSibling;
-        const prevRowEndEl =
-            prevRow?.querySelector<PdcLocationDate>('[pdc="end"]');
-        const prevRowEndDate = prevRowEndEl?.pdcValue;
-
-        // If no current row end date and no previous row, input should be enabled, no min, no max, and no further action
-        if (!endDate && !prevRow) {
-            this.enable(true);
-            this.#setMax();
-            this.#setMin();
-            return;
-        }
-
-        // If no previous row, input should be enabled
-        if (!prevRow) {
-            this.enable(true);
-        }
-
-        // If valid current row end date, set input max to current row end date
-        if (endDate && isDateRawType(endDate)) {
-            this.#setMax(endDate);
-        }
-
-        // If previous row, disable input
-        if (prevRowEndDate && isDateRawType(prevRowEndDate)) {
-            this.enable(false);
-            const correctStart = offsetDateString(prevRowEndDate, 1);
-            this.#setMin(correctStart); // Min set to prev end date + 1 day
-            if (this.pdcValue !== correctStart) this.updateInput(correctStart); // Update input value and element attr if they don't match current start
-            prevRowEndEl?.enable(false); // Disable previous end date
-        }
+    #updateStartBasedOnPrevEnd() {
+        if (!this.#prevRow.endDate) return;
+        const correctStart = offsetDateString(this.#prevRow.endDate, 1);
+        if (this.#startDateInputVal === correctStart) return;
+        this.enable(false);
+        this.#setMin(correctStart);
+        this.#setInputValue(correctStart);
+        this.#setAttr(correctStart);
+        this.#input.classList.add('success');
+        this.#prevRow.endEl?.enable(false);
     }
 
-    restrictEndInput() {
-        // Get elements for current row start date and next row start date
-        const startDate = this.#startEl.pdcValue;
-        const nextRow = this.closest(
-            '[data-pdc="location-row"]',
-        )?.nextElementSibling;
-        const nextRowStartEl =
-            nextRow?.querySelector<PdcLocationDate>('[pdc="start"]');
-        const nextRowStartDate = nextRowStartEl?.pdcValue;
-
-        // If no valid current row start date, input should be disabled, no min, no max, and no further action
-        if (!startDate || !isDateRawType(startDate)) {
-            this.enable(false);
-            this.#setMin();
-            this.#setMax();
-            return;
-        }
-
-        // If valid current row start date and no next row, input should be enabled, min of current row start date
-        if (startDate && isDateRawType(startDate)) {
-            this.enable(true);
-            this.#setMin(startDate);
-        }
-
-        // If next row, input should be disabled,
-        if (nextRowStartDate && isDateRawType(nextRowStartDate)) {
-            this.enable(false);
-            const correctEnd = offsetDateString(nextRowStartDate, -1);
-            this.#setMax(correctEnd); // Max set to next row start date - 1
-            if (this.pdcValue !== correctEnd) this.updateInput(correctEnd); // Update input value and element attr if they don't match current end
-            nextRowStartEl?.enable(false); // Disable next row start date
-        }
+    #updateEndBasedOnNextStart() {
+        if (!this.#nextRow.startDate) return;
+        this.enable(false);
+        const correctEnd = offsetDateString(this.#nextRow.startDate, -1);
+        if (this.#endDateInputVal === correctEnd) return;
+        this.#setMax(correctEnd);
+        this.#setInputValue(correctEnd);
+        this.#setAttr(correctEnd);
+        this.#input.classList.add('success');
+        this.#nextRow.startEl?.enable(false);
     }
 
-    enable(enable: boolean) {
-        enable ?
-            this.#input.removeAttribute('disabled')
-        :   this.#input.setAttribute('disabled', 'true');
-        this.enableTabIndex(enable);
-        this.#enabled = enable;
-    }
-    // setMin and setMax handled with restrictInput()
-    #setMin(value: DateRaw | null = null) {
-        value ?
-            this.#input.setAttribute('min', value)
-        :   this.#input.setAttribute('min', INPUT_DATE_MIN);
-    }
-    #setMax(value: DateRaw | null = null) {
-        value ?
-            this.#input.setAttribute('max', value)
-        :   this.#input.setAttribute('max', INPUT_DATE_MAX);
-    }
-    // setAttr and setInputValue handled with updateInput
-    setAttr(value: DateRaw | null = null) {
-        value ?
-            this.setAttribute(this.#attrName, value)
-        :   this.removeAttribute(this.#attrName);
-    }
-
-    focusEl() {
-        this.#input.focus();
-    }
-
+    /* VALIDATION
+     */
     renderError(
         enable: boolean,
-        msg: string = `Enter a valid ${this.#attrName} date.`,
+        msg = `Enter a valid ${this.#attrName} date.`,
     ) {
         if (enable) {
-            this.#input.classList.add('error');
-            this.#errorEl.classList.add('active');
+            if (this.#styled) {
+                this.#input.classList.add('error');
+                this.#errorEl.classList.add('active');
+            }
             this.#errorEl.textContent = msg;
             return;
         }
+        if (!this.#styled) return;
         this.#errorEl.classList.remove('active');
-        setTimeout(() => {
-            this.#errorEl.innerHTML = '&nbsp;';
-        }, 100);
     }
 
+    #isValidInput(date: string | null = null) {
+        if (
+            !date ||
+            YEAR_MIN_REGEX.test(date) ||
+            YEAR_MAX_REGEX.test(date) ||
+            YEAR_INCOMPLETE_REGEX.test(date) ||
+            !isDateRawType(date)
+        ) {
+            this.#reset();
+            if (this.#attrName === 'start') this.#resetEnd();
+            if (!date) return false;
+            if (YEAR_MIN_REGEX.test(date))
+                this.renderError(true, `Date must be after 2020`);
+            if (YEAR_MAX_REGEX.test(date))
+                this.renderError(true, `Date must be before 2041`);
+            if (YEAR_INCOMPLETE_REGEX.test(date))
+                this.renderError(true, `Enter a valid date.`);
+            return false;
+        }
+        return true;
+    }
+
+    async #isStartBeforeEnd() {
+        if (!this.#startDateInputVal) return false;
+        if (!this.#endDateInputVal) return true;
+        if (
+            Date.parse(this.#startDateInputVal) >
+            Date.parse(this.#endDateInputVal)
+        ) {
+            await this.#startEl.restrictStartInput();
+            this.#resetEnd();
+            this.#endEl.renderError(true, 'End date must be after start date.');
+            return false;
+        }
+        return true;
+    }
+
+    async restrictStartInput() {
+        if (!this.#endEl.pdcValue && !this.#prevRow.el) {
+            this.enable(true);
+            this.#setMax();
+            this.#setMin();
+            return;
+        }
+        if (!this.#prevRow.el) this.enable(true);
+        if (this.#endEl.pdcValue) this.#setMax(this.#endEl.pdcValue);
+        this.#updateStartBasedOnPrevEnd();
+    }
+
+    restrictEndInput() {
+        if (!this.#startEl.pdcValue) {
+            this.enable(false);
+            this.#setMin();
+            this.#setMax();
+            return;
+        } else {
+            this.enable(true);
+            this.#setMin(this.#startEl.pdcValue);
+        }
+        this.#updateEndBasedOnNextStart();
+    }
+
+    validate() {
+        this.#valid = false;
+        const attr = this.getAttribute(this.#attrName);
+        if (!(attr && isDateRawType(attr))) {
+            this.renderError(true);
+            return this.#valid;
+        }
+        this.#valid = true;
+        return this.#valid;
+    }
+
+    /* GET DATA METHODS
+     */
     get inputValue() {
         return this.#input.value;
     }
-    setInputValue(value: DateRaw | null = null) {
-        value ? (this.#input.value = value) : (this.#input.value = '');
+
+    get #startDateInputVal() {
+        return (
+                this.#startEl.inputValue &&
+                    isDateRawType(this.#startEl.inputValue)
+            ) ?
+                this.#startEl.inputValue
+            :   null;
+    }
+
+    get #endDateInputVal() {
+        return this.#endEl.inputValue && isDateRawType(this.#endEl.inputValue) ?
+                this.#endEl.inputValue
+            :   null;
     }
 
     get isEnabled() {
@@ -356,16 +362,5 @@ export class PdcLocationDate extends HTMLElement {
     get pdcValue() {
         const value = this.getAttribute(this.#attrName);
         return !!value && isDateRawType(value) ? value : null;
-    }
-
-    validate() {
-        this.#valid = false;
-        const attr = this.getAttribute(this.#attrName);
-        if (!(attr && isDateRawType(attr))) {
-            if (this.#styled) this.renderError(true);
-            return this.#valid;
-        }
-        this.#valid = true;
-        return this.#valid;
     }
 }

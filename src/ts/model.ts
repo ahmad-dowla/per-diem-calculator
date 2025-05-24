@@ -4,7 +4,10 @@ import type {
     Location,
     StateLocationItem,
 } from './types/locations';
-import type { StateExpenseItemUpdate } from './types/expenses';
+import type {
+    StateExpenseItemUpdate,
+    StateExpenseItemValid,
+} from './types/expenses';
 import type { State } from './types/config';
 
 // Utils
@@ -21,8 +24,8 @@ import {
     getLodgingRateIntl,
     returnValidStateExpense,
 } from './utils/expenses';
+import { US_STATE_LENGTH } from './utils/config';
 
-// State object to hold all data
 const state: State = {
     locations: [],
     locationsValid: [],
@@ -30,7 +33,6 @@ const state: State = {
     expensesValid: [],
 };
 
-// Update all locations
 export const updateAllStateLocations = (
     updatedRows: StateLocationItem[],
 ): void => {
@@ -38,7 +40,6 @@ export const updateAllStateLocations = (
     // logStateLocation();
 };
 
-// Update single location
 export const updateStateLocation = (
     updatedLocation: StateLocationItem,
 ): void => {
@@ -57,17 +58,15 @@ export const updateStateLocation = (
 //     ]);
 // }
 
-// Return countries or cities based on category
 export const returnOptions = async (
     row: StateLocationItem,
 ): Promise<Location[]> => {
     const { index, end, category, country } = row;
-    // If country exists, it must be to create cities
-    const listType = !!country ? 'city' : 'country';
+    const listType = country ? 'city' : 'country';
     if (!end) throw new Error(`Location ${index} - no end date`);
     const list =
-        !!country ?
-            country.length === 2 ?
+        country ?
+            country.length === US_STATE_LENGTH ?
                 // Domestic countries are all state abbreviations with length of 2 (e.g. 'NY')
                 await getCitiesDomestic(end, country)
             :   await getCitiesIntl(end, country)
@@ -78,93 +77,78 @@ export const returnOptions = async (
     return list;
 };
 
-// Validate all locations by confirming they have all the required values
 export const validateStateLocations = (): boolean => {
     state.locationsValid.length = 0;
     state.locations.forEach(location => {
         const validLocation = returnValidStateLocation(location);
-        validLocation && state.locationsValid.push(validLocation);
+        if (validLocation) state.locationsValid.push(validLocation);
     });
     return state.locations.length === state.locationsValid.length;
 };
 
-// Create expenses based on valid locations
 export const generateExpenses = async (
     viewValidator: AllViewLocationsValid,
 ) => {
     const { expensesCategory } = viewValidator;
-
     state.expenses.length = 0;
-
     state.locationsValid.map(location =>
         state.expenses.push(...createExpenseObjs(location)),
     );
-
     const expensesWithSomeRates = await Promise.all(
         state.expenses.map(expense => {
-            return expense.country.length === 2 ?
+            return expense.country.length === US_STATE_LENGTH ?
                     getLodgingRateDomestic(expense)
                 :   getLodgingRateIntl(expense);
         }),
     );
-
     const expensesWithAllRates = await Promise.all(
         expensesWithSomeRates.map(expense => {
             return getMieRates(expensesCategory, expense);
         }),
     );
-
     state.expensesValid = expensesWithAllRates.map(expense => {
         return returnValidStateExpense(expense);
     });
-
     return state.expensesValid;
 };
 
 export const updateStateExpenseItem = (update: StateExpenseItemUpdate) => {
-    const {
-        date,
-        lodgingAmount,
-        breakfastProvided,
-        lunchProvided,
-        dinnerProvided,
-    } = update;
+    const { date, lodgingAmount, ...deductions } = update;
     const item = state.expensesValid.find(expense => expense.date === date);
-    if (!item)
-        throw new Error(
-            `Failed to find expense item in state matching the expense update.`,
-        );
-
+    if (!item) throw new Error(`Failed to find expense matching the update.`);
     item.lodgingAmount = lodgingAmount;
     item.deductions = {
         ...item.deductions,
-        breakfastProvided,
-        lunchProvided,
-        dinnerProvided,
+        ...deductions,
     };
-
-    if (item.mieAmount > 0) {
-        const {
-            deductionBreakfast,
-            deductionLunch,
-            deductionDinner,
-            maxIncidental,
-        } = item.rates;
-        let mealsTotal =
-            item.deductions.FirstLastDay ?
-                item.rates.maxMieFirstLast
-            :   item.rates.maxMie;
-        if (breakfastProvided) mealsTotal -= deductionBreakfast;
-        if (lunchProvided) mealsTotal -= deductionLunch;
-        if (dinnerProvided) mealsTotal -= deductionDinner;
-        if (mealsTotal < maxIncidental) mealsTotal = maxIncidental;
-
-        item.mieAmount = mealsTotal;
-    }
-
+    if (item.mieAmount > 0) updateExpenseMie(item, update);
     item.totalAmount = item.lodgingAmount + item.mieAmount;
+    const { totalMie, totalLodging } = getExpenseSubtotals();
+    return {
+        date: item.date,
+        newRowMieTotal: item.mieAmount,
+        totalMie,
+        totalLodging,
+    };
+};
 
-    const { totalMie, totalLodging } = state.expensesValid.reduce(
+const updateExpenseMie = (
+    item: StateExpenseItemValid,
+    update: StateExpenseItemUpdate,
+) => {
+    let total =
+        item.deductions.FirstLastDay ?
+            item.rates.maxMieFirstLast
+        :   item.rates.maxMie;
+    if (update.breakfastProvided) total -= item.rates.deductionBreakfast;
+    if (update.lunchProvided) total -= item.rates.deductionLunch;
+    if (update.dinnerProvided) total -= item.rates.deductionDinner;
+    if (total < item.rates.maxIncidental) total = item.rates.maxIncidental;
+    item.mieAmount = total;
+};
+
+const getExpenseSubtotals = () => {
+    return state.expensesValid.reduce(
         (result, item) => {
             result.totalMie += item.mieAmount;
             result.totalLodging += item.lodgingAmount;
@@ -172,12 +156,6 @@ export const updateStateExpenseItem = (update: StateExpenseItemUpdate) => {
         },
         { totalMie: 0, totalLodging: 0 },
     );
-    return {
-        date: item.date,
-        newRowMieTotal: item.mieAmount,
-        totalMie,
-        totalLodging,
-    };
 };
 
 export const returnExpenses = () => {

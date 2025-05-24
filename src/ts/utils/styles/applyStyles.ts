@@ -1,7 +1,7 @@
 // Workaround to fully apply Tailwind styles to Shadow DOM
 // https://github.com/tailwindlabs/tailwindcss/issues/15005#issuecomment-2737489813
 
-import styles from '../../../css/styles.css?inline';
+import styles from '../../../css/_styles.css?inline';
 
 export const applyStyles = (shadowRoot: ShadowRoot) => {
     const shadowSheet = new CSSStyleSheet();
