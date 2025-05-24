@@ -34,13 +34,15 @@ API calls reduced with memoization and caching results in Cloudflare on the prox
 
 ## Built with
 
-TypeScript
+TypeScript - native web components encapsulated in shadow DOM
 Tailwind
 TomSelect for searchable dropdowns
 JSZip to unpack
 DOMPurify to santize developer config object
 
-## TK
+## Planned Updates
 
-This version is built independent of frameworks using native web components
-React version released soon
+- Dark mode
+- Add CSS paths to make it easy to style shadowDOM elements
+- Option to display rates only vs calculating expenses
+- React version
