@@ -24,7 +24,13 @@ Open source per diem calculator for both domestic and international trips. Built
 ## Usage
 
 - https://perdiemcalc.org
-- Develop locally - deploy per diem proxy - https://github.com/ahmad-dowla/per-diem-calculator-proxy
+- Develop locally
+
+## Local Development
+
+- deploy per diem proxy - https://github.com/ahmad-dowla/per-diem-calculator-proxy
+- VITE_PROXY_KEY, VITE_PROXY_URL, GSA_API_KEY
+-
 
 ## Behind scenes
 
@@ -44,5 +50,6 @@ DOMPurify to santize developer config object
 
 - Dark mode
 - Add CSS paths to make it easy to style shadowDOM elements
+- CDN option
 - Option to display rates only vs calculating expenses
 - React version
