@@ -1,17 +1,33 @@
 {
-    "name": "per-diem-calculator",
-    "private": true,
+    "name": "@per-diem-calculator/vanilla",
     "version": "1.0.0",
     "author": "Ahmad Dowla <ahmad.dowla@gmail.com>",
+    "description": "Open source per diem calculator for both domestic and international trips. Built in TypeScript with Tailwind. Rates sourced from GSA, State Dept., and DOD.",
+    "license": "MIT",
+    "homepage": "https://github.com/ahmad-dowla/per-diem-calculator",
+    "bugs": {
+        "url": "https://github.com/ahmad-dowla/per-diem-calculator/issues"
+    },
+    "keywords": [
+        "per diem",
+        "GSA",
+        "State Dept",
+        "DOD",
+        "calculator",
+        "expense report"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ahmad-dowla/per-diem-calculator.git"
+    },
     "type": "module",
     "scripts": {
-        "dev": "vite --host",
+        "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview --host"
+        "preview": "vite preview"
     },
     "devDependencies": {
         "@eslint/js": "^9.27.0",
-        "@tailwindcss/cli": "^4.1.7",
         "@tailwindcss/vite": "^4.1.4",
         "@vitejs/plugin-legacy": "^6.0.2",
         "eslint": "^9.27.0",
