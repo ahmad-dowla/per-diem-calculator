@@ -1,12 +1,22 @@
 import { defineConfig } from 'vite';
-import legacy from '@vitejs/plugin-legacy';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-    plugins: [
-        legacy({
-            targets: ['defaults', 'not IE 11'],
-        }),
-        tailwindcss(),
-    ],
+    plugins: [tailwindcss()],
+    build: {
+        lib: {
+            entry: ['src/index.ts'],
+            name: '@per-diem-calculator/vanilla',
+        },
+        rollupOptions: {
+            external: ['TomSelect', 'JSZip', 'DOMPurify'],
+            output: {
+                globals: {
+                    TomSelect: 'TomSelect',
+                    JSZip: 'JSZip',
+                    DOMPurify: 'DOMPurify',
+                },
+            },
+        },
+    },
 });

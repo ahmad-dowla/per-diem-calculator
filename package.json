@@ -21,6 +21,17 @@
         "url": "https://github.com/ahmad-dowla/per-diem-calculator.git"
     },
     "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/index.umd.cjs",
+    "module": "./dist/index.js",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.umd.cjs"
+        }
+    },
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
@@ -29,7 +40,6 @@
     "devDependencies": {
         "@eslint/js": "^9.27.0",
         "@tailwindcss/vite": "^4.1.4",
-        "@vitejs/plugin-legacy": "^6.0.2",
         "eslint": "^9.27.0",
         "eslint-config-prettier": "^10.1.5",
         "prettier": "^3.5.3",
