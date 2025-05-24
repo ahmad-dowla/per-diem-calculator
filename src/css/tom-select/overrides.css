@@ -39,7 +39,7 @@
 }
 
 .ts-dropdown-content {
-    @apply !h-lvh max-h-[375px];
+    @apply !h-lvh max-h-[calc(var(--row-location-open)-var(--row-close))] sm:max-h-[calc(var(--row-location-open-sm)-var(--row-close))];
 }
 
 .plugin-dropdown_input .dropdown-input {

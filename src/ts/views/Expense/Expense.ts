@@ -147,7 +147,7 @@ export class PdcExpenseView extends HTMLElement {
             case btn?.getAttribute('id') === 'toggle-expand':
                 this.#expandAllRows(btn);
                 return;
-            case btnPdcEl?.getAttribute('id') === 'print-expenses':
+            case btnPdcEl?.getAttribute('id') === 'save-expenses':
                 this.#viewContainer.setAttribute('table', 'true');
                 return;
             default:
