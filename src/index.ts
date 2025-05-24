@@ -1,5 +1,3 @@
-// TEST Try different config options
-
 import { Pdc } from './ts/controller';
 
 const container = document.querySelector('#perDiemCalc');
