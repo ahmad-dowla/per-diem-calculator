@@ -54,14 +54,14 @@ export class PdcLocationCategory extends HTMLElement {
         let pointerStartX = 0;
         let pointerStartY = 0;
 
-        this.#fieldset.addEventListener('pointerdown', e => {
+        this.#container.addEventListener('pointerdown', e => {
             if (!(e instanceof PointerEvent)) return;
             const result = handlePointerDown(e);
             pointerStartX = result.pointerStartX;
             pointerStartY = result.pointerStartY;
         });
 
-        this.#fieldset.addEventListener('pointerup', e => {
+        this.#container.addEventListener('pointerup', e => {
             if (e instanceof PointerEvent) {
                 const result = handlePointerUp(
                     e,
@@ -75,7 +75,8 @@ export class PdcLocationCategory extends HTMLElement {
         });
 
         // Keyboard events
-        this.#fieldset.addEventListener('keydown', e => {
+        this.#container.addEventListener('keydown', e => {
+            if (!(e instanceof KeyboardEvent)) return;
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
         });
@@ -89,10 +90,10 @@ export class PdcLocationCategory extends HTMLElement {
         const label = target.closest('label');
         const labelVal = label?.getAttribute('for');
         // In case the selection was made with keyboard presses, ensure the input fields are properly checked/unchecked so that the CSS can reflect that
-        const checkedInput = this.#fieldset.querySelector<HTMLInputElement>(
+        const checkedInput = this.#container.querySelector<HTMLInputElement>(
             `#${labelVal}`,
         );
-        const uncheckedInput = this.#fieldset.querySelector<HTMLInputElement>(
+        const uncheckedInput = this.#container.querySelector<HTMLInputElement>(
             `#${labelVal === 'domestic' ? 'intl' : 'domestic'}`,
         );
         if (!(checkedInput && uncheckedInput)) return;
@@ -107,11 +108,11 @@ export class PdcLocationCategory extends HTMLElement {
 
     /* GET ELS
      */
-    get #fieldset() {
-        const el = this.#shadowRoot.querySelector('fieldset');
+    get #container() {
+        const el = this.#shadowRoot.querySelector('#pdc-container');
         if (!el)
             throw new Error(
-                `Failed to render fieldset in Category custom element`,
+                `Failed to render container for Category custom element`,
             );
         return el;
     }
@@ -157,8 +158,8 @@ export class PdcLocationCategory extends HTMLElement {
      */
     #styleEl(bgColor: 'bg-white' | 'bg-neutral-50' | null = null) {
         if (!this.#styled) return;
-        this.#fieldset.classList.remove(`bg-white`, `bg-neutral-50`);
-        this.#fieldset.classList.add(
+        this.#container.classList.remove(`bg-white`, `bg-neutral-50`);
+        this.#container.classList.add(
             bgColor ? bgColor : `bg-${this.getAttribute('bg')}`,
         );
     }
@@ -173,15 +174,20 @@ export class PdcLocationCategory extends HTMLElement {
         this.removeAttribute('category');
         this.#inputs.forEach(input => {
             input.checked = false;
-            if (enable) input.removeAttribute('disabled');
-            else input.setAttribute('disabled', 'true');
+            if (enable) {
+                input.removeAttribute('disabled');
+                this.#container.removeAttribute('inert');
+            } else {
+                input.setAttribute('disabled', 'true');
+                this.#container.setAttribute('inert', '');
+            }
         });
         this.enableTabIndex(enable);
         this.#enabled = enable;
     }
 
     enableTabIndex(enable: boolean) {
-        const els = this.#fieldset.querySelectorAll('[tabindex]');
+        const els = this.#container.querySelectorAll('[tabindex]');
         els.forEach(el => el.setAttribute('tabindex', enable ? '0' : '-1'));
     }
 

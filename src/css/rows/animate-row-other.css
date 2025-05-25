@@ -1,5 +1,0 @@
-@theme {
-    --animate-row-delete: row-delete 0.35s 0.45s ease-out forwards;
-    --animate-row-add: row-add 0.35s 0.45s ease-in forwards;
-    --animate-row-add-sm: row-add-sm 0.35s 0.45s ease-in forwards;
-}

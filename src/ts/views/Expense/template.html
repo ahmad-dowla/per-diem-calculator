@@ -1,7 +1,7 @@
 <div
     id="expense-container"
     class="group relative mx-auto max-w-xl overflow-hidden p-3
-        [transition:height_0.7s_ease] print:hidden"
+        [transition:height_0.7s_ease] lg:max-w-7xl print:hidden"
 >
     <!-- Indicator that results are still loading -->
     <div
@@ -40,7 +40,7 @@
                     text-neutral-600 transition-colors duration-500 *:size-5
                     *:overflow-visible *:fill-current **:origin-center
                     **:transition-all hover:cursor-pointer focus:outline-none
-                    [&_.down]:[transform:translateY(15%)]
+                    lg:hidden [&_.down]:[transform:translateY(15%)]
                     [&_.up]:[transform:translateY(-15%)]
                     [&.active_.down]:[transform:scaleY(-1)_translateY(-70%)]
                     [&.active_.up]:[transform:scaleY(-1)_translateY(70%)]"

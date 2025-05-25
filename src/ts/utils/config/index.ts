@@ -1,6 +1,5 @@
 export { configDefault } from './configDefault';
 export {
-    ROW_CLOSED_HEIGHT,
     DEBOUNCE_TIME,
     BTN_ANIMATE_MS,
     ROW_ANIMATE_MS,
@@ -8,5 +7,13 @@ export {
     MILLISECONDS_IN_DAY,
     APPROX_DAYS_IN_6_MONTHS,
     OCTOBER,
+    SCREEN_WIDTH_SM,
+    SCREEN_WIDTH_LG,
+    ROW_CLOSED_HEIGHT,
+    ROW_LOCATION_OPEN_HEIGHT,
+    ROW_LOCATION_OPEN_HEIGHT_SM,
+    ROW_LOCATION_OPEN_HEIGHT_LG,
+    ROW_EXPENSE_OPEN_HEIGHT,
+    ROW_EXPENSE_OPEN_HEIGHT_LG,
 } from './numbers';
 export { sanitizeConfig } from './sanitizeConfig';

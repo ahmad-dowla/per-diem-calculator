@@ -1,12 +1,12 @@
 .ts-wrapper {
-    @apply [.has-items]:[&_.ts-control]:!border-r-success-400 !static min-h-[72px] w-[68%] hover:cursor-pointer sm:w-[75%] [.has-items]:[&_.ts-control]:after:!content-none;
+    @apply !static hover:cursor-pointer [.has-items]:[&_.ts-control]:after:!content-none;
 }
 
 .ts-control,
 .ts-wrapper.single .ts-control,
 .plugin-dropdown_input.focus.dropdown-active .ts-control,
 .ts-wrapper.single.input-active .ts-control {
-    @apply [.error]:border-r-error-400 [.success]:border-r-success-400 my-3 content-center rounded-none border-t-0 border-r-3 border-b-0 border-l-0 border-r-transparent bg-transparent bg-none !p-0 !py-3 !pr-3 text-base shadow-none transition-[border-color] select-none after:content-[none] focus:outline-none;
+    @apply content-center rounded-none border-0 bg-transparent bg-none !p-0 !pr-3 text-base shadow-none transition-colors select-none after:content-[none] focus:outline-none;
 }
 
 .ts-control .item {
@@ -39,7 +39,7 @@
 }
 
 .ts-dropdown-content {
-    @apply !h-lvh max-h-[calc(var(--row-location-open)-var(--row-close))] sm:max-h-[calc(var(--row-location-open-sm)-var(--row-close))];
+    @apply !h-lvh max-h-[410px] sm:max-h-[470px] lg:max-h-[160px];
 }
 
 .plugin-dropdown_input .dropdown-input {
@@ -51,5 +51,5 @@
 }
 
 .no-results {
-    @apply absolute h-full w-full !p-6 sm:!p-8 md:!p-10;
+    @apply !pl-5;
 }

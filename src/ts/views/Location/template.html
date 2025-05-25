@@ -1,7 +1,7 @@
 <div
     id="view-container"
     class="group relative mx-auto max-w-xl overflow-hidden p-3
-        [transition:height_0.7s_ease] print:hidden"
+        [transition:height_0.7s_ease] lg:max-w-7xl print:hidden"
 >
     <!-- Heading, rows, error container -->
     <div
@@ -32,6 +32,7 @@
     <!-- Add location button-->
     <div
         class="[.rows-open]:animate-rows-open-addRowBtn
+            lg:animate-rows-closed-addRowBtn
             [.rows-closed]:animate-rows-closed-addRowBtn relative z-0 -mt-5
             w-full [transform:translateY(-100%)] text-center opacity-0"
     >
@@ -64,7 +65,8 @@
     <fieldset
         id="expense-category"
         class="[.rows-open]:animate-rows-open-expenseCategoryBtn
-            [.rows-closed]:animate-rows-closed-expenseCategoryBtn relative mt-8
+            [.rows-closed]:animate-rows-closed-expenseCategoryBtn
+            lg:animate-rows-closed-expenseCategoryBtn relative mt-8
             [transform:translateY(400%)] space-y-6 text-center print:hidden"
     >
         <div
@@ -117,8 +119,9 @@
     <!-- Button to trigger Expense view -->
     <div
         class="[.rows-open]:animate-rows-open-expensesCalculateBtn
-            [.rows-closed]:animate-rows-closed-expensesCalculateBtn mt-6 mb-8
-            w-full [transform:translateY(200%)] text-center print:hidden"
+            [.rows-closed]:animate-rows-closed-expensesCalculateBtn
+            lg:animate-rows-closed-expensesCalculateBtn mt-6 mb-8 w-full
+            [transform:translateY(200%)] text-center print:hidden"
     >
         <pdc-button
             styled="true"

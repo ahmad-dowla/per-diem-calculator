@@ -1,35 +1,46 @@
 <div
-    class="group flex items-center justify-between border-b border-b-neutral-100
-        px-3"
+    inert
+    id="pdc-container"
+    class="group flex items-center justify-between px-3 transition-colors
+        duration-500 lg:flex-col lg:items-start lg:pt-3"
 >
     <pdc-label styled="true"></pdc-label>
-    <select hidden></select>
-    <button
-        tabindex="0"
-        type="button"
-        id=""
-        class="group-[.active]:focus-visible:border-primary-800 absolute
-            right-[24px] rounded-full border-3 border-transparent p-1
-            transition-colors focus:outline-none
-            group-[.active]:focus-visible:[&_svg]:-rotate-180"
+    <div
+        class="group-[.error]:border-r-error-400
+            group-[.success]:border-r-success-400 my-3 flex w-[68%] items-center
+            justify-between border-r-3 border-r-transparent py-1.5 pr-2.5
+            sm:w-[75%] lg:w-full lg:group-[.success]:border-r-transparent"
     >
-        <svg
-            class="group-[.active]:group-hover:stroke-primary-800
-                group-[.active]:group-focus-visible:stroke-primary-800 size-4
-                shrink-0 rotate-0 fill-none stroke-neutral-400
-                transition-[transform_stroke] duration-500
-                group-[.active]:group-hover:-rotate-180 sm:size-5"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+        <div class="grow overflow-hidden">
+            <select hidden></select>
+        </div>
+        <button
+            tabindex="0"
+            type="button"
+            id=""
+            class="group-[.active]:focus-visible:border-primary-800 relative
+                z-10 rounded-full border-3 border-transparent p-1
+                transition-colors focus:outline-none
+                group-[.active]:focus-visible:[&_svg]:-rotate-180"
         >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-            />
-        </svg>
-    </button>
+            <svg
+                class="group-[.active]:group-hover:stroke-primary-800
+                    group-[.active]:group-focus-visible:stroke-primary-800
+                    size-4 shrink-0 rotate-0 fill-none stroke-neutral-400
+                    transition-[transform_stroke] duration-500
+                    group-[.active]:group-hover:-rotate-180 sm:size-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                />
+            </svg>
+        </button>
+    </div>
     <!-- Loading indicator-->
     <div
         id="loading-spinner"
@@ -42,4 +53,15 @@
                 rounded-full border-4 border-t-4"
         ></div>
     </div>
+    <svg
+        id="checkmark"
+        class="fill-success-400 absolute top-2 right-2 hidden size-6
+            lg:group-[.success]:block"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 16 16"
+    >
+        <path
+            d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"
+        />
+    </svg>
 </div>

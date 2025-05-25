@@ -1,7 +1,7 @@
 @theme {
     @keyframes row-expense-open {
         0% {
-            height: var(--row-close);
+            height: var(--row-closed);
         }
         100% {
             height: var(--row-expense-open);
@@ -12,7 +12,7 @@
             height: var(--row-expense-open);
         }
         100% {
-            height: var(--row-close);
+            height: var(--row-closed);
         }
     }
 }

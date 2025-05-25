@@ -1,6 +1,9 @@
 @theme {
-    --row-expense-open: 400px;
-    --row-close: 96px;
-    --row-location-open: 477px;
-    --row-location-open-sm: 537px;
+    --row-expense-open: 441px;
+    --row-closed: 96px;
+    --row-location-open: 469px;
+    --row-location-open-sm: 529px;
+    --row-location-open-lg: 218px;
+    --row-expense-open-lg: 218px;
 }
+/* Also update in /src/ts/utils/config/numbers.ts */

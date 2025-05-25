@@ -1,32 +1,36 @@
 <fieldset
-    class="flex items-center justify-between border-b border-b-neutral-100
-        bg-white px-3"
+    inert
+    id="pdc-container"
+    class="relative flex items-center justify-between bg-white px-3
+        transition-colors duration-500 lg:flex-col lg:items-start lg:pt-3"
 >
     <pdc-label styled="true" text="Area"></pdc-label>
     <div
-        class="w-[72%] opacity-15 transition-opacity duration-700 **:text-sm
-            has-enabled:opacity-100 sm:w-[75%]"
+        class="*:focus-visible:border-r-primary-800
+            *:[.error]:border-r-error-400 *:has-checked:border-r-success-400
+            peer w-[72%] opacity-15 transition-opacity duration-700 *:my-3
+            *:grid *:cursor-pointer *:grid-cols-2 *:items-center
+            *:justify-items-center *:border-r-3 *:border-r-transparent
+            *:border-b-transparent *:bg-transparent *:py-2.5 *:pr-3
+            *:select-none **:text-sm **:transition-colors
+            *:focus-visible:outline-none has-enabled:opacity-100
+            *:has-disabled:hover:cursor-not-allowed sm:w-[75%]
+            *:sm:justify-items-start lg:w-full lg:*:my-1
+            lg:*:justify-items-center *:lg:py-1
+            lg:*:has-checked:border-r-transparent"
     >
         <label
             tabindex="-1"
-            class="group border-r-2-transparent
-                hover:[&_.state]:fill-primary-800
+            class="group hover:[&_.state]:fill-primary-800
                 hover:[&_.state]:stroke-primary-100
                 focus-visible:[&_.state]:fill-primary-800
-                focus-visible:[&_.state]:stroke-primary-100
-                focus-visible:border-r-primary-800 [.error]:border-r-error-400
-                has-checked:border-r-success-400 my-3 grid cursor-pointer
-                grid-cols-2 items-center justify-items-center border-r-3
-                border-r-transparent bg-transparent py-2.5 pr-3
-                transition-colors select-none *:pr-4 **:transition-colors
-                focus-visible:outline-none has-disabled:hover:cursor-not-allowed
-                sm:justify-items-start [&_.state]:fill-neutral-800
-                [&_.state]:stroke-neutral-100"
+                focus-visible:[&_.state]:stroke-primary-100 *:pr-4
+                [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
             for="domestic"
         >
             <svg
                 inert
-                class="max-h-[45px] sm:max-h-[60px]"
+                class="max-h-[45px] sm:max-h-[60px] lg:max-h-[50px]"
                 viewBox="0 0 959 593"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -383,7 +387,7 @@
                     [&_li]:first:border-b-2 [&_li]:first:pb-2 sm:[&_li]:mb-2
                     sm:[&_li]:inline-block sm:[&_li]:first:border-none
                     sm:[&_li]:first:pb-0 sm:[&_li]:last:border-b-2
-                    sm:[&_li]:last:pb-2"
+                    sm:[&_li]:last:pb-2 lg:[&_li]:list-item"
             >
                 <li>48 <br class="sm:hidden" />States</li>
                 <li class="hidden">Washington DC</li>
@@ -401,23 +405,16 @@
         </label>
         <label
             tabindex="-1"
-            class="group border-r-2-transparent hover:[&_.land]:fill-primary-800
+            class="group hover:[&_.land]:fill-primary-800
                 hover:[&_.water]:fill-primary-100
                 focus-visible:[&_.land]:fill-primary-800
-                focus-visible:[&_.water]:fill-primary-100
-                focus-visible:border-r-primary-800 [.error]:border-r-error-400
-                has-checked:border-r-success-400 my-4 grid cursor-pointer
-                grid-cols-2 items-center justify-items-center border-r-3
-                border-r-transparent bg-transparent py-2.5 pr-3
-                transition-colors select-none *:pr-4 **:transition-colors
-                focus-visible:outline-none has-disabled:hover:cursor-not-allowed
-                sm:ml-3 sm:justify-items-normal [&_.land]:fill-neutral-800
-                [&_.water]:fill-neutral-100"
+                focus-visible:[&_.water]:fill-primary-100 *:pr-4
+                [&_.land]:fill-neutral-800 [&_.water]:fill-neutral-100"
             for="intl"
         >
             <svg
                 inert
-                class="mr-5 max-h-[50px] sm:max-h-[60px]"
+                class="mr-5 max-h-[50px] sm:max-h-[60px] lg:max-h-[50px]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="1.52 1.58 3.77 3.77"
             >
@@ -498,7 +495,8 @@
                     [&_li]:first:border-b-2 [&_li]:first:pb-2 sm:[&_li]:mb-2
                     sm:[&_li]:inline-block sm:[&_li]:first:hidden
                     sm:[&_li]:first:border-none sm:[&_li]:first:pb-0
-                    sm:[&_li]:last:border-b-2 sm:[&_li]:last:pb-2"
+                    sm:[&_li]:last:border-b-2 sm:[&_li]:last:pb-2 lg:[&_li]:mb-1
+                    lg:[&_li]:list-item"
             >
                 <li>All Other Locations</li>
                 <li>Alaska, Hawaii</li>
@@ -517,4 +515,14 @@
             />
         </label>
     </div>
+    <svg
+        class="fill-success-400 absolute top-2 right-2 hidden size-6
+            lg:peer-has-checked:block"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 16 16"
+    >
+        <path
+            d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"
+        />
+    </svg>
 </fieldset>

@@ -2,18 +2,18 @@
 import type { StateExpenseItemValid } from '../../types/expenses';
 
 // Utils
-import {
-    handlePointerDown,
-    handlePointerUp,
-    USD,
-    wait,
-} from '../../utils/misc';
+import { handlePointerDown, handlePointerUp, USD } from '../../utils/misc';
 import {
     applyStyles,
     removeStyles,
     highlightSuccess,
 } from '../../utils/styles';
-import { ROW_CLOSED_HEIGHT, ROW_ANIMATE_MS } from '../../utils/config';
+import {
+    ROW_CLOSED_HEIGHT,
+    SCREEN_WIDTH_LG,
+    ROW_EXPENSE_OPEN_HEIGHT,
+    ROW_EXPENSE_OPEN_HEIGHT_LG,
+} from '../../utils/config';
 import { getShortMonth, getDD, getYYYY, getMM } from '../../utils/dates';
 
 // HTML/CSS
@@ -100,17 +100,18 @@ export class PdcExpenseRow extends HTMLElement {
         locationEl.textContent = `${this.#expense.city} (${this.#expense.country})`;
         lodgingRateEl.setAttribute(
             'text',
-            `<p class="font-semibold">Lodging</p>
-            <p class="text-sm sm:text-base">Max ${USD.format(this.#maxLodging)}</p>`,
+            `<span class="font-semibold block">Lodging</span>
+            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxLodging)}</span>`,
         );
         mieRateEl.setAttribute(
             'text',
-            `<p class="font-semibold">M&IE</p>
-            <p class="text-sm sm:text-base">Max ${USD.format(this.#maxMie)}</p>`,
+            `<span class="font-semibold block">M&IE</span>
+            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxMie)}</span></span>`,
         );
     }
 
     #disableUnusedRowEls() {
+        const mieEl = this.#shadowRoot.querySelector('#mie');
         const lodgingEl = this.#shadowRoot.querySelector('#lodging');
         const deductionsEl = this.#shadowRoot.querySelector('#deductions');
         if (this.#expensesCategory === 'mie') {
@@ -121,6 +122,8 @@ export class PdcExpenseRow extends HTMLElement {
         }
         if (this.#expensesCategory === 'lodging') {
             deductionsEl?.classList.add('disabled');
+            mieEl?.classList.add('disabled');
+            mieEl?.querySelector('input')?.setAttribute('disabled', '');
             deductionsEl
                 ?.querySelectorAll('input')
                 .forEach(el => el.setAttribute('disabled', ''));
@@ -206,6 +209,17 @@ export class PdcExpenseRow extends HTMLElement {
         return el;
     }
 
+    get #rowEls() {
+        const location = this.#row.querySelector<HTMLElement>('#location');
+        const deductions = this.#row.querySelector<HTMLElement>('#deductions');
+        const mie = this.#row.querySelector<HTMLElement>('#mie');
+        const lodging = this.#row.querySelector<HTMLElement>('#lodging');
+        const total = this.#row.querySelector<HTMLElement>('#total');
+        if (!(location && deductions && mie && lodging && total))
+            throw new Error('Failed to render row expense elements.');
+        return { location, deductions, mie, lodging, total };
+    }
+
     get #rowAnimatedEls() {
         const summary = this.#row.querySelector<HTMLElement>(
             '[data-pdc="expense-row-summary"]',
@@ -235,23 +249,39 @@ export class PdcExpenseRow extends HTMLElement {
         if (!this.#styled || this.#row.classList.contains('toggling')) return;
 
         if (!toggle) {
-            this.rowToggle(
-                this.#row.offsetHeight === ROW_CLOSED_HEIGHT ? 'open' : 'close',
-            );
+            const direction =
+                (
+                    window.screen.width >= SCREEN_WIDTH_LG ||
+                    this.#row.offsetHeight === ROW_CLOSED_HEIGHT
+                ) ?
+                    'open'
+                :   'close';
+            this.rowToggle(direction);
             return;
         }
 
         this.#row.classList.remove('pdc-row-open', 'pdc-row-close');
         this.#row.classList.add('toggling', `pdc-row-${toggle}`);
 
-        await this.#animateRow(toggle);
+        if (toggle === 'open') {
+            this.#row.style.height = this.#getRowTargetOpenHeight() + 'px';
+            await this.#animateRow('open');
+        } else {
+            this.#row.style.height = ROW_CLOSED_HEIGHT + 'px';
+            await this.#animateRow('close');
+        }
+
         this.#row.classList.remove('toggling');
     };
 
+    #getRowTargetOpenHeight() {
+        if (window.screen.width >= SCREEN_WIDTH_LG)
+            return ROW_EXPENSE_OPEN_HEIGHT_LG;
+        return ROW_EXPENSE_OPEN_HEIGHT;
+    }
+
     #animateRow = async (direction: 'open' | 'close') => {
-        await wait(ROW_ANIMATE_MS);
         this.#enableRowTabIndex(direction === 'open' ? true : false);
-        this.#row.style.height = `${direction === 'open' ? this.#row.scrollHeight : this.#row.clientHeight}px`;
         this.#rowAnimatedEls.summary.style.opacity =
             direction === 'open' ? '0' : '100';
         this.#rowAnimatedEls.summary.style.transform =
@@ -262,10 +292,16 @@ export class PdcExpenseRow extends HTMLElement {
             direction === 'open' ? `translateX(100%)` : `translateX(0%)`;
     };
 
-    windowResize = () => {
-        if (this.#row.offsetHeight === ROW_CLOSED_HEIGHT) return;
+    resizeRow = () => {
+        if (
+            window.screen.width < SCREEN_WIDTH_LG &&
+            this.#row.offsetHeight === ROW_CLOSED_HEIGHT
+        )
+            return;
         this.#row.style.height =
             this.#rowAnimatedEls.details.scrollHeight + 'px';
+        this.styleRow();
+        if (window.screen.width >= SCREEN_WIDTH_LG) this.rowToggle('open');
     };
 
     styleRow = () => {
@@ -278,10 +314,24 @@ export class PdcExpenseRow extends HTMLElement {
         const oppColor = color === 'neutral-50' ? 'white' : 'neutral-50';
         this.#row.classList.remove('bg-neutral-50', 'bg-white');
         this.#row.classList.add(`bg-${color}`);
-        [...this.#rowAnimatedEls.details.children].forEach((el, i) => {
+
+        Object.values(this.#rowEls).forEach((el, i) => {
             el.classList.remove('bg-white', 'bg-neutral-50');
-            el.classList.add(i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`);
+            if (window.screen.width < SCREEN_WIDTH_LG) {
+                el.classList.add(
+                    i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`,
+                );
+            } else {
+                el.classList.add(`bg-${color}`);
+                el
+                    .querySelector('#lodging-amount')
+                    ?.classList.remove('bg-white', 'bg-neutral-50');
+                el
+                    .querySelector('#lodging-amount')
+                    ?.classList.add(`bg-${oppColor}`);
+            }
         });
+
         this.style.position = 'relative';
         this.style.overflow = 'hidden';
         this.style.zIndex = index.toString();

@@ -88,6 +88,15 @@ export class PdcLocationDate extends HTMLElement {
         return el;
     }
 
+    get #container() {
+        const el = this.#shadowRoot.querySelector('#pdc-container');
+        if (!el)
+            throw new Error(
+                `Failed to render container for Date custom element`,
+            );
+        return el;
+    }
+
     get #shadowRoot() {
         if (!this.shadowRoot)
             throw new Error(
@@ -169,8 +178,14 @@ export class PdcLocationDate extends HTMLElement {
     }
 
     enable(enable: boolean) {
-        if (enable) this.#input.removeAttribute('disabled');
-        else this.#input.setAttribute('disabled', 'true');
+        if (enable) {
+            this.#input.removeAttribute('disabled');
+            this.#container.removeAttribute('inert');
+        } else {
+            this.#input.setAttribute('disabled', 'true');
+            this.#container.setAttribute('inert', '');
+            this.#input.classList.remove('success');
+        }
         this.enableTabIndex(enable);
         this.#enabled = enable;
     }
@@ -252,6 +267,7 @@ export class PdcLocationDate extends HTMLElement {
         if (enable) {
             if (this.#styled) {
                 this.#input.classList.add('error');
+                this.#input.classList.remove('success');
                 this.#errorEl.classList.add('active');
             }
             this.#errorEl.textContent = msg;

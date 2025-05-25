@@ -22,6 +22,7 @@ import templateHTML from './template.html?raw';
 
 // Custom Elements
 import { PdcExpenseRow, PdcButton } from '../../components';
+import { SCREEN_WIDTH_LG } from '../../utils/config';
 customElements.define('pdc-expense-row', PdcExpenseRow);
 
 // Template for this Custom Element
@@ -131,7 +132,7 @@ export class PdcExpenseView extends HTMLElement {
 
     #debouncedResizeHandler() {
         const resizeHandler = () => {
-            this.#rows.forEach(row => row.windowResize());
+            this.#rows.forEach(row => row.resizeRow());
         };
         return debounce(resizeHandler);
     }
@@ -265,6 +266,7 @@ export class PdcExpenseView extends HTMLElement {
             );
             this.#rowsContainer.appendChild(row);
             row.styleRow();
+            if (window.screen.width >= SCREEN_WIDTH_LG) row.rowToggle('open');
         });
         const position = this.getBoundingClientRect().top + window.pageYOffset;
         window.scrollTo({ top: position, behavior: 'smooth' });

@@ -43,6 +43,7 @@ export class PdcLocationSelect extends HTMLElement {
             'text',
             this.#attrName === 'country' ? 'State' : 'City',
         );
+        this.#addEventListeners();
         return this.#createTomSelect();
     }
 
@@ -61,15 +62,14 @@ export class PdcLocationSelect extends HTMLElement {
         // Mouse, touch events
         let pointerStartX = 0;
         let pointerStartY = 0;
-        this.#tomSelect.control.addEventListener(
-            'pointerdown',
-            (e: PointerEvent) => {
-                const result = handlePointerDown(e);
-                pointerStartX = result.pointerStartX;
-                pointerStartY = result.pointerStartY;
-            },
-        );
-        this.#container.addEventListener('pointerup', (e: PointerEvent) => {
+        this.#container.addEventListener('pointerdown', e => {
+            if (!(e instanceof PointerEvent)) return;
+            const result = handlePointerDown(e);
+            pointerStartX = result.pointerStartX;
+            pointerStartY = result.pointerStartY;
+        });
+        this.#container.addEventListener('pointerup', e => {
+            if (!(e instanceof PointerEvent)) return;
             const result = handlePointerUp(
                 e,
                 this.#handleClicks.bind(this),
@@ -81,30 +81,20 @@ export class PdcLocationSelect extends HTMLElement {
         });
 
         // Keyboard events
-        this.#container.addEventListener('keydown', (e: KeyboardEvent) => {
+        this.#container.addEventListener('keydown', e => {
+            if (!(e instanceof KeyboardEvent)) return;
             if (!(e.key === 'Enter' || e.key === ' ')) return;
             this.#handleClicks(e);
-        });
-
-        this.#tomSelect.on('change', () => {
-            const value = this.#tomSelect.getValue();
-            if (Array.isArray(value)) return; // Ensures string value as TomSelect can return string[] if multiple selection enabled
-            this.setAttribute(this.#attrName, value);
-
-            if (this.#styled) {
-                this.#renderError(false);
-                this.#tomSelect.control.classList.remove('error');
-                this.#tomSelect.control.classList.add('success');
-            }
-            this.#tomSelect.control.setAttribute('tabindex', '-1');
         });
     }
 
     #handleClicks = (e: Event) => {
         const target = e.target;
+        console.log(e.target);
         if (
             !(
-                target instanceof HTMLElement &&
+                (target instanceof HTMLElement ||
+                    target instanceof SVGElement) &&
                 (target.closest('.ts-control') || target.closest('button'))
             )
         )
@@ -119,7 +109,8 @@ export class PdcLocationSelect extends HTMLElement {
      */
 
     get #container() {
-        const el = this.#shadowRoot.querySelector('div');
+        const el =
+            this.#shadowRoot.querySelector<HTMLElement>('#pdc-container');
         if (!el)
             throw new Error(
                 `Failed to get container for Select custom element`,
@@ -185,7 +176,7 @@ export class PdcLocationSelect extends HTMLElement {
         div?.classList.add(bgColor ? bgColor : `bg-${this.getAttribute('bg')}`);
     }
 
-    showLoadingSpinner(enabled: boolean) {
+    #showLoadingSpinner(enabled: boolean) {
         if (!this.#styled) return;
         if (enabled) this.#loadingSpinner.classList.add('active');
         else this.#loadingSpinner.classList.remove('active');
@@ -202,19 +193,26 @@ export class PdcLocationSelect extends HTMLElement {
     }
 
     enable(enable: boolean) {
-        this.#render();
+        this.removeAttribute(this.#attrName);
         if (enable) {
             this.#tomSelect.enable();
             this.#container.classList.add('active');
+            this.#container.removeAttribute('inert');
         } else {
             this.#tomSelect.disable();
-            this.#container.classList.remove('active');
+            this.#container.classList.remove('active', 'success');
+            this.#container.setAttribute('inert', '');
         }
         this.enableTabIndex(enable);
+        this.#container.classList.remove('success', 'error');
         this.#enabled = enable;
     }
 
     setOptions(locations: Location[]) {
+        this.#showLoadingSpinner(true);
+        this.enable(false);
+        this.#tomSelect.destroy();
+        this.#createTomSelect();
         locations.forEach(location => {
             const value =
                 this.#attrName === 'country' ? location.country : location.city;
@@ -228,13 +226,27 @@ export class PdcLocationSelect extends HTMLElement {
             this.#select.appendChild(option);
             this.#tomSelect.sync();
         });
+        this.enable(true);
+        this.#tomSelect.on('change', () => {
+            const value = this.#tomSelect.getValue();
+            if (Array.isArray(value)) return; // Ensures string value as TomSelect can return string[] if multiple selection enabled
+            this.setAttribute(this.#attrName, value);
+
+            if (this.#styled) {
+                this.#renderError(false);
+                this.#container.classList.remove('error');
+                this.#container.classList.add('success');
+            }
+            this.#tomSelect.control.setAttribute('tabindex', '-1');
+        });
+        this.#showLoadingSpinner(false);
     }
 
     #createTomSelect() {
         const noResultsText =
             this.#attrName === 'city' ?
                 `No results
-        found.<br><br>Choose the first available option.<br><br>E.g. Standard Rate, [OTHER], etc.`
+        found. Choose the first available option such as "Standard Rate", "[OTHER]", etc.`
             :   `No results found.`;
         const tomSelect = new TomSelect(this.#select, {
             placeholder: `Select ${this.#attrName === 'country' ? 'state' : 'city'}`,
@@ -254,7 +266,6 @@ export class PdcLocationSelect extends HTMLElement {
         this.#tomSelect.disable();
         this.#tomSelect.tabIndex = -1;
         this.enableTabIndex(false);
-        this.#addEventListeners();
         this.#styleEl();
         return tomSelect;
     }
@@ -264,7 +275,7 @@ export class PdcLocationSelect extends HTMLElement {
     #renderError(enable: boolean) {
         if (enable) {
             if (this.#styled) {
-                this.#tomSelect.control.classList.add('error');
+                this.#container.classList.add('error');
                 this.#errorEl.classList.add('active');
             }
             this.#errorEl.textContent =
@@ -272,7 +283,7 @@ export class PdcLocationSelect extends HTMLElement {
             return;
         }
         if (!this.#styled) return;
-        this.#tomSelect.control.classList.remove('error');
+        this.#container.classList.remove('error');
         this.#errorEl.classList.remove('active');
     }
 

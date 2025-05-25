@@ -23,7 +23,13 @@ import {
     BTN_ANIMATE_MS,
     MILLISECONDS_IN_DAY,
     ROW_ANIMATE_MS,
+    SCREEN_WIDTH_LG,
     ROW_CLOSED_HEIGHT,
+    ROW_LOCATION_OPEN_HEIGHT,
+    ROW_LOCATION_OPEN_HEIGHT_SM,
+    ROW_LOCATION_OPEN_HEIGHT_LG,
+    SCREEN_WIDTH_SM,
+    DEBOUNCE_TIME,
 } from '../../utils/config';
 
 // HTML/CSS
@@ -208,12 +214,13 @@ export class PdcLocationView extends HTMLElement {
     }
 
     #getRowAnimatedEls(row: Element) {
-        const deleteBtn = row.querySelector<HTMLButtonElement>(
-            'button[data-pdc="delete-row"]',
-        );
         const summary = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-summary"]',
         );
+        const deleteBtn =
+            summary?.parentElement?.querySelector<HTMLButtonElement>(
+                'button[data-pdc="delete-row"]',
+            );
         const details = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-details"]',
         );
@@ -390,54 +397,92 @@ export class PdcLocationView extends HTMLElement {
 
     async #rowToggle(
         row: HTMLElement | null,
-        toggle: 'open' | 'close' | 'add' | 'initial' | 'delete' | null = null,
+        toggle: 'open' | 'close' | 'initial' | 'add' | 'delete' | null = null,
         nextRow: Element | null = null,
     ) {
-        if (!row) return;
-        if (!this.#styled || row.classList.contains('toggling')) return;
+        if (!row || !this.#styled || row.classList.contains('toggling')) return;
+
         if (!toggle) {
-            this.#rowToggle(
-                row,
-                row.offsetHeight === ROW_CLOSED_HEIGHT ? 'open' : 'close',
-            );
+            const direction =
+                (
+                    window.screen.width >= SCREEN_WIDTH_LG ||
+                    row.offsetHeight === ROW_CLOSED_HEIGHT
+                ) ?
+                    'open'
+                :   'close';
+            this.#rowToggle(row, direction);
             return;
         }
+        this.#clearErrorEl();
         row.classList.remove(
             'pdc-row-open',
-            'pdc-row-initial',
-            'pdc-row-add',
             'pdc-row-close',
+            'pdc-row-initial',
         );
         row.classList.add('toggling', `pdc-row-${toggle}`);
         // Pre-toggle adjustments
-        if (toggle === 'close' || toggle === 'delete') this.#clearErrorEl();
-        if (toggle === 'open') this.#animateBtns('open');
-        if (toggle === 'add' || toggle === 'initial') {
-            if (this.#rowsContainer.childElementCount > 1 && toggle === 'add')
-                this.#animateBtns('open'); // Trigger animation only if there are existing rows
+        if (toggle === 'initial' || toggle === 'add') {
             this.#styleRow(row);
             this.#returnRowObject(row); // Sets row count
         }
+        await wait(0);
+        this.#disableAllTabIndexes();
         // Fire toggles
-        if (toggle === 'open' || toggle === 'add' || toggle === 'initial')
+        if (toggle === 'open' || toggle === 'initial' || toggle === 'add') {
+            if (toggle !== 'initial') await this.#animateBtns('open');
+            row.style.height = this.#getRowTargetOpenHeight() + 'px';
             await this.#animateRow(row, 'open');
-        if (toggle === 'close') await this.#animateRow(row, 'close');
-        if (toggle === 'delete') await this.#animateRowDelete(row, nextRow);
+        }
+        if (toggle === 'close') {
+            await this.#animateRow(row, 'close');
+            row.style.height = ROW_CLOSED_HEIGHT + 'px';
+            await this.#animateBtns();
+        }
+        if (toggle === 'delete') {
+            row.style.height = 0 + 'px';
+            await this.#animateRowDelete(row, nextRow);
+        }
         if (toggle !== 'delete') {
             row.classList.remove('ring-transparent');
             row.classList.add('ring-neutral-200');
         }
-        await wait(BTN_ANIMATE_MS);
+        if (window.screen.width >= SCREEN_WIDTH_LG) {
+            this.#viewBtns.calculateExpenses
+                .querySelector<PdcButton>('pdc-button')
+                ?.enableTabIndex(true);
+
+            [
+                this.#viewBtns.addRow.querySelector('button'),
+                ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
+            ].forEach(el => el && el.setAttribute('tabindex', '0'));
+            this.#rows.forEach(row => {
+                row
+                    .querySelector('[data-pdc="location-row-sidebar"]')
+                    ?.querySelector('[data-pdc="delete-row"]')
+                    ?.setAttribute('tabindex', '0');
+            });
+        } else {
+            this.#rows.forEach(row => {
+                row
+                    .querySelector('[data-pdc="location-row-sidebar"]')
+                    ?.querySelector('[data-pdc="delete-row"]')
+                    ?.setAttribute('tabindex', '-1');
+            });
+        }
         row.classList.remove('toggling');
     }
 
+    #getRowTargetOpenHeight() {
+        if (window.screen.width >= SCREEN_WIDTH_LG)
+            return ROW_LOCATION_OPEN_HEIGHT_LG;
+        if (window.screen.width >= SCREEN_WIDTH_SM)
+            return ROW_LOCATION_OPEN_HEIGHT_SM;
+        return ROW_LOCATION_OPEN_HEIGHT;
+    }
+
     async #animateRow(row: HTMLElement, direction: 'open' | 'close') {
-        await wait(0);
-        this.#disableAllTabIndexes();
-        await wait(ROW_ANIMATE_MS);
-        this.#enableRowTabIndex(row, direction === 'open' ? true : false);
-        row.style.height = `${direction === 'open' ? row.scrollHeight : row.clientHeight}px`;
         const { details, summary, deleteBtn } = this.#getRowAnimatedEls(row);
+        this.#enableRowTabIndex(row, direction === 'open' ? true : false);
         if (direction === 'open') details.removeAttribute('inert');
         else details.setAttribute('inert', '');
         [summary, deleteBtn].forEach(
@@ -445,12 +490,11 @@ export class PdcLocationView extends HTMLElement {
         );
         details.style.opacity = direction === 'open' ? '100' : '0';
         details.style.transform =
-            direction === 'open' ? 'translateX(100%)' : `translateX(0%)`;
+            direction === 'open' ? 'translateX(100%)' : 'translateX(0%)';
         summary.style.transform =
-            direction === 'open' ? 'translateY(-200%)' : `translateY(0%)`;
+            direction === 'open' ? 'translateY(-200%)' : 'translateY(0%)';
         deleteBtn.style.transform =
-            direction === 'open' ? 'translateX(200%)' : `translateX(0%)`;
-        if (direction === 'close') this.#animateBtns();
+            direction === 'open' ? 'translateX(200%)' : 'translateX(0%)';
     }
 
     async #animateRowDelete(row: HTMLElement, nextRow: Element | null = null) {
@@ -473,14 +517,18 @@ export class PdcLocationView extends HTMLElement {
     }
 
     async #animateBtns(open: 'open' | null = null) {
+        if (!open) await wait(BTN_ANIMATE_MS);
         const btns = [
             this.#viewBtns.addRow,
             this.#viewBtns.expenseCategory,
             this.#viewBtns.calculateExpenses,
         ];
         const rowsOpen =
-            !!open ||
-            [...this.#rows].some(row => row.offsetHeight !== ROW_CLOSED_HEIGHT);
+            window.screen.width < SCREEN_WIDTH_LG &&
+            (open ||
+                [...this.#rows].some(
+                    row => row.offsetHeight !== ROW_CLOSED_HEIGHT,
+                ));
         btns.forEach(btn =>
             btn.classList.remove(rowsOpen ? 'rows-closed' : 'rows-open'),
         );
@@ -500,9 +548,17 @@ export class PdcLocationView extends HTMLElement {
 
     #windowResize = () => {
         [...this.#rows].forEach(row => {
-            if (row.offsetHeight === ROW_CLOSED_HEIGHT) return;
+            if (
+                window.screen.width < SCREEN_WIDTH_LG &&
+                row.offsetHeight === ROW_CLOSED_HEIGHT
+            )
+                return;
+            this.#styleRow(row);
             row.style.height =
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
+            if (window.screen.width >= SCREEN_WIDTH_LG)
+                this.#rowToggle(row, 'open');
+            else this.#animateBtns();
         });
     };
 
@@ -513,22 +569,12 @@ export class PdcLocationView extends HTMLElement {
         row.classList.remove('bg-white', 'bg-neutral-50');
         row.classList.add(`bg-${color}`);
         row.style.zIndex = index.toString();
-        [...this.#getRowAnimatedEls(row).details.children].forEach((el, i) => {
-            el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
+        Object.values(this.#getRowPdcEls(row)).forEach((el, i) => {
+            if (window.screen.width < SCREEN_WIDTH_LG)
+                el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
+            else el.setAttribute('bg', color);
         });
     };
-
-    showLoadingSpinner(
-        rowIndex: number,
-        enabled: boolean,
-        locationCategory: Extract<LocationKeys, 'country' | 'city'>,
-    ) {
-        if (!this.#styled) return;
-        const row = this.#getRowFromIndex(rowIndex);
-        row
-            .querySelector<PdcLocationSelect>(`[pdc='${locationCategory}']`)
-            ?.showLoadingSpinner(enabled);
-    }
 
     /* VALIDATION
      */
@@ -700,7 +746,8 @@ export class PdcLocationView extends HTMLElement {
 
     #returnValidation = (): AllViewLocationsValid => {
         this.removeAttribute('validate');
-        this.#rows.forEach(row => this.#rowToggle(row, 'close'));
+        if (window.screen.width < SCREEN_WIDTH_LG)
+            this.#rows.forEach(row => this.#rowToggle(row, 'close'));
         const inputValue = this.shadowRoot?.querySelector<HTMLInputElement>(
             'input[name="expenses-category"]:checked',
         )?.value;
@@ -718,7 +765,10 @@ export class PdcLocationView extends HTMLElement {
         const row = this.#getRowFromIndex(index);
         switch (updatedAttr) {
             case 'city':
-                this.#rowToggle(row, 'close');
+                if (window.screen.width < SCREEN_WIDTH_LG) {
+                    await wait(DEBOUNCE_TIME);
+                    this.#rowToggle(row, 'close');
+                }
                 return;
             case 'country':
                 this.#getRowPdcEls(row).city.enable(true);

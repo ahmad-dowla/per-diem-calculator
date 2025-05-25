@@ -1,43 +1,41 @@
 <li
     data-pdc="location-row"
-    class="group [.pdc-row-open]:animate-row-location-open
-        sm:[.pdc-row-open]:animate-row-location-open-sm
-        [.pdc-row-close]:animate-row-location-close
-        sm:[.pdc-row-close]:animate-row-location-close-sm
-        [.pdc-row-delete]:animate-row-delete [.pdc-row-add]:animate-row-add
-        sm:[.pdc-row-add]:animate-row-add-sm relative flex h-0 items-start
-        overflow-hidden bg-white ring-2 ring-transparent transition-shadow
-        duration-500 [.pdc-row-initial]:h-[var(--row-location-open)]
-        sm:[.pdc-row-initial]:h-[var(--row-location-open-sm)]"
+    class="group relative flex h-0 items-start overflow-hidden bg-white ring-2
+        ring-transparent
+        [transition:height_0.35s_ease-in,box-shadow_0.35s_ease,background-color_0.35s_ease]
+        [.pdc-row-initial]:h-[var(--row-location-open)]
+        sm:[.pdc-row-initial]:h-[var(--row-location-open-sm)]
+        lg:[.pdc-row-initial]:h-[var(--row-location-open-lg)]"
 >
     <!-- Row sidebar: number, toggle -->
     <div
         data-pdc="location-row-sidebar"
         class="relative z-10 mr-4 ml-2 h-[var(--row-location-open)] sm:mr-6
-            sm:ml-4 sm:h-[var(--row-location-open-sm)]"
+            sm:ml-4 sm:h-[var(--row-location-open-sm)] lg:mx-6 lg:flex
+            lg:h-[var(--row-location-open-lg)] lg:flex-col lg:justify-between
+            lg:text-center"
     >
         <div
             data-pdc="location-row-toggle"
             class="my-6 flex h-12 w-full items-center text-neutral-800
                 transition-colors hover:cursor-pointer *:hover:cursor-pointer
-                group-not-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-0
-                group-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-180"
+                lg:mb-0 lg:block lg:hover:cursor-auto lg:*:hover:cursor-auto
+                group-[.pdc-row-close]:hover:[&_button_svg]:!-rotate-180
+                group-[.pdc-row-open]:hover:[&_button_svg]:!-rotate-0"
         >
             <button
                 title="Toggle row"
                 tabindex="0"
                 type="button"
                 class="focus-visible:border-primary-800 rounded-full border-3
-                    border-transparent transition-colors focus:outline-none"
+                    border-transparent transition-colors focus:outline-none
+                    lg:hidden"
             >
                 <svg
                     inert
-                    class="size-5 shrink-0 fill-none stroke-current
+                    class="size-5 shrink-0 -rotate-180 fill-none stroke-current
                         transition-transform duration-500
-                        group-[.pdc-row-add]:-rotate-180
-                        group-[.pdc-row-close]:rotate-0
-                        group-[.pdc-row-initial]:-rotate-180
-                        group-[.pdc-row-open]:-rotate-180 sm:size-6"
+                        group-[.pdc-row-close]:rotate-0 sm:size-6"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                 >
@@ -51,32 +49,56 @@
             </button>
             <h3
                 data-pdc="location-row-number"
-                class="ml-2 text-2xl font-semibold select-none"
+                class="ml-2 text-2xl font-semibold select-none lg:ml-0"
             ></h3>
         </div>
+        <button
+            tabindex="-1"
+            type="button"
+            data-pdc="delete-row"
+            title="Delete location"
+            class="hover:text-error-600 focus-visible:text-error-600
+                focus-visible:border-b-primary-800 hidden border-b-4
+                border-b-transparent px-4 py-3 text-neutral-200
+                **:transition-colors **:duration-300 **:ease-out
+                hover:cursor-pointer focus:outline-none lg:block"
+        >
+            <svg
+                inert
+                class="size-7 fill-current sm:size-8"
+                data-pdc-unstyled="Delete Location"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+            >
+                <path
+                    d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+                />
+                <path
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+                />
+            </svg>
+        </button>
     </div>
 
     <!-- Row contents: summary, details -->
     <div
-        class="relative z-10 flex h-[var(--row-location-open)] w-full
-            items-start overflow-hidden sm:h-[var(--row-location-open-sm)]"
+        class="relative flex h-[var(--row-location-open)] w-full items-start
+            overflow-hidden sm:h-[var(--row-location-open-sm)]
+            lg:h-[var(--row-location-open-lg)]"
     >
         <!-- Summary -->
         <div
             data-pdc="location-row-toggle"
-            class="ml-1 flex h-24 w-full items-center justify-between
-                hover:cursor-pointer"
+            class="relative z-0 ml-1 flex h-24 w-full items-center
+                justify-between hover:cursor-pointer lg:hidden"
         >
             <div
                 data-pdc="location-row-summary"
                 inert
-                class="group-[.pdc-row-open]:animate-row-open-summary
-                    group-[.pdc-row-close]:animate-row-close-summary
-                    group-[.pdc-row-initial]:opacity-y-0 w-[77.5%]
-                    overflow-hidden text-sm
-                    group-[.pdc-row-add]:translate-y-[-200%]
-                    group-[.pdc-row-add]:opacity-0
-                    group-[.pdc-row-initial]:translate-y-[-200%] sm:text-base"
+                class="w-[77.5%] [transform:translateY(-200%)] overflow-hidden
+                    text-sm opacity-0
+                    [transition:transform_0.35s_ease-in,opacity_0.35s_ease-in]
+                    sm:text-base lg:[transform:translateY(-200%)] lg:opacity-0"
             >
                 <p data-pdc="location-row-summary-dates" class="truncate">
                     &nbsp;
@@ -93,14 +115,13 @@
                 data-pdc="delete-row"
                 title="Delete location"
                 class="hover:text-error-600 focus-visible:text-error-600
-                    focus-visible:border-b-primary-800
-                    group-[.pdc-row-open]:animate-row-open-deletebtn
-                    group-[.pdc-row-close]:animate-row-close-deletebtn mr-3
-                    border-b-4 border-b-transparent px-4 py-3 text-neutral-200
+                    focus-visible:border-b-primary-800 mr-3
+                    [transform:translateX(200%)] border-b-4 border-b-transparent
+                    px-4 py-3 text-neutral-200 opacity-0
+                    [transition:transform_0.35s_ease-in,opacity_0.35s_ease-in,border-color_0.35s_ease]
                     **:transition-colors **:duration-300 **:ease-out
-                    group-[.pdc-row-add]:translate-x-[200%]
-                    group-[.pdc-row-initial]:translate-x-[200%]
-                    hover:cursor-pointer focus:outline-none"
+                    hover:cursor-pointer focus:outline-none
+                    lg:[transform:translateX(200%)] lg:opacity-0"
             >
                 <svg
                     inert
@@ -122,25 +143,50 @@
         <!-- Details -->
         <div
             data-pdc="location-row-details"
-            class="group-[.pdc-row-open]:animate-row-open-details
-                group-[.pdc-row-add]:animate-row-open-details
-                group-[.pdc-row-close]:animate-row-close-details absolute top-0
-                left-[-100%] w-full overflow-hidden border-l-2
-                border-l-neutral-200 transition-colors
-                group-[.pdc-row-initial]:[transform:translateX(100%)]
-                group-[.pdc-row-initial]:opacity-100"
+            class="absolute top-0 left-[-100%] z-10 flex w-full
+                [transform:translateX(100%)] flex-col overflow-hidden border-l-2
+                border-l-neutral-200 opacity-100
+                [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease-in]
+                lg:grid lg:h-[var(--row-location-open-lg)] lg:grid-cols-7"
         >
-            <pdc-location-date pdc="start" styled="true"></pdc-location-date>
-            <pdc-location-date pdc="end" styled="true"></pdc-location-date>
+            <div
+                class="grid grid-cols-1 border-r border-r-transparent
+                    transition-colors *:border-r-1 *:border-b
+                    *:border-r-transparent *:border-b-neutral-100
+                    *:transition-colors lg:col-span-2 lg:divide-y
+                    lg:divide-neutral-200 lg:border-r-neutral-200
+                    lg:*:border-b-transparent"
+            >
+                <pdc-location-date
+                    pdc="start"
+                    styled="true"
+                ></pdc-location-date>
+                <pdc-location-date pdc="end" styled="true"></pdc-location-date>
+            </div>
             <pdc-location-category
                 pdc="category"
                 styled="true"
+                class="border-r border-b border-r-transparent
+                    border-b-neutral-100 transition-colors lg:col-span-3
+                    lg:border-r-neutral-200 lg:border-b-transparent"
             ></pdc-location-category>
-            <pdc-location-select
-                pdc="country"
-                styled="true"
-            ></pdc-location-select>
-            <pdc-location-select pdc="city" styled="true"></pdc-location-select>
+            <div
+                class="grid grid-cols-1 border-r border-r-transparent
+                    transition-colors *:border-r-1 *:border-b
+                    *:border-r-transparent *:border-b-neutral-100
+                    *:transition-colors lg:relative lg:col-span-2 lg:divide-y
+                    lg:divide-neutral-200 lg:border-r-neutral-200
+                    lg:*:border-b-transparent"
+            >
+                <pdc-location-select
+                    pdc="country"
+                    styled="true"
+                ></pdc-location-select>
+                <pdc-location-select
+                    pdc="city"
+                    styled="true"
+                ></pdc-location-select>
+            </div>
         </div>
     </div>
 </li>
