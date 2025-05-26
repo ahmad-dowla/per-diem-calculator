@@ -27,7 +27,7 @@ export class PdcButton extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
         this.shadowRoot?.appendChild(template.content.cloneNode(true));
 
-        const textEl = this.#button.querySelector('#text');
+        const textEl = this.#button.querySelector('[data-pdc="text"]');
         const text = this.getAttribute('text');
         const title = this.getAttribute('title');
 
@@ -35,6 +35,7 @@ export class PdcButton extends HTMLElement {
             throw new Error('Failed to render button.');
 
         this.#button.setAttribute('title', title);
+        this.#button.setAttribute('aria-label', `Click to ${title}`);
         textEl.textContent = text;
     }
 
