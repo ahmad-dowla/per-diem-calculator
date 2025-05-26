@@ -18,18 +18,13 @@
         min="2021-01-01"
         max="2040-12-31"
         required
-        class="[.error]:border-r-error-400 [.success]:border-r-success-400
-            focus-within:after:border-b-primary-800
-            webkit-calendar-picker-indicator
-            [&::-webkit-calendar-picker-indicator:focus]:border-b-primary-800
-            peer relative my-3 w-[68%] border-r-3 border-r-transparent
-            bg-transparent py-3 pr-3 text-neutral-800 opacity-100
-            transition-[border-color_opacity] after:absolute after:left-0
-            after:mt-1.5 after:w-full after:max-w-[95%] after:border-b-3
-            after:border-b-transparent after:transition-colors
-            after:content-['_'] focus:outline-none disabled:cursor-not-allowed
-            disabled:border-r-transparent disabled:!text-neutral-800/30
-            sm:w-[75%] lg:w-full lg:[.success]:border-r-transparent"
+        class="[.error]:border-r-error-400 [.success]:border-r-success-400 peer
+            relative my-3 w-[68%] border-r-3 border-r-transparent bg-transparent
+            py-3 pr-3 text-neutral-800 opacity-100
+            transition-[border-color_opacity] focus:outline-none
+            disabled:cursor-not-allowed disabled:border-r-transparent
+            disabled:!text-neutral-800/30 sm:w-[75%] lg:w-full
+            lg:[.success]:border-r-transparent"
     />
     <svg
         class="fill-success-400 absolute top-2 right-2 hidden size-6
