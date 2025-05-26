@@ -3,7 +3,6 @@
 
 @import './colors.css';
 @import './fonts.css';
-@import './row-heights.css';
 
 @import './tom-select/defaults';
 @import './tom-select/overrides';

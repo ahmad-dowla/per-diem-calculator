@@ -1,15 +1,13 @@
 <div
     id="expense-row"
-    class="group relative flex h-[var(--row-closed)] items-start overflow-hidden
-        bg-white ring-2 ring-neutral-200
-        [transition:height_0.35s_ease-in,box-shadow_0.35s_ease,background-color_0.35s_ease]
-        lg:h-[var(--row-expense-open-lg)]"
+    class="group relative flex items-start overflow-hidden bg-white ring-2
+        ring-neutral-200
+        [transition:height_0.35s_ease-in,box-shadow_0.35s_ease,background-color_0.35s_ease]"
 >
     <!-- Row sidebar: date, toggle -->
     <div
         data-pdc="expense-row-sidebar"
-        class="relative z-10 mr-4 ml-2 h-[var(--row-expense-closed)] sm:mr-6
-            sm:ml-4 lg:mx-6 lg:h-[var(--row-expense-open-lg)]"
+        class="relative z-10 mr-4 ml-2 sm:mr-6 sm:ml-4 lg:mx-6"
     >
         <div
             data-pdc="expense-row-toggle"
@@ -58,15 +56,14 @@
 
     <!-- Row contents: summary, details -->
     <div
-        class="relative z-10 flex h-[var(--row-expense-closed)] w-full
-            items-start overflow-hidden transition-[height]
-            group-[.pdc-row-open]:h-[var(--row-expense-open)]
-            lg:!h-[var(--row-expense-open-lg)]"
+        data-pdc="expense-row-contents"
+        class="relative z-10 flex h-0 w-full items-start overflow-hidden
+            [transition:height_0.35s_ease-in]"
     >
         <!-- Summary -->
         <div
             data-pdc="expense-row-toggle"
-            class="ml-1 flex h-22 w-full items-center justify-between lg:hidden"
+            class="ml-1 flex h-24 w-full items-center justify-between lg:hidden"
         >
             <div
                 data-pdc="expense-row-summary"
@@ -115,12 +112,12 @@
         <!-- Details -->
         <div
             data-pdc="expense-row-details"
-            class="absolute top-0 left-[-100%] h-[var(--row-expense-open)]
-                w-full [transform:translateX(0%)] overflow-hidden border-l-2
+            class="absolute top-0 left-[-100%] h-0 w-full
+                [transform:translateX(0%)] overflow-hidden border-l-2
                 border-l-neutral-200 opacity-0
-                [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease]
-                lg:grid lg:h-[var(--row-expense-open-lg)]
-                lg:[transform:translateX(100%)] lg:grid-cols-5 lg:opacity-100"
+                [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease-out]
+                lg:grid lg:[transform:translateX(100%)] lg:grid-cols-5
+                lg:opacity-100"
         >
             <div class="lg:col-span-3">
                 <!-- Location -->

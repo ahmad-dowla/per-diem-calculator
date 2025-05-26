@@ -2,18 +2,13 @@
     data-pdc="location-row"
     class="group relative flex h-0 items-start overflow-hidden bg-white ring-2
         ring-transparent
-        [transition:height_0.35s_ease-in,box-shadow_0.35s_ease,background-color_0.35s_ease]
-        [.pdc-row-initial]:h-[var(--row-location-open)]
-        sm:[.pdc-row-initial]:h-[var(--row-location-open-sm)]
-        lg:[.pdc-row-initial]:h-[var(--row-location-open-lg)]"
+        [transition:height_0.35s_ease-in,box-shadow_0.35s_ease,background-color_0.35s_ease]"
 >
     <!-- Row sidebar: number, toggle -->
     <div
         data-pdc="location-row-sidebar"
-        class="relative z-10 mr-4 ml-2 h-[var(--row-location-open)] sm:mr-6
-            sm:ml-4 sm:h-[var(--row-location-open-sm)] lg:mx-6 lg:flex
-            lg:h-[var(--row-location-open-lg)] lg:flex-col lg:justify-between
-            lg:text-center"
+        class="relative z-10 mr-4 ml-2 sm:mr-6 lg:mx-6 lg:flex lg:flex-col
+            lg:justify-between lg:text-center"
     >
         <div
             data-pdc="location-row-toggle"
@@ -82,9 +77,9 @@
 
     <!-- Row contents: summary, details -->
     <div
-        class="relative flex h-[var(--row-location-open)] w-full items-start
-            overflow-hidden sm:h-[var(--row-location-open-sm)]
-            lg:h-[var(--row-location-open-lg)]"
+        data-pdc="location-row-contents"
+        class="[transition:height_0.35s_ease relative flex h-0 w-full
+            items-start overflow-hidden"
     >
         <!-- Summary -->
         <div
@@ -146,7 +141,7 @@
             class="absolute top-0 left-[-100%] z-10 flex w-full
                 [transform:translateX(100%)] flex-col overflow-hidden border-l-2
                 border-l-neutral-200 opacity-100
-                [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease-in]
+                [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease-out]
                 lg:grid lg:h-[var(--row-location-open-lg)] lg:grid-cols-7"
         >
             <div

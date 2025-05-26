@@ -218,14 +218,18 @@ export class PdcLocationView extends HTMLElement {
             summary?.parentElement?.querySelector<HTMLButtonElement>(
                 'button[data-pdc="delete-row"]',
             );
+        const contents = row.querySelector<HTMLElement>(
+            '[data-pdc="location-row-contents"]',
+        );
         const details = row.querySelector<HTMLElement>(
             '[data-pdc="location-row-details"]',
         );
-        if (!(deleteBtn && summary && details))
+        if (!(deleteBtn && summary && contents && details))
             throw new Error('Failed to render row summary elements.');
         return {
             deleteBtn,
             summary,
+            contents,
             details,
         };
     }
@@ -418,11 +422,15 @@ export class PdcLocationView extends HTMLElement {
         // Fire toggles
         if (toggle === 'open' || toggle === 'initial' || toggle === 'add') {
             row.style.height = this.#getRowTargetOpenHeight() + 'px';
+            this.#getRowAnimatedEls(row).contents.style.height =
+                this.#getRowTargetOpenHeight() + 'px';
             await this.#animateRow(row, 'open');
         }
         if (toggle === 'close') {
             await this.#animateRow(row, 'close');
             row.style.height = ROW_CLOSED_HEIGHT + 'px';
+            this.#getRowAnimatedEls(row).contents.style.height =
+                ROW_CLOSED_HEIGHT + 'px';
         }
         if (toggle === 'delete') {
             row.style.height = 0 + 'px';
@@ -511,6 +519,8 @@ export class PdcLocationView extends HTMLElement {
                 return;
             this.#styleRow(row);
             row.style.height =
+                this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
+            this.#getRowAnimatedEls(row).contents.style.height =
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
             if (window.screen.width >= SCREEN_WIDTH_LG)
                 this.#rowToggle(row, 'open');

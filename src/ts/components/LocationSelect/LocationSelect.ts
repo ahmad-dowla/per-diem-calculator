@@ -4,7 +4,7 @@ import type { Location } from '../../types/locations';
 // Utils
 import { applyStyles, removeStyles } from '../../utils/styles';
 import { debounce, handlePointerDown, handlePointerUp } from '../../utils/misc';
-import { BTN_ANIMATE_MS } from '../../utils/config';
+import { ROW_ANIMATE_MS } from '../../utils/config';
 import TomSelect from 'tom-select';
 
 // HTML/CSS
@@ -244,7 +244,7 @@ export class PdcLocationSelect extends HTMLElement {
         });
         setTimeout(() => {
             this.#showLoadingSpinner(false);
-        }, BTN_ANIMATE_MS);
+        }, ROW_ANIMATE_MS * 2);
     }
 
     #createTomSelect() {
