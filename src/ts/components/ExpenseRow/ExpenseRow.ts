@@ -319,6 +319,12 @@ export class PdcExpenseRow extends HTMLElement {
                 el.classList.add(
                     i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`,
                 );
+                el
+                    .querySelector('#lodging-amount')
+                    ?.classList.remove('bg-white', 'bg-neutral-50');
+                el
+                    .querySelector('#lodging-amount')
+                    ?.classList.add(`bg-${color}`);
             } else {
                 el.classList.add(`bg-${color}`);
                 el
