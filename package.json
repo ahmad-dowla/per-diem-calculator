@@ -1,6 +1,6 @@
 {
     "name": "@per-diem-calculator/vanilla",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "author": "Ahmad Dowla <ahmad.dowla@gmail.com>",
     "description": "Open source per diem calculator for both domestic and international trips. Built in TypeScript with Tailwind. Rates sourced from GSA, State Dept., and DOD.",
     "license": "MIT",
