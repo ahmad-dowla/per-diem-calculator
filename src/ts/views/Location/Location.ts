@@ -389,11 +389,10 @@ export class PdcLocationView extends HTMLElement {
         nextRow: Element | null = null,
     ) {
         if (!row || !this.#styled || row.classList.contains('toggling')) return;
-
         if (!toggle) {
             const direction =
                 (
-                    window.screen.width >= SCREEN_WIDTH_LG ||
+                    window.innerWidth >= SCREEN_WIDTH_LG ||
                     row.offsetHeight === ROW_CLOSED_HEIGHT
                 ) ?
                     'open'
@@ -415,6 +414,7 @@ export class PdcLocationView extends HTMLElement {
         }
         await wait(0);
         this.#disableAllTabIndexes();
+
         // Fire toggles
         if (toggle === 'open' || toggle === 'initial' || toggle === 'add') {
             row.style.height =
@@ -437,7 +437,7 @@ export class PdcLocationView extends HTMLElement {
             row.classList.remove('ring-transparent');
             row.classList.add('ring-neutral-200');
         }
-        if (window.screen.width >= SCREEN_WIDTH_LG) {
+        if (window.innerWidth >= SCREEN_WIDTH_LG) {
             this.#rows.forEach(row => {
                 row
                     .querySelector('[data-pdc="location-row-sidebar"]')
@@ -502,7 +502,7 @@ export class PdcLocationView extends HTMLElement {
     #windowResize = () => {
         [...this.#rows].forEach(row => {
             if (
-                window.screen.width < SCREEN_WIDTH_LG &&
+                window.innerWidth < SCREEN_WIDTH_LG &&
                 row.offsetHeight === ROW_CLOSED_HEIGHT
             )
                 return;
@@ -511,7 +511,7 @@ export class PdcLocationView extends HTMLElement {
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
             this.#getRowAnimatedEls(row).contents.style.height =
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
-            if (window.screen.width >= SCREEN_WIDTH_LG)
+            if (window.innerWidth >= SCREEN_WIDTH_LG)
                 this.#rowToggle(row, 'open');
         });
     };
@@ -524,7 +524,7 @@ export class PdcLocationView extends HTMLElement {
         row.classList.add(`bg-${color}`);
         row.style.zIndex = index.toString();
         Object.values(this.#getRowPdcEls(row)).forEach((el, i) => {
-            if (window.screen.width < SCREEN_WIDTH_LG)
+            if (window.innerWidth < SCREEN_WIDTH_LG)
                 el.setAttribute('bg', i % 2 === 0 ? color : oppColor);
             else el.setAttribute('bg', color);
         });
@@ -700,7 +700,7 @@ export class PdcLocationView extends HTMLElement {
 
     #returnValidation = (): AllViewLocationsValid => {
         this.removeAttribute('validate');
-        if (window.screen.width < SCREEN_WIDTH_LG)
+        if (window.innerWidth < SCREEN_WIDTH_LG)
             this.#rows.forEach(row => this.#rowToggle(row, 'close'));
         const inputValue = this.shadowRoot?.querySelector<HTMLInputElement>(
             'input[name="expenses-category"]:checked',
@@ -719,7 +719,7 @@ export class PdcLocationView extends HTMLElement {
         const row = this.#getRowFromIndex(index);
         switch (updatedAttr) {
             case 'city':
-                if (window.screen.width < SCREEN_WIDTH_LG) {
+                if (window.innerWidth < SCREEN_WIDTH_LG) {
                     await wait(DEBOUNCE_TIME);
                     this.#rowToggle(row, 'close');
                 }

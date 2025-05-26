@@ -71,7 +71,7 @@ export class PdcExpenseRow extends HTMLElement {
 
         this.#disableUnusedRowEls();
         this.#rowAnimatedEls.contents.style.height =
-            (window.screen.width >= SCREEN_WIDTH_LG ?
+            (window.innerWidth >= SCREEN_WIDTH_LG ?
                 this.#rowAnimatedEls.details.offsetHeight
             :   ROW_CLOSED_HEIGHT) + 'px';
         this.#addEventListeners();
@@ -248,7 +248,7 @@ export class PdcExpenseRow extends HTMLElement {
         if (!toggle) {
             const direction =
                 (
-                    window.screen.width >= SCREEN_WIDTH_LG ||
+                    window.innerWidth >= SCREEN_WIDTH_LG ||
                     this.#row.offsetHeight === ROW_CLOSED_HEIGHT
                 ) ?
                     'open'
@@ -290,7 +290,7 @@ export class PdcExpenseRow extends HTMLElement {
 
     resizeRow = () => {
         if (
-            window.screen.width < SCREEN_WIDTH_LG &&
+            window.innerWidth < SCREEN_WIDTH_LG &&
             this.#row.offsetHeight === ROW_CLOSED_HEIGHT
         )
             return;
@@ -299,7 +299,7 @@ export class PdcExpenseRow extends HTMLElement {
         this.#rowAnimatedEls.contents.style.height =
             this.#rowAnimatedEls.details.offsetHeight + 'px';
         this.styleRow();
-        if (window.screen.width >= SCREEN_WIDTH_LG) this.rowToggle('open');
+        if (window.innerWidth >= SCREEN_WIDTH_LG) this.rowToggle('open');
     };
 
     styleRow = () => {
@@ -315,7 +315,7 @@ export class PdcExpenseRow extends HTMLElement {
 
         Object.values(this.#rowEls).forEach((el, i) => {
             el.classList.remove('bg-white', 'bg-neutral-50');
-            if (window.screen.width < SCREEN_WIDTH_LG) {
+            if (window.innerWidth < SCREEN_WIDTH_LG) {
                 el.classList.add(
                     i % 2 === 0 ? `bg-${color}` : `bg-${oppColor}`,
                 );

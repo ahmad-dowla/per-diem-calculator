@@ -266,7 +266,7 @@ export class PdcExpenseView extends HTMLElement {
             );
             this.#rowsContainer.appendChild(row);
             row.styleRow();
-            if (window.screen.width >= SCREEN_WIDTH_LG) row.rowToggle('open');
+            if (window.innerWidth >= SCREEN_WIDTH_LG) row.rowToggle('open');
         });
         const position = this.getBoundingClientRect().top + window.pageYOffset;
         window.scrollTo({ top: position, behavior: 'smooth' });
