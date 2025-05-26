@@ -93,7 +93,6 @@ export class PdcLocationSelect extends HTMLElement {
 
     #handleClicks = (e: Event) => {
         const target = e.target;
-        console.log(e.target);
         if (
             !(
                 (target instanceof HTMLElement ||
