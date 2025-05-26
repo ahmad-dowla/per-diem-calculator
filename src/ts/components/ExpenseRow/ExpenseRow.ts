@@ -70,6 +70,10 @@ export class PdcExpenseRow extends HTMLElement {
         this.#updateTotalAmount();
 
         this.#disableUnusedRowEls();
+        this.#rowAnimatedEls.contents.style.height =
+            (window.screen.width >= SCREEN_WIDTH_LG ?
+                this.#rowAnimatedEls.details.offsetHeight
+            :   ROW_CLOSED_HEIGHT) + 'px';
         this.#addEventListeners();
     }
 
