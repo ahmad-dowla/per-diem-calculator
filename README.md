@@ -64,14 +64,14 @@ pdc.addEventListener('expenseUpdate', e => {
 
 ```
 
-## Additional features
+## Additional Features
 
 - Save an expense report PDF that includes daily breakdown, rates used, and links to the original federal source
 - Full keyboard-only navigation support
 - API calls are reduced via both memoization by the calculator, and caching results in Cloudflare by the proxy
 - All features usable in both mobile and desktop widths
 
-## Expense object
+## Expense Object
 
 ```
 {
@@ -101,7 +101,7 @@ pdc.addEventListener('expenseUpdate', e => {
 }
 ```
 
-## Built with
+## Built With
 
 - TypeScript
 - Tailwind
@@ -117,3 +117,4 @@ pdc.addEventListener('expenseUpdate', e => {
 - Option to mark personal days and remove them from the final expense amount
 - React version - I used this project as a way to get familiar with native web components, but a React version will be shared soon
 - CDN option
+- Tests
