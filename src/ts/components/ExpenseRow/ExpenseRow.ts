@@ -8,12 +8,7 @@ import {
     removeStyles,
     highlightSuccess,
 } from '../../utils/styles';
-import {
-    ROW_CLOSED_HEIGHT,
-    SCREEN_WIDTH_LG,
-    ROW_EXPENSE_OPEN_HEIGHT,
-    ROW_EXPENSE_OPEN_HEIGHT_LG,
-} from '../../utils/config';
+import { ROW_CLOSED_HEIGHT, SCREEN_WIDTH_LG } from '../../utils/config';
 import { getShortMonth, getDD, getYYYY, getMM } from '../../utils/dates';
 
 // HTML/CSS
@@ -218,13 +213,17 @@ export class PdcExpenseRow extends HTMLElement {
         const summary = this.#row.querySelector<HTMLElement>(
             '[data-pdc="expense-row-summary"]',
         );
+        const contents = this.#row.querySelector<HTMLElement>(
+            '[data-pdc="expense-row-contents"]',
+        );
         const details = this.#row.querySelector<HTMLElement>(
             '[data-pdc="expense-row-details"]',
         );
-        if (!(summary && details))
+        if (!(summary && contents && details))
             throw new Error('Failed to render row summary elements.');
         return {
             summary,
+            contents,
             details,
         };
     }
@@ -258,21 +257,20 @@ export class PdcExpenseRow extends HTMLElement {
         this.#row.classList.add('toggling', `pdc-row-${toggle}`);
 
         if (toggle === 'open') {
-            this.#row.style.height = this.#getRowTargetOpenHeight() + 'px';
+            this.#row.style.height =
+                this.#rowAnimatedEls.details.offsetHeight + 'px';
+            this.#rowAnimatedEls.contents.style.height =
+                this.#rowAnimatedEls.details.offsetHeight + 'px';
             await this.#animateRow('open');
         } else {
             this.#row.style.height = ROW_CLOSED_HEIGHT + 'px';
+            this.#rowAnimatedEls.contents.style.height =
+                ROW_CLOSED_HEIGHT + 'px';
             await this.#animateRow('close');
         }
 
         this.#row.classList.remove('toggling');
     };
-
-    #getRowTargetOpenHeight() {
-        if (window.screen.width >= SCREEN_WIDTH_LG)
-            return ROW_EXPENSE_OPEN_HEIGHT_LG;
-        return ROW_EXPENSE_OPEN_HEIGHT;
-    }
 
     #animateRow = async (direction: 'open' | 'close') => {
         this.#enableRowTabIndex(direction === 'open' ? true : false);
@@ -293,7 +291,9 @@ export class PdcExpenseRow extends HTMLElement {
         )
             return;
         this.#row.style.height =
-            this.#rowAnimatedEls.details.scrollHeight + 'px';
+            this.#rowAnimatedEls.details.offsetHeight + 'px';
+        this.#rowAnimatedEls.contents.style.height =
+            this.#rowAnimatedEls.details.offsetHeight + 'px';
         this.styleRow();
         if (window.screen.width >= SCREEN_WIDTH_LG) this.rowToggle('open');
     };

@@ -10,10 +10,5 @@ export {
     SCREEN_WIDTH_SM,
     SCREEN_WIDTH_LG,
     ROW_CLOSED_HEIGHT,
-    ROW_LOCATION_OPEN_HEIGHT,
-    ROW_LOCATION_OPEN_HEIGHT_SM,
-    ROW_LOCATION_OPEN_HEIGHT_LG,
-    ROW_EXPENSE_OPEN_HEIGHT,
-    ROW_EXPENSE_OPEN_HEIGHT_LG,
 } from './numbers';
 export { sanitizeConfig } from './sanitizeConfig';

@@ -24,10 +24,6 @@ import {
     ROW_ANIMATE_MS,
     SCREEN_WIDTH_LG,
     ROW_CLOSED_HEIGHT,
-    ROW_LOCATION_OPEN_HEIGHT,
-    ROW_LOCATION_OPEN_HEIGHT_SM,
-    ROW_LOCATION_OPEN_HEIGHT_LG,
-    SCREEN_WIDTH_SM,
     DEBOUNCE_TIME,
 } from '../../utils/config';
 
@@ -421,9 +417,10 @@ export class PdcLocationView extends HTMLElement {
         this.#disableAllTabIndexes();
         // Fire toggles
         if (toggle === 'open' || toggle === 'initial' || toggle === 'add') {
-            row.style.height = this.#getRowTargetOpenHeight() + 'px';
+            row.style.height =
+                this.#getRowAnimatedEls(row).details.offsetHeight + 'px';
             this.#getRowAnimatedEls(row).contents.style.height =
-                this.#getRowTargetOpenHeight() + 'px';
+                this.#getRowAnimatedEls(row).details.offsetHeight + 'px';
             await this.#animateRow(row, 'open');
         }
         if (toggle === 'close') {
@@ -465,14 +462,6 @@ export class PdcLocationView extends HTMLElement {
             this.#viewBtns.addRow.querySelector('button'),
             ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
         ].forEach(el => el && el.setAttribute('tabindex', '0'));
-    }
-
-    #getRowTargetOpenHeight() {
-        if (window.screen.width >= SCREEN_WIDTH_LG)
-            return ROW_LOCATION_OPEN_HEIGHT_LG;
-        if (window.screen.width >= SCREEN_WIDTH_SM)
-            return ROW_LOCATION_OPEN_HEIGHT_SM;
-        return ROW_LOCATION_OPEN_HEIGHT;
     }
 
     async #animateRow(row: HTMLElement, direction: 'open' | 'close') {
