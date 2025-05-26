@@ -5,7 +5,7 @@ This is an open source per diem calculator to pull lodging and meals per diem ra
 There are a few issues with the tools available as of May 2025:
 
 - No existing calculators for end users that pull both domestic and international rates and deductions
-- The General Services Administration (GSA) has an API that provides rates for CONUS (48 states) rates--however, no API is available for OCONUS rates by Department of Defense (DOD) for Alaska, Hawaii, and US territories, or by the State Dept. for all other locations.
+- The General Services Administration (GSA) has an API that provides CONUS (48 states) rates--however, no API is available for OCONUS rates by Department of Defense (DOD) (Alaska, Hawaii, US territories) or by the State Dept. (all other locations).
 - No existing calculators for developers to easily pull domestic and international rates/deductions into their application
 - Many existing calculators limited to a single location and can't be used in one go for multi-destination trips
 
