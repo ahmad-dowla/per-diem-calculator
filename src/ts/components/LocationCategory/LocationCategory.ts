@@ -165,7 +165,7 @@ export class PdcLocationCategory extends HTMLElement {
     }
 
     focusEl() {
-        [...this.#labels][0].focus();
+        [...this.#labels][1].focus();
     }
 
     /* UPDATE METHODS
@@ -196,14 +196,18 @@ export class PdcLocationCategory extends HTMLElement {
     #renderError(enable: boolean, msg = `Select a category.`) {
         if (enable) {
             if (this.#styled) {
-                this.#labels.forEach(label => label.classList.add('error'));
+                this.#labels.forEach((label, i) => {
+                    if (i > 0) label.classList.add('error');
+                });
                 this.#errorEl.classList.add('active');
             }
             this.#errorEl.textContent = msg;
             return;
         }
         if (!this.#styled) return;
-        this.#labels.forEach(label => label.classList.remove('error'));
+        this.#labels.forEach((label, i) => {
+            if (i > 0) label.classList.remove('error');
+        });
         this.#errorEl.classList.remove('active');
     }
 

@@ -98,16 +98,10 @@ export class PdcExpenseRow extends HTMLElement {
             throw new Error(`Failed to render row's rate elements.`);
 
         locationEl.textContent = `${this.#expense.city} (${this.#expense.country})`;
-        lodgingRateEl.setAttribute(
-            'text',
-            `<span class="font-semibold block">Lodging</span>
-            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxLodging)}</span>`,
-        );
-        mieRateEl.setAttribute(
-            'text',
-            `<span class="font-semibold block">M&IE</span>
-            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxMie)}</span></span>`,
-        );
+        lodgingRateEl.innerHTML = `<span class="font-semibold block">Lodging</span>
+            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxLodging)}</span>`;
+        mieRateEl.innerHTML = `<span class="font-semibold block">M&IE</span>
+            <span class="text-sm normal-case font-normal">Max ${USD.format(this.#maxMie)}</span></span>`;
     }
 
     #disableUnusedRowEls() {

@@ -40,14 +40,13 @@ export class PdcLocationDate extends HTMLElement {
         } else template.innerHTML = removeStyles(templateHTML);
         this.#shadowRoot.appendChild(template.content.cloneNode(true));
 
+        this.#label.textContent =
+            this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1);
         this.#label.setAttribute(
-            'text',
-            this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1),
+            'aria-label',
+            `Select the trip ${this.#attrName.charAt(0).toUpperCase()}${this.#attrName.slice(1)} Date`,
         );
-        this.#label.setAttribute(
-            'title',
-            `${this.#attrName.charAt(0).toUpperCase()}${this.#attrName.slice(1)} Date`,
-        );
+        this.#label.setAttribute('for', this.#attrName);
         if (this.#attrName === 'start') this.restrictStartInput();
         else this.restrictEndInput();
 
@@ -79,7 +78,7 @@ export class PdcLocationDate extends HTMLElement {
     /* GET ELS
      */
     get #label() {
-        const el = this.#shadowRoot.querySelector('pdc-label');
+        const el = this.#shadowRoot.querySelector('label');
         if (!el)
             throw new Error(`Failed to render label in Date custom element`);
         return el;

@@ -42,13 +42,11 @@ import {
     PdcLocationSelect,
     PdcLocationDate,
     PdcButton,
-    PdcLabel,
 } from '../../components';
 customElements.define('pdc-location-date', PdcLocationDate);
 customElements.define('pdc-location-category', PdcLocationCategory);
 customElements.define('pdc-location-select', PdcLocationSelect);
 customElements.define('pdc-button', PdcButton);
-customElements.define('pdc-label', PdcLabel);
 
 // Template for this Custom Element
 const template = document.createElement('template');

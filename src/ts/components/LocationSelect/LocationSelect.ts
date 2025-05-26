@@ -39,9 +39,11 @@ export class PdcLocationSelect extends HTMLElement {
             applyStyles(this.#shadowRoot);
         } else template.innerHTML = removeStyles(templateHTML);
         this.#shadowRoot.appendChild(template.content.cloneNode(true));
+        this.#label.textContent =
+            this.#attrName === 'country' ? 'State' : 'City';
         this.#label.setAttribute(
-            'text',
-            this.#attrName === 'country' ? 'State' : 'City',
+            'aria-label',
+            `Select the trip ${this.#attrName === 'country' ? 'state' : 'city'}`,
         );
         this.#addEventListeners();
         return this.#createTomSelect();
@@ -133,7 +135,7 @@ export class PdcLocationSelect extends HTMLElement {
     }
 
     get #label() {
-        const el = this.#shadowRoot.querySelector('pdc-label');
+        const el = this.#shadowRoot.querySelector('label');
         if (!el)
             throw new Error(`Failed to get label for Select custom element`);
         return el;
