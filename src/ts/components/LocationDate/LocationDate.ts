@@ -47,6 +47,7 @@ export class PdcLocationDate extends HTMLElement {
             `Select the trip ${this.#attrName.charAt(0).toUpperCase()}${this.#attrName.slice(1)} Date`,
         );
         this.#label.setAttribute('for', this.#attrName);
+        this.#input.setAttribute('id', this.#attrName);
         if (this.#attrName === 'start') this.restrictStartInput();
         else this.restrictEndInput();
 
