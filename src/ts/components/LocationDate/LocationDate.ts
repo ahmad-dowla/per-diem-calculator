@@ -44,6 +44,10 @@ export class PdcLocationDate extends HTMLElement {
             'text',
             this.#attrName.charAt(0).toUpperCase() + this.#attrName.slice(1),
         );
+        this.#label.setAttribute(
+            'title',
+            `${this.#attrName.charAt(0).toUpperCase()}${this.#attrName.slice(1)} Date`,
+        );
         if (this.#attrName === 'start') this.restrictStartInput();
         else this.restrictEndInput();
 
