@@ -30,14 +30,9 @@
     </div>
 
     <!-- Add location button-->
-    <div
-        class="[.rows-open]:animate-rows-open-addRowBtn
-            lg:animate-rows-closed-addRowBtn
-            [.rows-closed]:animate-rows-closed-addRowBtn relative z-0 -mt-5
-            w-full [transform:translateY(-100%)] text-center opacity-0"
-    >
+    <div class="relative z-0 -mt-5 w-full text-center opacity-0">
         <button
-            tabindex="-1"
+            tabindex="0"
             type="button"
             id="add-row"
             title="Add additional location"
@@ -64,10 +59,7 @@
     <!-- Input for type of per diem (mie vs lodging vs both)-->
     <fieldset
         id="expense-category"
-        class="[.rows-open]:animate-rows-open-expenseCategoryBtn
-            [.rows-closed]:animate-rows-closed-expenseCategoryBtn
-            lg:animate-rows-closed-expenseCategoryBtn relative mt-8
-            [transform:translateY(400%)] space-y-6 text-center print:hidden"
+        class="relative mt-8 space-y-6 text-center print:hidden"
     >
         <div
             class="*:hover:bg-primary-900 *:hover:text-primary-50
@@ -82,7 +74,7 @@
                 *:select-none *:ring-inset *:focus:outline-none
                 *:focus-visible:ring-6 sm:max-w-2xs md:max-w-xs"
         >
-            <label tabindex="-1" class="" for="mie">
+            <label tabindex="0" class="" for="mie">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -92,7 +84,7 @@
                 />
                 M&IE
             </label>
-            <label tabindex="-1" class="" for="lodging">
+            <label tabindex="0" class="" for="lodging">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -102,7 +94,7 @@
                 />
                 Lodging
             </label>
-            <label tabindex="-1" class="" for="both">
+            <label tabindex="0" class="" for="both">
                 <input
                     type="radio"
                     name="expenses-category"
@@ -117,12 +109,7 @@
     </fieldset>
 
     <!-- Button to trigger Expense view -->
-    <div
-        class="[.rows-open]:animate-rows-open-expensesCalculateBtn
-            [.rows-closed]:animate-rows-closed-expensesCalculateBtn
-            lg:animate-rows-closed-expensesCalculateBtn mt-6 mb-8 w-full
-            [transform:translateY(200%)] text-center print:hidden"
-    >
+    <div class="mt-6 mb-8 w-full text-center print:hidden">
         <pdc-button
             styled="true"
             id="calculate-expenses"

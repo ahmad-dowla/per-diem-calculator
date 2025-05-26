@@ -20,7 +20,6 @@ import {
 import { removeStyles, applyStyles } from '../../utils/styles';
 import {
     APPROX_DAYS_IN_6_MONTHS,
-    BTN_ANIMATE_MS,
     MILLISECONDS_IN_DAY,
     ROW_ANIMATE_MS,
     SCREEN_WIDTH_LG,
@@ -355,15 +354,6 @@ export class PdcLocationView extends HTMLElement {
         Object.values(this.#getRowPdcEls(row)).forEach(
             el => el.isEnabled && el.enableTabIndex(enable),
         );
-        this.#viewBtns.calculateExpenses
-            .querySelector<PdcButton>('pdc-button')
-            ?.enableTabIndex(!enable);
-        // Activate tabindex for delete icon which is hidden while row open
-        [
-            this.#getRowAnimatedEls(row).deleteBtn,
-            this.#viewBtns.addRow.querySelector('button'),
-            ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
-        ].forEach(el => el && el.setAttribute('tabindex', enable ? '-1' : '0'));
     }
 
     #disableAllTabIndexes() {
@@ -427,14 +417,12 @@ export class PdcLocationView extends HTMLElement {
         this.#disableAllTabIndexes();
         // Fire toggles
         if (toggle === 'open' || toggle === 'initial' || toggle === 'add') {
-            if (toggle !== 'initial') await this.#animateBtns('open');
             row.style.height = this.#getRowTargetOpenHeight() + 'px';
             await this.#animateRow(row, 'open');
         }
         if (toggle === 'close') {
             await this.#animateRow(row, 'close');
             row.style.height = ROW_CLOSED_HEIGHT + 'px';
-            await this.#animateBtns();
         }
         if (toggle === 'delete') {
             row.style.height = 0 + 'px';
@@ -445,14 +433,6 @@ export class PdcLocationView extends HTMLElement {
             row.classList.add('ring-neutral-200');
         }
         if (window.screen.width >= SCREEN_WIDTH_LG) {
-            this.#viewBtns.calculateExpenses
-                .querySelector<PdcButton>('pdc-button')
-                ?.enableTabIndex(true);
-
-            [
-                this.#viewBtns.addRow.querySelector('button'),
-                ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
-            ].forEach(el => el && el.setAttribute('tabindex', '0'));
             this.#rows.forEach(row => {
                 row
                     .querySelector('[data-pdc="location-row-sidebar"]')
@@ -468,6 +448,15 @@ export class PdcLocationView extends HTMLElement {
             });
         }
         row.classList.remove('toggling');
+        this.#viewBtns.calculateExpenses
+            .querySelector<PdcButton>('pdc-button')
+            ?.enableTabIndex(true);
+        // Activate tabindex for delete icon which is hidden while row open
+        [
+            this.#getRowAnimatedEls(row).deleteBtn,
+            this.#viewBtns.addRow.querySelector('button'),
+            ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
+        ].forEach(el => el && el.setAttribute('tabindex', '0'));
     }
 
     #getRowTargetOpenHeight() {
@@ -501,7 +490,6 @@ export class PdcLocationView extends HTMLElement {
         await wait(ROW_ANIMATE_MS);
         // Deleted row was only row -> add a blank template row
         row.remove();
-        this.#animateBtns();
         if (nextRow) {
             // For any next rows
             const index = this.#getRowIndex(nextRow);
@@ -511,36 +499,6 @@ export class PdcLocationView extends HTMLElement {
                     this.#returnRowObject(remainingRow); // Update summary number
                     this.#styleRow(remainingRow); // Update background color
                 });
-        }
-    }
-
-    async #animateBtns(open: 'open' | null = null) {
-        if (!open) await wait(BTN_ANIMATE_MS);
-        const btns = [
-            this.#viewBtns.addRow,
-            this.#viewBtns.expenseCategory,
-            this.#viewBtns.calculateExpenses,
-        ];
-        const rowsOpen =
-            window.screen.width < SCREEN_WIDTH_LG &&
-            (open ||
-                [...this.#rows].some(
-                    row => row.offsetHeight !== ROW_CLOSED_HEIGHT,
-                ));
-        btns.forEach(btn =>
-            btn.classList.remove(rowsOpen ? 'rows-closed' : 'rows-open'),
-        );
-        btns.forEach(btn =>
-            btn.classList.add(rowsOpen ? 'rows-open' : 'rows-closed'),
-        );
-        await wait(BTN_ANIMATE_MS);
-        btns.forEach(btn => (btn.style.zIndex = rowsOpen ? '0' : '50'));
-        if (rowsOpen) {
-            this.#viewBtns.addRow.style.transform = `translateY(-100%)`;
-            this.#viewBtns.expenseCategory.style.transform = `translateY(400%)`;
-            this.#viewBtns.calculateExpenses.style.transform = `translateY(200%)`;
-        } else {
-            btns.forEach(btn => (btn.style.transform = `translateY(0%)`));
         }
     }
 
@@ -556,7 +514,6 @@ export class PdcLocationView extends HTMLElement {
                 this.#getRowAnimatedEls(row).details.scrollHeight + 'px';
             if (window.screen.width >= SCREEN_WIDTH_LG)
                 this.#rowToggle(row, 'open');
-            else this.#animateBtns();
         });
     };
 

@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 @import './tw-shadow-props.css';
+
 @import './colors.css';
 @import './fonts.css';
+@import './row-heights.css';
 
-@import './rows/_index.css';
 @import './tom-select/defaults';
 @import './tom-select/overrides';
