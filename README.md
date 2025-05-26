@@ -69,6 +69,7 @@ pdc.addEventListener('expenseUpdate', e => {
 - Save an expense report PDF that includes daily breakdown, rates used, and links to the original federal source
 - Full keyboard-only navigation support
 - API calls are reduced via both memoization by the calculator, and caching results in Cloudflare by the proxy
+- All features usable in both mobile and desktop widths
 
 ## Expense object
 
