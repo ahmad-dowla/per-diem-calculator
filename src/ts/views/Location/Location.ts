@@ -65,7 +65,7 @@ export class PdcLocationView extends HTMLElement {
         this.#shadowRoot.appendChild(template.content.cloneNode(true));
 
         this.#applyConfig(config);
-        this.#createEventListeners();
+        this.#addEventListeners();
         this.#addRow('initial');
     }
 
@@ -86,7 +86,7 @@ export class PdcLocationView extends HTMLElement {
 
     /* EVENTS
      */
-    #createEventListeners() {
+    #addEventListeners() {
         const viewContainer =
             this.shadowRoot?.querySelector<HTMLElement>('#view-container');
 
@@ -354,26 +354,34 @@ export class PdcLocationView extends HTMLElement {
         Object.values(this.#getRowPdcEls(row)).forEach(
             el => el.isEnabled && el.enableTabIndex(enable),
         );
+        // Row toggle button should always have tabindex enabled
+        row
+            .querySelector('[data-pdc="location-row-sidebar"]')
+            ?.querySelector('[data-pdc="location-row-toggle"]')
+            ?.querySelector('button')
+            ?.setAttribute('tabindex', '0');
+        // Row delete button should only have tabindex enabled when row is closed
+        this.#getRowAnimatedEls(row).deleteBtn.setAttribute(
+            'tabindex',
+            enable ? '-1' : '0',
+        );
     }
 
     #disableAllTabIndexes() {
         this.#rows.forEach(row => {
-            Object.values(this.#getRowPdcEls(row)).forEach(
-                el => el.isEnabled && el.enableTabIndex(false),
-                this.#getRowAnimatedEls(row).deleteBtn.setAttribute(
-                    'tabindex',
-                    '-1',
-                ),
+            Object.values(this.#getRowPdcEls(row)).forEach(el =>
+                el.enableTabIndex(false),
+            );
+            row.querySelectorAll('[tabindex]').forEach(el =>
+                el.setAttribute('tabindex', '-1'),
             );
         });
         this.#viewBtns.calculateExpenses
             .querySelector<PdcButton>('pdc-button')
             ?.enableTabIndex(false);
-
-        [
-            this.#viewBtns.addRow.querySelector('button'),
-            ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
-        ].forEach(el => el && el.setAttribute('tabindex', '-1'));
+        this.#shadowRoot
+            .querySelectorAll('[tabindex]')
+            .forEach(el => el.setAttribute('tabindex', '-1'));
     }
 
     /* VISUAL METHODS
@@ -453,12 +461,11 @@ export class PdcLocationView extends HTMLElement {
             });
         }
         row.classList.remove('toggling');
+        // Activate tabindex for view's iconsn
         this.#viewBtns.calculateExpenses
             .querySelector<PdcButton>('pdc-button')
             ?.enableTabIndex(true);
-        // Activate tabindex for delete icon which is hidden while row open
         [
-            this.#getRowAnimatedEls(row).deleteBtn,
             this.#viewBtns.addRow.querySelector('button'),
             ...this.#viewBtns.expenseCategory.querySelectorAll('label'),
         ].forEach(el => el && el.setAttribute('tabindex', '0'));
@@ -529,6 +536,24 @@ export class PdcLocationView extends HTMLElement {
             else el.setAttribute('bg', color);
         });
     };
+
+    async showRowLoadingSpinner(rowIndex: number, enabled: boolean) {
+        if (!this.#styled) return;
+        const row = this.#getRowFromIndex(rowIndex);
+        const loadingSpinner =
+            row.querySelector<HTMLElement>('#loading-spinner');
+        if (!loadingSpinner)
+            throw new Error('Failed to render row loading spinner.');
+        if (enabled) {
+            loadingSpinner.style.opacity = '1';
+            loadingSpinner.classList.add('active');
+        } else {
+            await wait(ROW_ANIMATE_MS * 2);
+            loadingSpinner.style.opacity = '0';
+            await wait(ROW_ANIMATE_MS);
+            loadingSpinner.classList.remove('active');
+        }
+    }
 
     /* VALIDATION
      */

@@ -101,12 +101,16 @@ export class Pdc {
         let startDate, endDate;
         switch (true) {
             case !newValue && !!country && !!category && !!end && !!start:
+                this.#viewLocation.showRowLoadingSpinner(index, true);
                 this.#viewLocation.restrictRow(index, 'country');
                 await this.#createSelectOptions(row);
+                this.#viewLocation.showRowLoadingSpinner(index, false);
                 return;
             case !newValue && !!category && !!end && !!start:
+                this.#viewLocation.showRowLoadingSpinner(index, true);
                 this.#viewLocation.restrictRow(index, 'category');
                 await this.#createSelectOptions(row);
+                this.#viewLocation.showRowLoadingSpinner(index, false);
                 return;
             case !newValue && !!end && !!start:
                 this.#viewLocation.restrictRow(index, 'end');
@@ -131,7 +135,9 @@ export class Pdc {
             default:
                 this.#viewLocation.restrictRow(index, changedAttr);
                 if (changedAttr === 'category' || changedAttr === 'country') {
+                    this.#viewLocation.showRowLoadingSpinner(index, true);
                     await this.#createSelectOptions(row);
+                    this.#viewLocation.showRowLoadingSpinner(index, false);
                 }
                 return;
         }

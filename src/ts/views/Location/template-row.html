@@ -168,11 +168,22 @@
             <div
                 class="grid grid-cols-1 border-r border-r-transparent
                     transition-colors *:border-r-1 *:border-b
-                    *:border-r-transparent *:border-b-neutral-100
-                    *:transition-colors lg:relative lg:col-span-2 lg:divide-y
-                    lg:divide-neutral-200 lg:border-r-neutral-200
-                    lg:*:border-b-transparent"
+                    *:border-r-transparent *:border-b-neutral-100 lg:relative
+                    lg:col-span-2 lg:divide-y lg:divide-neutral-200
+                    lg:border-r-neutral-200 lg:*:border-b-transparent"
             >
+                <!-- Loading indicator-->
+                <div
+                    id="loading-spinner"
+                    class="absolute z-0 flex h-[146px] w-full items-center
+                        justify-center bg-white opacity-0 transition-opacity
+                        duration-700 lg:h-[208px] [.active]:z-50"
+                >
+                    <div
+                        class="border-t-primary-600 border-primary-50 h-10 w-10
+                            animate-spin rounded-full border-4 border-t-4"
+                    ></div>
+                </div>
                 <pdc-location-select
                     pdc="country"
                     styled="true"

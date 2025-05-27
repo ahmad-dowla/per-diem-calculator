@@ -4,7 +4,6 @@ import type { Location } from '../../types/locations';
 // Utils
 import { applyStyles, removeStyles } from '../../utils/styles';
 import { debounce, handlePointerDown, handlePointerUp } from '../../utils/misc';
-import { ROW_ANIMATE_MS } from '../../utils/config';
 import TomSelect from 'tom-select';
 
 // HTML/CSS
@@ -141,15 +140,6 @@ export class PdcLocationSelect extends HTMLElement {
         return el;
     }
 
-    get #loadingSpinner() {
-        const el = this.#shadowRoot.querySelector('#loading-spinner');
-        if (!el)
-            throw new Error(
-                `Failed to get loading spinner element for Select custom element`,
-            );
-        return el;
-    }
-
     get #errorEl() {
         const el = this.closest('#locations-container')?.querySelector(
             '#error',
@@ -176,12 +166,6 @@ export class PdcLocationSelect extends HTMLElement {
         const div = this.#shadowRoot.querySelector('div');
         div?.classList.remove(`bg-white`, `bg-neutral-50`);
         div?.classList.add(bgColor ? bgColor : `bg-${this.getAttribute('bg')}`);
-    }
-
-    #showLoadingSpinner(enabled: boolean) {
-        if (!this.#styled) return;
-        if (enabled) this.#loadingSpinner.classList.add('active');
-        else this.#loadingSpinner.classList.remove('active');
     }
 
     focusEl() {
@@ -211,7 +195,6 @@ export class PdcLocationSelect extends HTMLElement {
     }
 
     setOptions(locations: Location[]) {
-        this.#showLoadingSpinner(true);
         this.enable(false);
         this.#tomSelect.destroy();
         this.#createTomSelect();
@@ -241,9 +224,6 @@ export class PdcLocationSelect extends HTMLElement {
             }
             this.#tomSelect.control.setAttribute('tabindex', '-1');
         });
-        setTimeout(() => {
-            this.#showLoadingSpinner(false);
-        }, ROW_ANIMATE_MS * 2);
     }
 
     #createTomSelect() {
