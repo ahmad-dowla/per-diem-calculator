@@ -138,7 +138,7 @@ export class PdcLocationView extends HTMLElement {
             case btnEl?.dataset.pdc === 'delete-row':
                 this.#deleteRow(row);
                 return;
-            case btnPdcEl?.getAttribute('id') === 'calculate-expenses':
+            case btnPdcEl?.getAttribute('id') === 'calculate':
                 this.#validateRows('calculate');
                 return;
             case !!target.closest('[data-pdc="location-row-toggle"]'):
@@ -237,7 +237,7 @@ export class PdcLocationView extends HTMLElement {
         const expenseCategory =
             this.shadowRoot?.querySelector<HTMLElement>('#expense-category');
         const calculateExpenses = this.shadowRoot
-            ?.querySelector('#calculate-expenses')
+            ?.querySelector('#calculate')
             ?.closest('div');
         if (!(addRow && expenseCategory && calculateExpenses))
             throw new Error('Failed to render buttons for location View.');

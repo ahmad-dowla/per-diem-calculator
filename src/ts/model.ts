@@ -24,6 +24,7 @@ import {
     getLodgingRateIntl,
     returnValidStateExpense,
 } from './utils/expenses';
+import { getMM, getYYYY } from './utils/dates';
 import { US_STATE_LENGTH } from './utils/config';
 
 const state: State = {
@@ -112,6 +113,28 @@ export const generateExpenses = async (
     return state.expensesValid;
 };
 
+export const generateUniqueRates = () => {
+    const rateSet = new Set<StateExpenseItemValid>();
+    const getRateString = (expense: StateExpenseItemValid) => {
+        const { effDate, ...rates } = expense.rates;
+        const { country, city } = expense;
+        return JSON.stringify({ city, country, rates });
+    };
+    state.expensesValid.forEach((expense, i, arr) => {
+        if (i === 0 || getRateString(expense) !== getRateString(arr[i - 1]))
+            rateSet.add(expense);
+    });
+    console.table(rateSet);
+    return rateSet;
+};
+
+export const generateUniqueSources = () => {
+    const sourceSet = new Set<string>();
+    state.expensesValid.forEach(expense => sourceSet.add(expense.source));
+    console.table(sourceSet);
+    return sourceSet;
+};
+
 export const updateStateExpenseItem = (update: StateExpenseItemUpdate) => {
     const { date, lodgingAmount, ...deductions } = update;
     const item = state.expensesValid.find(expense => expense.date === date);
@@ -160,4 +183,19 @@ const getExpenseSubtotals = () => {
 
 export const returnExpenses = () => {
     return state.expensesValid;
+};
+
+export const returnRates = () => {
+    const expenses = generateUniqueRates();
+    return [...expenses].map(expense => {
+        const { rates, source } = expense;
+        const eff_date = `${getMM(expense.date)}/${getYYYY(expense.date)}`;
+        const location = `${expense.city}, ${expense.country}`;
+        return {
+            eff_date,
+            location,
+            ...rates,
+            source,
+        };
+    });
 };

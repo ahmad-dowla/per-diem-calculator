@@ -54,7 +54,8 @@ export class Pdc {
     #dispatchEvent() {
         const event = new CustomEvent('expenseUpdate', {
             detail: {
-                data: model.returnExpenses(),
+                expenses: model.returnExpenses(),
+                rates: model.returnRates(),
             },
         });
         this.#eventTarget.dispatchEvent(event);
@@ -161,8 +162,12 @@ export class Pdc {
                 this.#expenseTable,
             );
             const expenses = await model.generateExpenses(viewValidator);
+            const rates = model.generateUniqueRates();
+            const sources = model.generateUniqueSources();
             await this.#viewExpense.addRows(
                 expenses,
+                rates,
+                sources,
                 viewValidator.expensesCategory,
             );
             this.#viewExpense.renderLoadingSpinner(false);

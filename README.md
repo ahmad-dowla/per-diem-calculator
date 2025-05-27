@@ -48,7 +48,7 @@ const container = document.querySelector('#perDiemCalc');
 new Pdc(container);
 ```
 
-The expenses can be outputted to an object for further use in your application (see your console in [this demo](https://perdiemcalc.org/object) and this [example object](#expense-object)):
+The expenses can be outputted to an object for further use in your application (see your console in [this demo](https://perdiemcalc.org/object), and the [Expense Object](#expense-object) and [Rates Object](#rates-object) sections):
 
 ```
 import { Pdc } from '@per-diem-calculator/vanilla';
@@ -58,8 +58,9 @@ const container = document.querySelector('#perDiemCalc');
 const pdc = new Pdc(container);
 
 pdc.addEventListener('expenseUpdate', e => {
-    const { data } = e.detail;
-    console.table(data);
+    const { expenses, rates } = e.detail;
+    console.table(expenses);
+    console.table(rates);
 });
 
 ```
@@ -76,8 +77,8 @@ pdc.addEventListener('expenseUpdate', e => {
 ```
 {
   date: "2025-05-27",
-  country: "AR" // for domestic rates, states are counted as countries
-  city: "Hot Springs"
+  country: "AR", // for domestic rates, states are counted as countries
+  city: "Hot Springs",
   deductions: {
     FirstLastDay: true,
     breakfastProvided: true,
@@ -101,19 +102,35 @@ pdc.addEventListener('expenseUpdate', e => {
 }
 ```
 
+## Rates Object
+
+```
+{
+  eff_date: "05/2025",
+  location: "Hotsprings, AR",
+  maxLodging: 114,
+  maxMie: 68,
+  maxMieFirstLast: 51,
+  maxIncidental: 5,
+  deductionBreakfast: 16,
+  deductionLunch: 19,
+  ​deductionDinner: 28,
+  source: "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&fiscal_year=2025&state=AR&city=Hot Springs"
+}
+```
+
 ## Built With
 
 - TypeScript
 - Tailwind
 - [Tom Select](https://github.com/orchidjs/tom-select) ([Apache-2.0](https://github.com/orchidjs/tom-select?tab=Apache-2.0-1-ov-file)) for searchable dropdowns
 - [JSZip](https://github.com/Stuk/jszip) ([MIT](https://github.com/Stuk/jszip?tab=License-1-ov-file)) to unpack DOD rate zip files
-- [DOMPurify](https://github.com/cure53/DOMPurify) ([Apache-2.0](https://github.com/cure53/DOMPurify?tab=License-1-ov-file)) to santize config options
+- [DOMPurify](https://github.com/cure53/DOMPurify) ([Apache-2.0](https://github.com/cure53/DOMPurify?tab=License-1-ov-file)) to sanitize config options
 
 ## Planned Updates
 
 - Accessibility improvements to reach full WCAG compliance
 - CSS paths for an easy way to style shadowDOM elements
-- Option to display rates onscreen vs just in the generated PDF
 - Option to mark personal days and remove them from the final expense amount
 - React version - I used this project as a way to get familiar with native web components, but a React version will be shared soon
 - CDN option

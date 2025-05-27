@@ -15,7 +15,7 @@ import {
     wait,
 } from '../../utils/misc';
 import { applyStyles, removeStyles } from '../../utils/styles';
-import { getDD, getMM, getYY, isDateRawType } from '../../utils/dates';
+import { getDD, getMM, getYY, getYYYY, isDateRawType } from '../../utils/dates';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
@@ -255,6 +255,8 @@ export class PdcExpenseView extends HTMLElement {
 
     async addRows(
         expenses: StateExpenseItemValid[],
+        rates: Set<StateExpenseItemValid>,
+        sources: Set<string>,
         expensesCategory: 'mie' | 'lodging' | 'both',
     ) {
         this.#rowsContainer.innerHTML = '';
@@ -272,22 +274,19 @@ export class PdcExpenseView extends HTMLElement {
         window.scrollTo({ top: position, behavior: 'smooth' });
         await this.#updateTotals();
         this.#updateTotalsText();
-        this.#createSourceList();
-        this.#createRatesTable();
+        this.#createSourceList(sources);
+        this.#createRatesTable(rates);
     }
 
     /* Create prinout
      */
-    #createSourceList() {
-        const sources = new Set<string>();
-        this.#rows?.forEach(row => {
-            sources.add(row.rateSource);
-        });
+    #createSourceList(sources: Set<string>) {
         const sourcesEl = this.#shadowRoot.querySelector('#sources');
         if (!sourcesEl)
             throw new Error(
                 'Failed to render sources element in Expense view.',
             );
+        sourcesEl.innerHTML = '';
         sources.forEach(source => {
             sourcesEl.insertAdjacentHTML(
                 'beforeend',
@@ -296,41 +295,142 @@ export class PdcExpenseView extends HTMLElement {
         });
     }
 
-    #createRatesTable() {
+    #createRatesTable(rates: Set<StateExpenseItemValid>) {
         const ratesTable = this.#shadowRoot.querySelector('#rates-table');
-        if (!ratesTable)
-            throw new Error('Failed to render rates table in Expense view.');
-
-        const rateSet = new Set<string>();
-        this.#rows.forEach((row, i, arr) => {
-            if (i === 0 || row.rateString !== arr[i - 1].rateString)
-                rateSet.add(row.rateStringForTable);
-        });
-
-        let markup = '';
-        rateSet.forEach(item => {
-            markup += this.#createRateTableMarkup(item);
-        });
-
-        ratesTable.innerHTML = markup;
-    }
-
-    #createRateTableMarkup(item: string) {
-        const rateObject = JSON.parse(item);
-        const { rates } = rateObject;
-        return /*HTML*/ `
-            <tr class="border-b-2">
-                <td class="border-r-2 p-3">${rateObject.monthYear}</td>
-                <td class="border-r-2 p-3">${rateObject.city}, ${rateObject.country}</td>
-                <td>${rates.maxLodging.toFixed(2)}</td>
-                <td>${rates.maxMie.toFixed(2)}</td>
-                <td>${rates.maxMieFirstLast.toFixed(2)}</td>
-                <td class="border-r-2">${rates.maxIncidental.toFixed(2)}</td>
-                <td>${rates.deductionBreakfast.toFixed(2)}</td>
-                <td>${rates.deductionLunch.toFixed(2)}</td>
-                <td>${rates.deductionDinner.toFixed(2)}</td>
-            </tr>
+        const ratesRows = this.#shadowRoot.querySelector('#rates-rows');
+        if (!(ratesTable && ratesRows))
+            throw new Error('Failed to render rates elements in Expense view.');
+        let tableMarkup = '';
+        let rowsMarkup = /* HTML */ `
+            <div
+                class="hidden grid-cols-10 items-center border-b-2 border-b-neutral-300 bg-neutral-50 text-sm font-semibold *:p-2 lg:grid"
+            >
+                <div class="row-span-2">Eff. Date</div>
+                <div
+                    class="col-span-2 row-span-2 border-r border-r-neutral-300 !py-11"
+                >
+                    Location
+                </div>
+                <div
+                    class="col-span-4 border-r border-b border-r-neutral-300 border-b-neutral-300"
+                >
+                    Maximums
+                </div>
+                <div class="col-span-3 border-b border-b-neutral-300">
+                    Deductions
+                </div>
+                <div>Lodging</div>
+                <div>M&IE<br /><span class="font-normal">Full</span></div>
+                <div>M&IE<br /><span class="font-normal">First/Last</span></div>
+                <div class="border-r border-r-neutral-300 !py-6">Incid.</div>
+                <div>Break.</div>
+                <div>Lunch</div>
+                <div>Dinner</div>
+            </div>
         `;
+        [...rates].forEach((expense, i) => {
+            tableMarkup += /* HTML */ `
+                <tr class="border-b-2">
+                    <td class="border-r-2 p-3">
+                        ${getMM(expense.date)}/${getYYYY(expense.date)}
+                    </td>
+                    <td class="border-r-2 p-3">
+                        ${expense.city}, ${expense.country}
+                    </td>
+                    <td>${expense.rates.maxLodging.toFixed(2)}</td>
+                    <td>${expense.rates.maxMie.toFixed(2)}</td>
+                    <td>${expense.rates.maxMieFirstLast.toFixed(2)}</td>
+                    <td class="border-r-2">
+                        ${expense.rates.maxIncidental.toFixed(2)}
+                    </td>
+                    <td>${expense.rates.deductionBreakfast.toFixed(2)}</td>
+                    <td>${expense.rates.deductionLunch.toFixed(2)}</td>
+                    <td>${expense.rates.deductionDinner.toFixed(2)}</td>
+                </tr>
+            `;
+            const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-neutral-50';
+            const oppColor =
+                bgColor === 'bg-white' ? 'bg-neutral-50' : 'bg-white';
+
+            rowsMarkup += /* HTML */ `
+                <details
+                    class="${oppColor} border-b-2 border-b-neutral-300 p-4 lg:hidden"
+                >
+                    <summary class="truncate">
+                        <p class="ml-3 inline text-sm">
+                            ${getMM(expense.date)}/${getYYYY(expense.date)}
+                        </p>
+                        <p class="ml-3 inline">
+                            ${expense.city}, ${expense.country}
+                        </p>
+                    </summary>
+                    <p class="p-2 pt-5 pb-0 font-semibold">Maximums</p>
+                    <div
+                        class="grid grid-cols-3 p-2 *:p-2 *:pb-0 [&_p]:text-right"
+                    >
+                        <label class="col-span-2 !pt-0">Lodging</label>
+                        <p class="!pt-0">
+                            ${USD.format(expense.rates.maxLodging)}
+                        </p>
+                        <label class="col-span-2">M&IE (Full)</label>
+                        <p>${USD.format(expense.rates.maxMie)}</p>
+                        <label class="col-span-2">M&IE (First/Last)</label>
+                        <p>${USD.format(expense.rates.maxMieFirstLast)}</p>
+                        <label class="col-span-2">Incid.</label>
+                        <p>${USD.format(expense.rates.maxIncidental)}</p>
+                    </div>
+                    <p class="p-2 pt-5 pb-0 font-semibold">Deductions</p>
+                    <div
+                        class="grid grid-cols-3 p-2 *:p-2 *:pb-0 [&_p]:text-right"
+                    >
+                        <label class="col-span-2 !pt-0">Breakfast</label>
+                        <p class="!pt-0">
+                            ${USD.format(expense.rates.deductionBreakfast)}
+                        </p>
+                        <label class="col-span-2">Lunch</label>
+                        <p>${USD.format(expense.rates.deductionLunch)}</p>
+                        <label class="col-span-2">Dinner</label>
+                        <p>${USD.format(expense.rates.deductionDinner)}</p>
+                    </div>
+                    <p class="p-2 pt-5 pb-0 font-semibold">Source</p>
+                    <a
+                        class="mb-5 ml-4 block truncate pb-2 underline underline-offset-8"
+                        href="${expense.source}"
+                        target="_blank"
+                        aria-label="Link to source for ${expense.date} ${expense.city} rates"
+                        >${expense.source}</a
+                    >
+                </details>
+                <div
+                    class="${bgColor} hidden grid-cols-10 items-center border-b-1 border-b-neutral-300 *:p-6 *:pb-0 lg:grid"
+                >
+                    <div>${getMM(expense.date)}/${getYYYY(expense.date)}</div>
+                    <div class="col-span-2 truncate">
+                        ${expense.city}, ${expense.country}
+                    </div>
+                    <div>${expense.rates.maxLodging.toFixed(2)}</div>
+                    <div>${expense.rates.maxMie.toFixed(2)}</div>
+                    <div>${expense.rates.maxMieFirstLast.toFixed(2)}</div>
+                    <div>${expense.rates.maxIncidental.toFixed(2)}</div>
+                    <div>${expense.rates.deductionBreakfast.toFixed(2)}</div>
+                    <div>${expense.rates.deductionLunch.toFixed(2)}</div>
+                    <div>${expense.rates.deductionDinner.toFixed(2)}</div>
+                    <div
+                        class="col-span-10 mt-4 truncate border-t border-t-neutral-100 !py-4 text-sm"
+                    >
+                        <a
+                            class="pb-2 text-neutral-500 underline underline-offset-8 transition-colors hover:text-neutral-800"
+                            href="${expense.source}"
+                            target="_blank"
+                            aria-label="Link to source for ${expense.date} ${expense.city} rates"
+                            >${expense.source}</a
+                        >
+                    </div>
+                </div>
+            `;
+        });
+        ratesTable.innerHTML = tableMarkup;
+        ratesRows.innerHTML = rowsMarkup;
     }
 
     async createExpenseTable(expenses: StateExpenseItemValid[]) {

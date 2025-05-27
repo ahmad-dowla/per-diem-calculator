@@ -9,7 +9,7 @@ import {
     highlightSuccess,
 } from '../../utils/styles';
 import { ROW_CLOSED_HEIGHT, SCREEN_WIDTH_LG } from '../../utils/config';
-import { getShortMonth, getDD, getYYYY, getMM } from '../../utils/dates';
+import { getShortMonth, getDD, getYYYY } from '../../utils/dates';
 
 // HTML/CSS
 import templateHTML from './template.html?raw';
@@ -430,18 +430,6 @@ export class PdcExpenseRow extends HTMLElement {
      */
     get rateSource() {
         return this.#expense.source;
-    }
-
-    get rateString() {
-        const { effDate, ...rates } = this.#expense.rates;
-        const { country, city } = this.#expense;
-        return JSON.stringify({ city, country, rates });
-    }
-
-    get rateStringForTable() {
-        const { date, country, city, rates } = this.#expense;
-        const monthYear = `${getMM(date)}/${getYYYY(date)}`;
-        return JSON.stringify({ monthYear, country, city, rates });
     }
 
     get amount() {
