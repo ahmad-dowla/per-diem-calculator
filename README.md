@@ -1,6 +1,6 @@
 # Introduction
 
-This is an open source per diem calculator to pull lodging and meals per diem rates, and factor deductions, for both domestic and international trips. A demo can be found here: https://perdiemcalc.org.
+This is an open source per diem calculator to lookup lodging and meals per diem rates, and account for deductions, for both domestic and international trips. A demo can be found here: https://perdiemcalc.org.
 
 There are a few issues with the tools available as of May 2025:
 
@@ -11,9 +11,9 @@ There are a few issues with the tools available as of May 2025:
 
 This calculator was built to address all the above issues. It's a single tool that:
 
-- Pulls both domestic and international rates
-- Accounts for multi-destination trips
+- Pulls both domestic and international rates, and provides the ability to select deductions for each rate
 - Gets rates directly from federal sources via GSA's API; and via downloading OCONUS rate zip files from the Dept. of Defense (which includes the State Department's OCONUS rates), unpacking them using JSZIP, and parsing the rate XML file using DOMParser and XPathEvaluator
+- Accounts for multi-destination trips
 - Easily incorporates into existing projects by being built with native Javascript web components
 
 ## Usage
@@ -48,7 +48,7 @@ const container = document.querySelector('#perDiemCalc');
 new Pdc(container);
 ```
 
-The expenses can be outputted to an object for further use in your application (see your console in [this demo](https://perdiemcalc.org/object), and the [Expense Object](#expense-object) and [Rates Object](#rates-object) sections):
+The rates and expenses can be outputted to an object for further use in your application (see your console in [this demo](https://perdiemcalc.org/object), and the [Expense Object](#expense-object) and [Rates Object](#rates-object) sections):
 
 ```
 import { Pdc } from '@per-diem-calculator/vanilla';
