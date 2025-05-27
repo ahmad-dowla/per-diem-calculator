@@ -115,7 +115,7 @@
             class="absolute top-0 left-[-100%] w-full [transform:translateX(0%)]
                 overflow-hidden border-l-2 border-l-neutral-200 opacity-0
                 [transition:height_0.35s_ease,transform_0.35s_ease-in,opacity_0.35s_ease-out]
-                lg:grid lg:[transform:translateX(100%)] lg:grid-cols-5
+                lg:grid lg:[transform:translateX(100%)] lg:grid-cols-5 lg:py-2.5
                 lg:opacity-100"
         >
             <div class="lg:col-span-3">
@@ -124,13 +124,6 @@
                     class="flex flex-col justify-between border-b
                         border-b-neutral-100 px-3 py-3 lg:border-b-transparent"
                 >
-                    <label
-                        class="hidden text-sm font-semibold tracking-wider
-                            text-neutral-700 uppercase transition-colors
-                            lg:block lg:text-neutral-700"
-                        >Location</label
-                    >
-
                     <p
                         id="location"
                         class="relative my-1 truncate text-neutral-800"
@@ -204,7 +197,8 @@
                     id="mie"
                     class="flex items-center justify-between border-b
                         border-b-neutral-100 px-3 py-3 lg:grid lg:grid-cols-2
-                        lg:justify-start [.disabled]:cursor-not-allowed
+                        lg:justify-start lg:border-b-transparent
+                        [.disabled]:cursor-not-allowed
                         [.disabled]:**:opacity-30"
                 >
                     <label
@@ -238,7 +232,8 @@
                     id="lodging"
                     class="flex items-center justify-between border-b
                         border-b-neutral-100 px-3 py-3 lg:grid lg:grid-cols-2
-                        lg:justify-start [.disabled]:cursor-not-allowed
+                        lg:justify-start lg:border-b-transparent
+                        [.disabled]:cursor-not-allowed
                         [.disabled]:**:opacity-30"
                 >
                     <label
@@ -271,7 +266,7 @@
                     id="total"
                     class="flex items-center justify-between border-b
                         border-b-neutral-100 px-3 py-0 lg:grid lg:grid-cols-2
-                        lg:justify-start lg:border-b-transparent lg:py-3
+                        lg:justify-start lg:border-b-transparent
                         [.disabled]:cursor-not-allowed
                         [.disabled]:**:opacity-30"
                 >
