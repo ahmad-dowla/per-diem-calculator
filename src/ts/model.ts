@@ -124,14 +124,12 @@ export const generateUniqueRates = () => {
         if (i === 0 || getRateString(expense) !== getRateString(arr[i - 1]))
             rateSet.add(expense);
     });
-    console.table(rateSet);
     return rateSet;
 };
 
 export const generateUniqueSources = () => {
     const sourceSet = new Set<string>();
     state.expensesValid.forEach(expense => sourceSet.add(expense.source));
-    console.table(sourceSet);
     return sourceSet;
 };
 
