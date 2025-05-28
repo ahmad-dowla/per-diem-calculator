@@ -187,7 +187,7 @@ export class PdcLocationCategory extends HTMLElement {
     }
 
     enableTabIndex(enable: boolean) {
-        const els = this.#container.querySelectorAll('[tabindex]');
+        const els = this.#container.querySelectorAll('label[tabindex]');
         els.forEach(el => el.setAttribute('tabindex', enable ? '0' : '-1'));
     }
 

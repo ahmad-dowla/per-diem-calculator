@@ -14,16 +14,16 @@
     <div
         class="*:focus-visible:border-r-primary-800
             *:[.error]:border-r-error-400 *:has-checked:border-r-success-400
-            peer w-[72%] opacity-15 transition-opacity duration-700 *:my-3
-            *:grid *:cursor-pointer *:grid-cols-2 *:items-center
-            *:justify-items-center *:border-r-3 *:border-r-transparent
+            peer w-[68%] justify-items-center opacity-15 transition-opacity
+            duration-700 *:my-3 *:grid *:w-full *:cursor-pointer *:grid-cols-7
+            *:items-center *:border-r-3 *:border-r-transparent
             *:border-b-transparent *:bg-transparent *:py-2.5 *:pr-3
             *:select-none **:text-sm **:transition-colors
             *:focus-visible:outline-none has-enabled:opacity-100
-            *:has-disabled:hover:cursor-not-allowed sm:w-[75%]
-            *:sm:justify-items-start lg:w-full lg:*:my-1
-            lg:*:justify-items-center *:lg:py-1
-            lg:*:has-checked:border-r-transparent"
+            *:has-disabled:hover:cursor-not-allowed sm:w-[75%] md:w-full
+            md:*:grid-cols-8 md:*:pl-15 lg:mx-auto lg:*:my-1 lg:*:w-[95%]
+            *:lg:py-1 lg:*:pl-5 lg:*:has-checked:border-r-transparent
+            xl:*:pl-15"
     >
         <label
             tabindex="-1"
@@ -32,8 +32,10 @@
                 hover:[&_.state]:stroke-primary-100
                 has-checked:[&_.state]:stroke-primary-100
                 focus-visible:[&_.state]:fill-primary-800
-                focus-visible:[&_.state]:stroke-primary-100 *:pr-4
-                [&_.state]:fill-neutral-800 [&_.state]:stroke-neutral-100"
+                focus-visible:[&_.state]:stroke-primary-100
+                [&_input]:accent-primary-800 *:pr-4 [&_.state]:fill-neutral-800
+                [&_.state]:stroke-neutral-100 [&_input]:justify-self-end
+                [&_svg]:col-span-3 [&_ul]:col-span-3 md:[&_ul]:col-span-4"
             for="domestic"
         >
             <svg
@@ -401,14 +403,13 @@
                 <li class="hidden">Washington DC</li>
             </ul>
             <input
+                tabindex="-1"
                 type="radio"
                 name="category"
                 value="domestic"
                 id="domestic"
-                class="hidden"
                 disabled
                 required
-                hidden
             />
         </label>
         <label
@@ -418,13 +419,15 @@
                 has-checked:[&_.water]:fill-primary-100
                 hover:[&_.water]:fill-primary-100
                 focus-visible:[&_.land]:fill-primary-800
-                focus-visible:[&_.water]:fill-primary-100 *:pr-4
-                [&_.land]:fill-neutral-800 [&_.water]:fill-neutral-100"
+                focus-visible:[&_.water]:fill-primary-100
+                [&_input]:accent-primary-800 *:pr-4 [&_.land]:fill-neutral-800
+                [&_.water]:fill-neutral-100 [&_input]:justify-self-end
+                [&_svg]:col-span-3 [&_ul]:col-span-3 md:[&_ul]:col-span-4"
             for="intl"
         >
             <svg
                 inert
-                class="mr-5 max-h-[50px] sm:max-h-[60px] lg:max-h-[50px]"
+                class="max-h-[35px] sm:max-h-[60px] lg:max-h-[50px]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="1.52 1.58 3.77 3.77"
             >
@@ -508,20 +511,23 @@
                     sm:[&_li]:last:border-b-2 sm:[&_li]:last:pb-2 lg:[&_li]:mb-1
                     lg:[&_li]:list-item"
             >
-                <li>All Other Locations</li>
+                <li>
+                    All <br class="sm:hidden" />Other
+                    <br class="sm:hidden" /><span class="sm:hidden">Lctns</span
+                    ><span class="hidden sm:block">Locations</span>
+                </li>
                 <li>Alaska, Hawaii</li>
                 <li>US Territories</li>
                 <li>Other Countries</li>
             </ul>
             <input
+                tabindex="-1"
                 type="radio"
                 name="category"
                 value="intl"
                 id="intl"
-                class="hidden"
                 disabled
                 required
-                hidden
             />
         </label>
     </div>
