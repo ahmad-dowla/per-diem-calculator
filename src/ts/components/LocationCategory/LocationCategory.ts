@@ -193,7 +193,7 @@ export class PdcLocationCategory extends HTMLElement {
 
     /* VALIDATION
      */
-    #renderError(enable: boolean, msg = `Select a category.`) {
+    #renderError(enable: boolean, msg = `Select an area.`) {
         if (enable) {
             if (this.#styled) {
                 this.#labels.forEach((label, i) => {
