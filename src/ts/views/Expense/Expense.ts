@@ -392,7 +392,7 @@ export class PdcExpenseView extends HTMLElement {
                         <label class="col-span-2">Dinner</label>
                         <p>${USD.format(expense.rates.deductionDinner)}</p>
                     </div>
-                    <p class="p-2 pt-5 pb-0 !text-left font-semibold">Source</p>
+                    <p class="p-2 pt-5 pb-0 font-semibold">Source</p>
                     <a
                         class="mb-5 ml-4 block truncate pb-2 underline underline-offset-8"
                         href="${expense.source}"
@@ -416,7 +416,7 @@ export class PdcExpenseView extends HTMLElement {
                     <div>${expense.rates.deductionLunch.toFixed(2)}</div>
                     <div>${expense.rates.deductionDinner.toFixed(2)}</div>
                     <div
-                        class="col-span-10 mt-4 truncate border-t border-t-neutral-100 !py-4 text-sm"
+                        class="col-span-10 mt-4 truncate border-t border-t-neutral-100 !py-4 !text-left text-sm"
                     >
                         <a
                             class="pb-2 text-neutral-500 underline underline-offset-8 transition-colors hover:text-neutral-800"
