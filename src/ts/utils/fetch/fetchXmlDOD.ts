@@ -28,6 +28,11 @@ const fetchXmlDOD = async (year: YYYY) => {
 
     try {
         await zip.loadAsync(resFile);
+        const filename = `ocallhist-${getYY(year, 'YYYY')}.xml`;
+        const data = await zip.file(filename)?.async('string');
+        if (!data)
+            throw new Error(`Failed to extract XML file from zip from ${url}`);
+        return data;
     } catch (e) {
         // Gracefully handle transition period between years where DoD may put out a temporary locked ZIP file for first few weeks of January. That locked file will trigger an error in JZIP so we'll switch to using prior year rates.
         const now = new Date();
@@ -39,16 +44,11 @@ const fetchXmlDOD = async (year: YYYY) => {
             console.warn(
                 `${currentYear} data not yet public in finalized form. Falling back to ${fixedYear} data.`,
             );
-            if (isYYYY(fixedYear)) return fetchXmlDOD(fixedYear);
+            if (isYYYY(fixedYear)) return await fetchXmlDOD(fixedYear);
         }
         // If it's not a current-year transition issue, throw the original error
-        throw e;
+        throw new Error(`Failed to process DOD ZIP for ${year}: ${e}`);
     }
-    const filename = `ocallhist-${getYY(year, 'YYYY')}.xml`;
-    const data = await zip.file(filename)?.async('string');
-    if (!data)
-        throw new Error(`Failed to extract XML file from zip from ${url}`);
-    return data;
 };
 
 const fetchXmlDODmemo = memoize(fetchXmlDOD);
