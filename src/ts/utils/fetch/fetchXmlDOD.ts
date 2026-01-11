@@ -19,21 +19,26 @@ const fetchXmlDOD = async (year: YYYY) => {
         },
     });
     if (!res.ok) throw new Error(`Failed to download file from ${url}`);
+    const contentType = res.headers.get('content-type') || '';
 
-    const resFile = await res.arrayBuffer();
-    if (!resFile)
-        throw new Error(`Failed to write file from ${url} to arrayBuffer`);
+    // Check if we actually got a ZIP file.
+    // If it's HTML, it's the DoD/Cloudflare error page.
+    const isZip =
+        contentType.includes('application/zip') ||
+        contentType.includes('application/octet-stream');
 
-    const zip = new JSZip();
-
-    try {
+    if (res.ok && isZip) {
+        const resFile = await res.arrayBuffer();
+        if (!resFile)
+            throw new Error(`Failed to write file from ${url} to arrayBuffer`);
+        const zip = new JSZip();
         await zip.loadAsync(resFile);
         const filename = `ocallhist-${getYY(year, 'YYYY')}.xml`;
         const data = await zip.file(filename)?.async('string');
         if (!data)
             throw new Error(`Failed to extract XML file from zip from ${url}`);
         return data;
-    } catch (e) {
+    } else {
         // Gracefully handle transition period between years where DoD may put out a temporary locked ZIP file for first few weeks of January. That locked file will trigger an error in JZIP so we'll switch to using prior year rates.
         const now = new Date();
         const currentYear = now.getFullYear();
@@ -47,7 +52,7 @@ const fetchXmlDOD = async (year: YYYY) => {
             if (isYYYY(fixedYear)) return await fetchXmlDOD(fixedYear);
         }
         // If it's not a current-year transition issue, throw the original error
-        throw new Error(`Failed to process DOD ZIP for ${year}: ${e}`);
+        throw new Error(`Failed to process DOD ZIP for ${year}`);
     }
 };
 
