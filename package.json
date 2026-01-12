@@ -35,7 +35,8 @@
     "scripts": {
         "dev": "vite --host",
         "build": "tsc && vite build",
-        "preview": "vite preview --host"
+        "preview": "vite preview --host",
+        "prepublishOnly": "npm run build && rm -rf node_modules/.vite"
     },
     "devDependencies": {
         "@eslint/js": "^9.27.0",
